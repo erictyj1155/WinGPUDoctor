@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WinGPUDoctor.Core/WinGPUDoctor.Core.csproj" />
+    <Project Path="src/WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
+    <Project Path="src/WinGPUDoctor.Cli/WinGPUDoctor.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WinGPUDoctor.Tests/WinGPUDoctor.Tests.csproj" />
+  </Folder>
+</Solution>

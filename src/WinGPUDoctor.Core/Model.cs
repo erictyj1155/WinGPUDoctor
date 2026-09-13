@@ -1,0 +1,59 @@
+using System.Text.Json.Serialization;
+
+namespace WinGPUDoctor.Core;
+
+public enum DataState { Available, Unknown, Unsupported, Failed, Redacted }
+public enum DataSource { WmiOperatingSystem, WmiComputerSystem, WmiVideoController, WmiSignedDriver, DisplayConfig, NotCollected }
+public enum ReasonCode { None, MissingValue, NotImplemented, NonPciDevice, InvalidValue, NoMatchingDriver, AmbiguousDriver, AccessDenied, ProviderUnavailable, Timeout, QueryFailed, SensitiveValue }
+public enum CollectorStatus { Succeeded, Partial, Failed, Unsupported }
+public enum WarningCode { InventoryOnly, ProviderReportedValues, TopologyNotCollected, ReviewBeforeSharing, CollectionIncomplete, ValuesRedacted }
+
+// Observed values carry provenance. Unavailable values never use a guessed substitute.
+public sealed record Observation<T> where T : class
+{
+    public DataState State { get; }
+    public T? Value { get; }
+    public DataSource Source { get; }
+    public ReasonCode Reason { get; }
+
+    [JsonConstructor]
+    public Observation(DataState state, T? value, DataSource source, ReasonCode reason)
+    {
+        if (!Enum.IsDefined(state) || !Enum.IsDefined(source) || !Enum.IsDefined(reason))
+            throw new ArgumentException("Undefined observation enum.");
+        if (state == DataState.Available ? value is null || reason != ReasonCode.None : value is not null || reason == ReasonCode.None)
+            throw new ArgumentException("Available observations need a value; unavailable observations need a reason and no value.");
+        State = state; Value = value; Source = source; Reason = reason;
+    }
+
+    public static Observation<T> Known(T value, DataSource source) => new(DataState.Available, value, source, ReasonCode.None);
+    public static Observation<T> Absent(DataState state, DataSource source, ReasonCode reason) => new(state, null, source, reason);
+}
+
+public sealed record SystemFacts(Observation<string> WindowsVersion, Observation<string> WindowsBuild,
+    Observation<string> Manufacturer, Observation<string> Model);
+public sealed record DriverFacts(Observation<string> Provider, Observation<string> Version, Observation<string> Date);
+public sealed record GpuFacts(string Id, Observation<string> Name, Observation<string> PciVendorId,
+    Observation<string> PciDeviceId, Observation<string> Classification, DriverFacts Driver);
+// Reserved shape for the next spike; rational refresh avoids rounding 60000/1001 to 60.
+public sealed record DisplayMode(int WidthPixels, int HeightPixels, uint RefreshNumerator, uint RefreshDenominator);
+public sealed record DisplayFacts(string Id, Observation<string> Name, Observation<string> AdapterId,
+    Observation<DisplayMode> Mode);
+public sealed record CollectedFacts(SystemFacts System, Observation<IReadOnlyList<GpuFacts>> Gpus,
+    Observation<IReadOnlyList<DisplayFacts>> Displays);
+public sealed record CollectorRun(DataSource Source, CollectorStatus Status, ReasonCode Reason);
+public sealed record CollectionSnapshot(CollectedFacts Facts, IReadOnlyList<CollectorRun> Collection);
+public sealed record DiagnosticFinding(string Id, string Severity, string Message, IReadOnlyList<string> Evidence);
+public sealed record PrivacySummary(string PolicyVersion, int RedactedFields);
+public sealed record DiagnosticReport(string SchemaVersion, string ToolVersion, DateOnly CollectedOnUtc,
+    CollectedFacts Facts, IReadOnlyList<DiagnosticFinding> Findings, IReadOnlyList<WarningCode> Warnings,
+    IReadOnlyList<CollectorRun> Collection, PrivacySummary Privacy);
+
+public interface IDiagnosticCollector { CollectionSnapshot Collect(); }
+
+// Only the privacy boundary can construct this type. Public exporters cannot take a raw snapshot.
+public sealed class ShareableReport
+{
+    internal DiagnosticReport Report { get; }
+    internal ShareableReport(DiagnosticReport report) => Report = report;
+}
