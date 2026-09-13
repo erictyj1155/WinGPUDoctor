@@ -1,12 +1,12 @@
 # Architecture
 
-Status: accepted M1 foundation, 2026-09-10. Implementation and future design are distinguished below.
+Status: M1 foundation extended by M2 active topology, 2026-09-10. Core, Windows, and CLI boundaries are preserved.
 
 ## Stack
 
 C# / .NET 10 LTS, `System.Management` isolated in a Windows-specific assembly, `System.Text.Json` and a small Markdown renderer in the core, xUnit for deterministic tests. No GUI framework, dependency-injection container, plugin loader, database, or background host is needed for this milestone. .NET 10 is selected for its remaining LTS runway; SDK/package versions are pinned and lock files are retained. See the [official lifecycle policy](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
 
-C# can consume WMI directly and documented Win32/COM interfaces through interop. A later DisplayConfig/DXGI spike should evaluate generated bindings such as CsWin32 against a small reviewed interop surface. Do not add bindings to M1 just to reserve a dependency. C++ gives direct Windows SDK access but increases resource/lifetime and build complexity; Rust offers memory safety but adds a second ecosystem without a demonstrated requirement. Neither is necessary for the current four WMI queries.
+C# consumes WMI and an isolated Unicode P/Invoke surface for DisplayConfig/SetupAPI. No dependency was added in M2. Definitions were checked against Microsoft's SDK documentation and verified with size/offset tests and a binary union fixture. SetupAPI provides a direct device-instance bridge, so DXGI was not introduced. C++ or Rust is unnecessary for this scope.
 
 ## Dependency direction
 
@@ -19,9 +19,9 @@ Future GUI ──────> same collector and core interfaces
 
 1. **System collection:** two fixed local WMI projections for numeric OS version/build and firmware manufacturer/model.
 2. **GPU collection:** WMI video-controller inventory; match display-class signed drivers by full case-insensitive instance ID in temporary memory. Never match by name, vendor, list order, or approximate PCI ID.
-3. **Display collection:** explicit unsupported result in M1. Next spike will use DisplayConfig active paths and DXGI adapter identity. The reserved display model supports local adapter references and rational refresh rates; it is not an implemented collector.
+3. **Display collection:** `DisplayTopologyCollector` queries active paths through injectable native interfaces. Each domain entry preserves source/target keys and adapters, source dimensions, rational path/signal rates, rotation, and target availability. Clone/extended relationships remain representable. `WindowsCollector.CreateLocal()` composes WMI and topology; the WMI-only injectable constructor remains for M1 tests.
 4. **Normalization/model:** `Observation<T>` enforces state/value/reason consistency. Collectors return projected facts and structured collection outcomes, with no conclusions or raw provider dumps.
-5. **Privacy:** `PrivacyPolicy.Prepare` copies the permitted fields, validates structured formats, removes suspicious free text, regenerates report-local GPU IDs, and drops reserved display data. Raw objects cannot be passed to public report writers. This is a deliberate code boundary, not a sandbox against malicious extensions or reflection.
+5. **Privacy:** `PrivacyPolicy.Prepare` copies permitted facts. `TopologyPrivacy` regenerates labels, remaps unique GPU references, validates GDI/enum text, and filters names. Native LUIDs, paths, instance IDs, and EDID fields never enter domain facts. Public writers cannot accept raw collector objects. This is a code boundary, not a sandbox against malicious extensions or reflection.
 6. **Rules:** pure functions over sanitized facts. M1 explains multiple or zero reported controllers only. Findings contain evidence paths and do not infer mode, health, activity, or causes.
 7. **Reports:** one `ShareableReport` feeds JSON and Markdown. No raw export escape hatch. A future ZIP writer can package the same two outputs plus a sanitized manifest; arbitrary log/file inclusion is not permitted by this design.
 8. **CLI:** validates arguments before collecting, previews without writing by default, asks for explicit export acceptance, and never overwrites an existing file. File I/O belongs to the CLI, not the collector/core.
@@ -31,6 +31,18 @@ Future GUI ──────> same collector and core interfaces
 Each WMI query reports expected permission/provider/COM failures independently. Missing values, ambiguous driver matches, unrecognized PCI identity, and invalid dates remain explicit. A failed query discards any partially enumerated rows; successful independent collectors survive. `CollectorRun` summarizes completeness, while individual fields carry specific reasons.
 
 Managed WMI objects are disposed. Queries use 10-second connection/enumeration timeout settings and cap output at 128 rows per query. These settings are **not a hard overall deadline**: synchronous COM/provider calls can still hang, and the four queries do not form an atomic hardware snapshot. Ctrl+C can stop the CLI. A future hardened collector may use a bounded worker process, only if failure testing justifies it; no persistent service is proposed.
+
+## M2 topology semantics
+
+For each distinct source/target LUID, `DISPLAYCONFIG_ADAPTER_NAME` returns an interface path. `SetupDiOpenDeviceInterfaceW` and the documented device-info-only `SetupDiGetDeviceInterfaceDetailW` query resolve its devnode; `SetupDiGetDeviceInstanceIdW` reads its instance ID. Unique ordinal case-insensitive equality with WMI controller instance IDs gives `exactSetupApiInstanceId` evidence and `exact` confidence. Zero/multiple matches remain unmatched/ambiguous. Confidence describes this identity join only, not health, chronology, or rendering. No path parsing, PCI-only/name/order join, or DXGI fallback is used. A SafeHandle disposes SetupAPI information sets.
+
+Domain/export references use per-report GPU/path/source/target/adapter/clone labels. Source and target adapters can differ. Inventory retains adapters without active paths; this does not establish their workload or power state.
+
+Queries allow at most three sizing/query attempts, cap counts at 128 paths/512 modes, validate returned counts, and record recovered races. Mode lookups require matching type, LUID, and endpoint ID. Name/bridge failures preserve other path facts. Availability is separate from path-active state. Generic errors stay generic. `CollectionIssue` records operation/reason and an actual numeric error when available, with no raw strings. Display failures do not erase WMI results.
+
+Windows 10 enables virtual-mode awareness; Windows 11 build 22000+ also enables virtual-refresh awareness. Earlier API contexts select active paths only; older OS/.NET support is not claimed. Invalid-parameter errors are reported rather than hidden by fallback. Virtual-aware paths use packed 16-bit indexes; others use full 32-bit indexes. Path refresh and signal VSync remain separate rationals, accompanied by query mode and the Windows 11 boost flag. No FPS, VRR activity, or GPU workload is inferred. The desktop-image union is laid out but not exported.
+
+Paths/modes come from one successful query. Names and SetupAPI/WMI identity data are separate reads that can race with hot-plug; the report is not globally atomic. Inactive/HMD-specific paths, proprietary mode state, and setters are outside M2.
 
 ## Vendor extension seam
 

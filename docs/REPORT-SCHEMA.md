@@ -1,52 +1,57 @@
-# Report schema 0.1.0
+# Report schema 0.2.0
 
-The C# model is in `src/WinGPUDoctor.Core/Model.cs`. The export contract is [report-0.1.0.schema.json](../schemas/report-0.1.0.schema.json), JSON Schema draft 2020-12. Examples in `examples/` are synthetic. M1 does not offer arbitrary report import; schema validation is not a sanitization mechanism.
+The model is in `src/WinGPUDoctor.Core/Model.cs`; the export contract is [report-0.2.0.schema.json](../schemas/report-0.2.0.schema.json), draft 2020-12. Schema 0.1.0 is retained as the M1 historical contract. M2 changes the previously reserved display shape and adds collection diagnostics; readers must check the version. M1 observation semantics and test cases are preserved. There is no arbitrary report import feature, and schema validation is not sanitization.
 
-## Envelope
+## Envelope and observations
+
+`schemaVersion`, `toolVersion`, and `collectedOnUtc` describe format/tool/date. `facts` holds source observations; `findings` holds derived rules and evidence paths; `warnings` uses stable codes; `collection` records source completion; `privacy` records policy version and removed-field count. No raw provider object or correlation identifier is part of this envelope.
+
+Each observation has `state`, `value`, `source`, and `reason`:
+
+| State | Meaning |
+|---|---|
+| `available` | Non-null value and reason `none`; an empty array is a successfully empty inventory |
+| `unknown` | Value not established; null plus reason such as missing name or unmatched identity |
+| `unsupported` | Feature/API unsupported or deliberately unimplemented; null plus reason |
+| `failed` | Attempted collection failed; null plus a safe reason |
+| `redacted` | Privacy policy removed the value; null plus `sensitiveValue` |
+
+A failed inventory is never an available empty list. Numeric values remain directly reported facts, with calendar-date/PCI normalization documented in the collectors. No uncertain field receives a guessed substitute. Findings remain the two conservative M1 inventory rules; topology adds observations and warnings without new mode/health verdicts.
+
+## Active display path model
+
+`facts.displays` is an observation containing one entry per returned active path, not a flat inventory of all physical monitors.
 
 | Field | Meaning |
 |---|---|
-| `schemaVersion` | Exact schema contract version; currently `0.1.0` |
-| `toolVersion` | Diagnostic tool version; independent of Windows and schema versions |
-| `collectedOnUtc` | UTC calendar date only; not a precise timestamp |
-| `facts` | Source observations: system, GPU inventory, reserved display inventory |
-| `findings` | Derived rule results: stable rule ID, severity, message, evidence paths |
-| `warnings` | Stable warning codes; explanation catalog in `ReportWriter.WarningText` |
-| `collection` | Per-source completion status and safe reason code; no exception strings |
-| `privacy` | Policy version and number of removed fields |
+| `id` | Per-report path label (`display-1`, etc.) |
+| `sourceId`, `targetId` | Neutral endpoint labels; shared source IDs preserve clone relationships |
+| `sourceAdapterId`, `targetAdapterId` | Per-report CCD adapter keys; can differ; not GPU inventory indexes |
+| `sourceAdapter`, `targetAdapter` | Independent observations of an exact inventory match or unavailable state |
+| `sourceGdiName` | Dedicated allowlisted GDI alias, such as `\\.\DISPLAY1`; not a panel-location inference |
+| `name` | Filtered monitor friendly name; missing names remain unknown |
+| `outputTechnology` | Connector enum label from CCD; an unrecognized enum stays unknown |
+| `sourceResolution` | Source mode width/height in pixels; not a claim about native panel or signal dimensions |
+| `pathRefreshRate` | Exact numerator/denominator from the path; meaning accompanied by query mode |
+| `signalRefreshRate` | Exact target-signal vertical-sync numerator/denominator, kept separately |
+| `rotation`, `scanLineOrdering` | Target enum observations; unknown values remain explicit |
+| `pathActive`, `targetAvailable` | Separate reported flags; an active path can transiently have an unavailable target |
+| `refreshRateBoost` | Windows 11 reported boost flag; unsupported when not queried with virtual-refresh awareness |
+| `cloneGroupId` | Neutral clone-group fallback when reported and source mode is absent; otherwise unknown, not a “no cloning” verdict |
+| `queryMode` | `activePaths`, `virtualModeAware`, or `virtualModeAndRefreshAware` |
 
-“Raw collected facts” means directly observed, allowlisted facts with normalization documented; it never means a raw WMI dump. Internal temporary join identifiers are outside this model. Normalizations include PCI hex extraction, provider date to ISO calendar date, safe trimming, and privacy removal. Findings are separate interpretations, never replacements for facts.
+An available adapter match contains a regenerated `gpuId`, `evidence: exactSetupApiInstanceId`, and `confidence: exact`. This means one complete case-insensitive SetupAPI/WMI instance-ID equality match. It does not certify actual rendering, chronology, physical port wiring, health, or hardware type. Unmatched/ambiguous joins retain their CCD adapter label and never borrow a GPU name by order or PCI type. No raw LUID, native source/target ID, interface path, PnP path, or EDID identifier is exported.
 
-## Observation contract
+Refresh ratios are not rounded in JSON. Markdown adds a rounded human-readable Hz value and retains the ratio. With Windows 11 virtual-refresh awareness, the path value and physical target signal can differ. These fields do not measure FPS, GPU activity, or instantaneous variable refresh. Scan-line ordering is retained so an interlaced signal is not silently treated as progressive.
 
-```json
-{"state":"available","value":"32.0.15.1234","source":"wmiSignedDriver","reason":"none"}
-```
+## Collection metadata
 
-```json
-{"state":"unknown","value":null,"source":"wmiSignedDriver","reason":"noMatchingDriver"}
-```
+Each source result has `status`, `reason`, `attempts`, `queryMode`, and `issues`. Each issue contains a fixed `operation`, safe `reason`, and an actual integer `nativeErrorCode` when available; otherwise that optional error metadata is null. No exception strings or device-specific paths are permitted. WMI uses `notQueried` for display query mode.
 
-| State | Contract |
-|---|---|
-| `available` | Non-null observed value and reason `none`; an empty array is a successful empty inventory |
-| `unknown` | Query succeeded but a value could not be established; null plus specific reason |
-| `unsupported` | Feature/API not implemented or supported in this context; null plus reason |
-| `failed` | Attempted collection failed; null plus safe reason |
-| `redacted` | Privacy policy removed an observed value; null plus `sensitiveValue` |
+An insufficient-buffer race is retried at most three times. Recovered races remain recorded while a final complete query can succeed. Exhaustion is `failed/topologyChanged`. Access denial records a session/access limitation; unsupported APIs remain unsupported; generic errors remain generic. Names, modes, adapter resolution, and target availability can make a result partial while other path data remains usable. Missing optional clone-group data alone is not treated as partial.
 
-Null alone has no meaning; always inspect `state`, `source`, and `reason`. Sources are fixed enum values, not provider-controlled strings. A GPU's provider/version/date each has its own observation. PCI IDs are type codes, not unique device identities. Non-PCI inventory entries remain visible with `nonPciDevice` for those fields. Driver matches never fall back to a different adapter by name/order.
+## Export and compatibility
 
-`collection.status` is `succeeded`, `partial`, `failed`, or `unsupported`. A successful query with missing required values is partial; the source-level reason summarizes missing data, while field reasons retain specifics such as `ambiguousDriver`. A failed inventory is not represented as an available empty array. Classification and display collection are explicitly unsupported in M1. Driver collection is omitted from metadata if no GPUs were returned or GPU collection failed, because it was not attempted.
+Both formats use the same privacy-projected snapshot. Schema/tool/privacy versions are 0.2.0/0.2.0-poc/0.2. The schema forbids undeclared fields. Topology keys are regenerated and references remapped before writing, while GDI aliases and connector/rotation/scan-line strings have field-specific allowlists. Preview remains necessary for arbitrary OEM/monitor descriptions.
 
-## Findings, warnings, and completeness
-
-M1 rules are `inventory.multiple-adapters` and `inventory.empty`, with severity `information` and evidence `facts.gpus`. Neither determines health, actual rendering, routing, power, or hybrid mode. No findings does not mean the system is healthy. Warnings separately state collection limitations, source limitations, privacy review, and redaction.
-
-Both outputs come from the same privacy-projected snapshot. Markdown displays every implemented fact with provenance and unavailable state/reason, then findings, warnings, collection outcomes, and privacy counts. JSON exposes the same information structurally. Enum naming is camelCase in JSON; Markdown displays enum labels for readability.
-
-## Extension and compatibility
-
-`DisplayFacts` and rational `DisplayMode` reserve room for the next spike, but M1 strips incoming display payloads and exports `unsupported`. The future native model will likely need separate source/target mode semantics and path relationships; refine/version that portion after evidence rather than claiming it is complete now. No native LUID, monitor path, or serial belongs in the public schema.
-
-Increment the schema version when the contract changes; pre-1.0 readers must not assume unknown fields or enum additions are safe. Schema forbids undeclared fields. Future ZIP export should package the same `report.json`, `report.md`, and a minimal versioned manifest with relative allowlisted filenames. ZIP is a transport wrapper, not a new collection model or license to include raw logs.
+The future ZIP design remains a wrapper for sanitized JSON/Markdown plus a minimal reviewed manifest. No ZIP implementation or raw-log inclusion was added in M2.

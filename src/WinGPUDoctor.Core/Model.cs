@@ -3,10 +3,11 @@ using System.Text.Json.Serialization;
 namespace WinGPUDoctor.Core;
 
 public enum DataState { Available, Unknown, Unsupported, Failed, Redacted }
-public enum DataSource { WmiOperatingSystem, WmiComputerSystem, WmiVideoController, WmiSignedDriver, DisplayConfig, NotCollected }
-public enum ReasonCode { None, MissingValue, NotImplemented, NonPciDevice, InvalidValue, NoMatchingDriver, AmbiguousDriver, AccessDenied, ProviderUnavailable, Timeout, QueryFailed, SensitiveValue }
+public enum DataSource { WmiOperatingSystem, WmiComputerSystem, WmiVideoController, WmiSignedDriver, DisplayConfig, NotCollected, SetupApiInstanceJoin }
+public enum ReasonCode { None, MissingValue, NotImplemented, NonPciDevice, InvalidValue, NoMatchingDriver, AmbiguousDriver, AccessDenied, ProviderUnavailable, Timeout, QueryFailed, SensitiveValue,
+    ApiUnavailable, NotSupported, SessionAccessDenied, TopologyChanged, NativeError, UnmatchedAdapter, AmbiguousAdapter, InvalidModeIndex, TargetUnavailable, InactivePathSkipped, ResourceLimit, InteropLayoutUnsupported }
 public enum CollectorStatus { Succeeded, Partial, Failed, Unsupported }
-public enum WarningCode { InventoryOnly, ProviderReportedValues, TopologyNotCollected, ReviewBeforeSharing, CollectionIncomplete, ValuesRedacted }
+public enum WarningCode { InventoryOnly, ProviderReportedValues, TopologyNotCollected, ReviewBeforeSharing, CollectionIncomplete, ValuesRedacted, TopologyIsNotRendering }
 
 // Observed values carry provenance. Unavailable values never use a guessed substitute.
 public sealed record Observation<T> where T : class
@@ -35,13 +36,32 @@ public sealed record SystemFacts(Observation<string> WindowsVersion, Observation
 public sealed record DriverFacts(Observation<string> Provider, Observation<string> Version, Observation<string> Date);
 public sealed record GpuFacts(string Id, Observation<string> Name, Observation<string> PciVendorId,
     Observation<string> PciDeviceId, Observation<string> Classification, DriverFacts Driver);
-// Reserved shape for the next spike; rational refresh avoids rounding 60000/1001 to 60.
-public sealed record DisplayMode(int WidthPixels, int HeightPixels, uint RefreshNumerator, uint RefreshDenominator);
-public sealed record DisplayFacts(string Id, Observation<string> Name, Observation<string> AdapterId,
-    Observation<DisplayMode> Mode);
+public sealed record PixelSize(uint WidthPixels, uint HeightPixels);
+public sealed record RationalRate(uint Numerator, uint Denominator);
+public sealed record FlagValue(bool Enabled);
+public enum AdapterMatchEvidence { ExactSetupApiInstanceId }
+public enum AdapterMatchConfidence { Exact }
+public sealed record AdapterMatch(string GpuId, AdapterMatchEvidence Evidence, AdapterMatchConfidence Confidence);
+public enum DisplayQueryMode { NotQueried, ActivePaths, VirtualModeAware, VirtualModeAndRefreshAware }
+// One entry per active path. Shared SourceId or TargetId preserves relationships; labels are report-local.
+public sealed record DisplayFacts(string Id, string SourceId, string TargetId, string SourceAdapterId, string TargetAdapterId,
+    Observation<AdapterMatch> SourceAdapter, Observation<AdapterMatch> TargetAdapter,
+    Observation<string> SourceGdiName, Observation<string> Name, Observation<string> OutputTechnology,
+    Observation<PixelSize> SourceResolution, Observation<RationalRate> PathRefreshRate, Observation<RationalRate> SignalRefreshRate,
+    Observation<string> Rotation, Observation<string> ScanLineOrdering, bool PathActive, bool TargetAvailable,
+    Observation<FlagValue> RefreshRateBoost, Observation<string> CloneGroupId, DisplayQueryMode QueryMode);
 public sealed record CollectedFacts(SystemFacts System, Observation<IReadOnlyList<GpuFacts>> Gpus,
     Observation<IReadOnlyList<DisplayFacts>> Displays);
-public sealed record CollectorRun(DataSource Source, CollectorStatus Status, ReasonCode Reason);
+public enum CollectionOperation { QueryPaths, SourceName, TargetName, AdapterName, ResolveAdapter, DecodeMode, ValidatePath }
+public sealed record CollectionIssue(CollectionOperation Operation, ReasonCode Reason, int? NativeErrorCode);
+public sealed record CollectorRun(DataSource Source, CollectorStatus Status, ReasonCode Reason)
+{
+    public int Attempts { get; init; } = 1;
+    public DisplayQueryMode QueryMode { get; init; } = DisplayQueryMode.NotQueried;
+    public IReadOnlyList<CollectionIssue> Issues { get; init; } = [];
+    public bool IsIncomplete() => Status is CollectorStatus.Partial or CollectorStatus.Failed ||
+        Status == CollectorStatus.Unsupported && Reason != ReasonCode.NotImplemented;
+}
 public sealed record CollectionSnapshot(CollectedFacts Facts, IReadOnlyList<CollectorRun> Collection);
 public sealed record DiagnosticFinding(string Id, string Severity, string Message, IReadOnlyList<string> Evidence);
 public sealed record PrivacySummary(string PolicyVersion, int RedactedFields);

@@ -39,7 +39,7 @@ $null=Invoke-CheckedCli @('--format','xml') @(2);$checks.Add('invalid format rej
 $null=Invoke-CheckedCli @('--yes') @(2);$checks.Add('unscoped --yes rejected: PASS')
 $null=Invoke-CheckedCli @('--output','\\example.invalid\share\report.json','--yes') @(2);$checks.Add('UNC path rejected before collection: PASS')
 $preview=Invoke-CheckedCli @('--format','json') @(0,3)
-if(!(Test-Json -Json $preview.Out -SchemaFile (Join-Path $projectRoot 'schemas\report-0.1.0.schema.json'))){throw 'JSON stdout is not a valid report.'}
+if(!(Test-Json -Json $preview.Out -SchemaFile (Join-Path $projectRoot 'schemas\report-0.2.0.schema.json'))){throw 'JSON stdout is not a valid report.'}
 if(@(Get-ChildItem -LiteralPath $checkDir -Force).Count -ne 0){throw 'Default preview unexpectedly created files.'}
 $checks.Add('JSON preview schema and no file creation: PASS')
 $declined=Join-Path $checkDir 'declined.json'

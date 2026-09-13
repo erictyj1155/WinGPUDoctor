@@ -100,4 +100,22 @@ public class CollectorTests
             Assert.DoesNotContain(forbidden, properties);
         Assert.Equal("DeviceClass = 'DISPLAY'", WmiReader.Definition(WmiQuery.DisplayDrivers).Filter);
     }
+
+    [Fact] public void InjectedDisplayFailurePreservesRealCollectorComposition()
+    {
+        var api = TopologyTests.Single(); api.SizeError = 5;
+        var result = new WindowsCollector(new FakeReader(), new DisplayTopologyCollector(api, api, DisplayQueryMode.VirtualModeAndRefreshAware)).Collect();
+        Assert.Equal(DataState.Available, result.Facts.Gpus.State);
+        Assert.Equal(DataState.Available, result.Facts.System.WindowsBuild.State);
+        Assert.Equal(ReasonCode.SessionAccessDenied, result.Facts.Displays.Reason);
+    }
+    [Fact] public void FailedWmiInventoryDoesNotStopActivePathCollection()
+    {
+        var api = TopologyTests.Single(); var wmi = new FakeReader();
+        wmi.Results[WmiQuery.VideoControllers] = new(DataState.Failed, [], ReasonCode.AccessDenied);
+        var result = new WindowsCollector(wmi, new DisplayTopologyCollector(api, api, DisplayQueryMode.VirtualModeAndRefreshAware)).Collect();
+        Assert.Equal(DataState.Available, result.Facts.Displays.State);
+        Assert.Equal(ReasonCode.UnmatchedAdapter, result.Facts.Displays.Value![0].SourceAdapter.Reason);
+        Assert.Equal(DataState.Failed, result.Facts.Gpus.State);
+    }
 }

@@ -1,35 +1,38 @@
 # Roadmap
 
-## Milestone 1 — foundation and feasibility
+## Milestone 1 — complete
 
-- [x] Document Windows API choices and limitations.
-- [x] Separate core, Windows collector, and CLI.
-- [x] Model facts, interpretations, warnings, unavailable states, and collection outcomes.
-- [x] Privacy projection, JSON/Markdown, preview and explicit export.
-- [x] Small WMI inventory proof of concept and synthetic tests.
-- [x] Record local validation evidence and remaining gaps.
+Read-only WMI inventory, core/Windows/CLI boundaries, JSON/Markdown, privacy projection and preview/export, MIT foundation, schema, tests, and decision records. The verified baseline is preserved before M2; see `docs/VALIDATION.md`.
 
-## Recommended Milestone 2 — active display topology spike only
+## Milestone 2 — active topology
 
-Implement a read-only `GetDisplayConfigBufferSizes` / `QueryDisplayConfig` / `DisplayConfigGetDeviceInfo` collector, plus the minimum DXGI enumeration necessary to associate adapters by LUID. Do not add a GUI, vendor modules, activity monitoring, MUX detection claims, or fixes.
+- [x] DisplayConfig active paths with distinct source/target and adapter relationships.
+- [x] Exact SetupAPI instance-ID bridge to WMI inventory; unmatched/ambiguous states.
+- [x] Source dimensions, separate rational path/signal rates, rotation, connector and availability.
+- [x] Bounded query races, validated native unions/layouts/indexes, per-field failures.
+- [x] Neutral labels and privacy checks excluding raw correlation IDs from both exports.
+- [x] Retained M1 tests plus deterministic topology cases and non-admin local validation.
+- [x] Schema 0.2.0, updated documentation and durable interop/correlation decision.
 
-Acceptance criteria:
+M2 does not determine application rendering GPU, utilization/power, MUX position, hybrid mode, or Optimus. Local hardware validation covers this machine in its unchanged current configuration only. Synthetic clone/multi-monitor tests are not physical compatibility evidence.
 
-1. Enumerate active desktop display paths; preserve clone relationships and source/target distinctions.
-2. Report pixel dimensions and rational configured refresh with explicit virtual/physical mode semantics; label unsupported cases.
-3. Map native adapter identities in memory to report-local IDs. Never export monitor device paths, EDID serials, or raw LUIDs. Do not join different adapters solely on PCI vendor/device IDs.
-4. Bound retries after hot-plug buffer changes, validate native struct sizes/mode indexes, and preserve partial API failures.
-5. Return explicit unavailable states for inaccessible console sessions, unsupported drivers, and disappearing adapters. Do not suggest elevation as a universal workaround for RDP.
-6. Test deterministic interop parsing and race/failure paths. Conduct opt-in standard-user hardware checks on at least an internal-panel hybrid laptop and an external display setup; log which cases remain untested.
-7. Explain **display scan-out routing** separately from the adapter rendering an application. No claims about electrical MUX position or dGPU sleep from topology alone.
+## Milestone 3 scope — single-laptop validation and hardening (not started)
 
-## Later, evidence-gated
+Do not begin automatically; see `STATUS.md` for the current checkpoint. The owner has only the laptop/internal display and no external monitor, TV, or second display. Do not wait for unavailable hardware or require physical Extend/Duplicate/clone/hot-plug tests to complete this milestone.
 
-- SetupAPI present-device inventory and driver-property comparison, including disabled/disconnected adapters.
-- Classification spike using documented D3DKMT hybrid flags and/or D3D12 UMA evidence; conflicting and absent evidence remains unknown.
-- Explicit user-triggered before/after snapshots; no background monitor by default.
-- Vendor-specific read-only capabilities only when standard APIs leave a concrete diagnostic gap; assess redistribution terms and wake-up effects first.
-- Harden collection cancellation if provider-hang evidence requires a worker process.
-- Privacy-reviewed ZIP support bundle, then a separate GUI decision.
+When authorized to execute M3:
 
-Automatic remediation, BIOS/MUX/driver/service/registry/power-plan changes, telemetry, AI features, and generic optimization are outside this roadmap's current authorization.
+- Repeatedly collect on the current unchanged internal-display configuration. Check stable active-path count, adapter correlation, resolution/refresh, absence of stale state, privacy, and non-administrator operation.
+- Review the severity of missing optional monitor friendly names. Current M2 behavior is partial/exit `3`; do not describe the review as a completed correction. Preserve explicit unknown values and distinguish optional metadata absence from substantive collection failures.
+- Harden the existing model/collector where evidence supports a change. Inspect current fixtures before adding missing deterministic synthetic cases for multiple displays, clone/extend, unmatched/ambiguous adapters, topology changes/retries, and partial failures.
+- Record physical observations separately from synthetic compatibility tests in `docs/VALIDATION.md`. Do not claim real hardware validation from mocked responses.
+
+Do not change graphics modes, MUX/BIOS state, drivers, or power settings. The existing external-display/remote-session manual checklist remains optional future coverage when hardware/session access becomes available, not a completion gate for this single-laptop milestone.
+
+Do not add new data sources, DXGI, classification, vendor APIs, monitoring, GUI, or remediation in this validation milestone unless a specific failure requires a separately reviewed scope decision.
+
+## Later, separately authorized
+
+Potential work includes SetupAPI/WMI inventory comparison, hard collection cancellation, privacy-reviewed ZIP packaging, and a separate GUI decision. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised.
+
+BIOS/MUX/driver/service/registry/power-plan changes, telemetry, AI features, automatic fixes, and generic optimization remain outside current scope.

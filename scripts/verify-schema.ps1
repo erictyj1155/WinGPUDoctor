@@ -1,7 +1,7 @@
 # Deterministic validation of synthetic reports only. Requires PowerShell 7.
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path $PSScriptRoot -Parent
-$schema=Join-Path $projectRoot 'schemas\report-0.1.0.schema.json'
+$schema=Join-Path $projectRoot 'schemas\report-0.2.0.schema.json'
 $json=Get-Content -LiteralPath (Join-Path $projectRoot 'examples\report.example.json') -Raw
 if(!(Test-Json -Json $json -SchemaFile $schema)){throw 'Synthetic example does not match report schema.'}
 $invalid=$json | ConvertFrom-Json -AsHashtable

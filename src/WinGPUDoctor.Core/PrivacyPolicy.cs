@@ -40,14 +40,13 @@ public static class PrivacyPolicy
                 $"gpu-{i + 1}", Clean(g.Name), Clean(g.PciVendorId, hex), Clean(g.PciDeviceId, hex),
                 Observation<string>.Absent(DataState.Unsupported, DataSource.NotCollected, ReasonCode.NotImplemented),
                 new(Clean(g.Driver.Provider), Clean(g.Driver.Version, version), Clean(g.Driver.Date, @"\A\d{4}-\d{2}-\d{2}\z")))).ToArray(), gpus.Source);
-        // M1 never exports display strings or identifiers. Enabling this requires a privacy review.
-        var displays = Observation<IReadOnlyList<DisplayFacts>>.Absent(DataState.Unsupported, DataSource.NotCollected, ReasonCode.NotImplemented);
+        var displays = TopologyPrivacy.Project(snapshot.Facts, Clean);
         var facts = new CollectedFacts(system, gpus, displays);
         var warnings = new List<WarningCode> { WarningCode.InventoryOnly, WarningCode.ProviderReportedValues,
-            WarningCode.TopologyNotCollected, WarningCode.ReviewBeforeSharing };
-        if (snapshot.Collection.Any(c => c.Status is CollectorStatus.Failed or CollectorStatus.Partial)) warnings.Add(WarningCode.CollectionIncomplete);
+            displays.State == DataState.Available ? WarningCode.TopologyIsNotRendering : WarningCode.TopologyNotCollected, WarningCode.ReviewBeforeSharing };
+        if (snapshot.Collection.Any(c => c.IsIncomplete())) warnings.Add(WarningCode.CollectionIncomplete);
         if (removed > 0) warnings.Add(WarningCode.ValuesRedacted);
-        return new(new("0.1.0", "0.1.0-poc", collectedOnUtc, facts, DiagnosticRules.Evaluate(facts),
-            warnings.ToArray(), snapshot.Collection.ToArray(), new("0.1", removed)));
+        return new(new("0.2.0", "0.2.0-poc", collectedOnUtc, facts, DiagnosticRules.Evaluate(facts),
+            warnings.ToArray(), snapshot.Collection.Select(c => c with { Issues = c.Issues.ToArray() }).ToArray(), new("0.2", removed)));
     }
 }

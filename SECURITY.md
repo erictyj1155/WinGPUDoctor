@@ -11,6 +11,7 @@ A private security reporting channel has not yet been configured because this re
 - Local fixed read queries; no arbitrary WQL, remote machine parameter, remediation commands, or extra privileges.
 - `asInvoker` executable; no elevation prompts or administrator-only features.
 - WMI/native strings are untrusted. Report allowlist and whole-field redaction precede all export; no raw exception output.
+- DisplayConfig and SetupAPI interop is isolated, read-only, and size/offset tested. Temporary device-information sets use SafeHandle disposal. Raw device identifiers never enter the report model; bounded array sizing/retries and explicit matching failures avoid fallback guesses.
 - No app network client, telemetry, automatic updates, service, or dynamic vendor DLL loader.
 - File export is explicit and create-new only. A failed write may leave a new partial file; existing files remain intact. Trusted destination selection remains the user's responsibility.
 - Dependencies are versioned/locked; CI uses read-only repository permissions and does not attach live hardware reports. GitHub-hosted CI has not run until the repository is published.

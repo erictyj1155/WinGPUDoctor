@@ -2,17 +2,21 @@
 
 **Read → Explain → Report.** An early, read-only Windows GPU/display diagnostics project, separate from any university or research work.
 
-Milestone 1 is an architectural foundation and a small CLI proof of concept, **not a finished troubleshooting application**. It reports what a Windows provider returns; it does not certify GPU health.
+Milestones 1 and 2 provide a small CLI for inventory and **active display paths**, not a finished troubleshooting application. It reports Windows observations; it does not certify GPU health.
 
 ## Implemented
 
 - Windows numeric version/build and firmware-reported computer manufacturer/model.
 - WMI-reported video controllers, PCI vendor/device type IDs when recognizable, and matched driver provider/version/date.
+- Active DisplayConfig paths with separate source/target adapters, source resolution, rational path/signal refresh, connector type, rotation, and availability.
+- Exact DisplayConfig → SetupAPI device-instance → WMI inventory correlation; unmatched/ambiguous cases remain explicit. Clone/extended relationships use per-report source/target labels.
 - Explicit available, unknown, unsupported, failed, and redacted field states with provenance.
 - Sanitized JSON and Markdown, console preview, and opt-in local file export without overwriting existing files.
 - Deterministic tests using synthetic data; separate manual hardware checks.
 
-Display enumeration/topology, iGPU/dGPU classification, application GPU use, idle-power diagnosis, vendor APIs, and a GUI are **not implemented**. Two reported adapters do not prove hybrid mode. No automatic fixes, telemetry, network client, background service, registry writes, driver operations, or elevation requests are implemented.
+Topology does not establish application GPU use, GPU utilization/power, MUX state, or Optimus/Advanced Optimus. iGPU/dGPU classification, inactive-display enumeration, vendor APIs, and a GUI remain unimplemented. No automatic fixes, telemetry, network client, background service, configuration writes, or elevation requests are implemented.
+
+The local M2 check found one internal path at 2560 × 1600 and approximately 165 Hz mapped to Intel Graphics. Windows returned no monitor friendly name; that field remained unknown with partial-collection exit `3`. This describes that run only, not a persistent mode or broad compatibility claim.
 
 ## Build and run
 
@@ -39,7 +43,7 @@ dotnet src/WinGPUDoctor.Cli/bin/Release/net10.0-windows/wingpudoctor.dll --forma
 
 `--output` shows a Markdown preview on stderr and asks you to type `EXPORT`. It saves that same snapshot without recollecting. In deliberate automation, `--yes` with `--output` accepts export without the prompt; preview still goes to stderr. Existing files are never overwritten. The parent directory must exist. Direct UNC/device paths, alternate data streams, and non-fixed drives are rejected. See [privacy](PRIVACY.md) for indirect/cloud folder limitations.
 
-Exit codes: `0` collection completed; `2` invalid arguments/platform/destination; `3` incomplete collection; `4` export declined; `5` export failed. A partial report can still be previewed or explicitly saved with exit code `3`. Deferred display collection alone does not count as a failed M1 run.
+Exit codes: `0` collection completed; `2` invalid arguments/platform/destination; `3` incomplete collection; `4` export declined; `5` export failed. A partial report can still be previewed or saved with exit code `3`. Missing names can make collection partial without invalidating available path/adapter facts. Attempted but unsupported topology is also incomplete; intentionally deferred features do not cause failure by themselves.
 
 For this initial workspace, a SHA512-verified portable SDK is in ignored `.tools/dotnet`. The supplied scripts require PowerShell 7. `scripts/dev.ps1` uses the portable SDK when present, otherwise the installed SDK; it keeps SDK state/package cache under `.tools` and disables telemetry and certificate generation. This folder is a local development convenience, not part of the distributed app.
 
@@ -50,10 +54,12 @@ For this initial workspace, a SHA512-verified portable SDK is in ignored `.tools
 
 ## Project map
 
+For any new contributor or coding agent, start with [AGENTS.md](AGENTS.md) → [STATUS.md](STATUS.md) → actual Git status/diff/history → relevant code/tests. These repository records support handoff across models and providers without conversation memory. After authorized work and verification, update the current status if it changed; keep dated evidence in the existing validation record.
+
 ```text
 src/
   WinGPUDoctor.Core/       Facts, states, rules, privacy boundary, JSON/Markdown
-  WinGPUDoctor.Windows/    Fixed local WMI queries and normalization
+  WinGPUDoctor.Windows/    Local WMI, isolated DisplayConfig/SetupAPI, matching
   WinGPUDoctor.Cli/        Arguments, preview, explicit local export
 tests/WinGPUDoctor.Tests/  Synthetic unit and collector-contract tests
 docs/                     Feasibility, schema guide, decisions, validation
@@ -65,4 +71,4 @@ scripts/                  Development and opt-in hardware checks
 
 Start with [API feasibility](docs/API-FEASIBILITY.md), [architecture](ARCHITECTURE.md), [report schema](docs/REPORT-SCHEMA.md), and [validation evidence](docs/VALIDATION.md). Decisions are recorded in [ADRs](docs/decisions/README.md). See [roadmap](ROADMAP.md), [contributing](CONTRIBUTING.md), and [security](SECURITY.md).
 
-MIT licensed. No GitHub repository has been created or published by this local milestone.
+MIT licensed. See [STATUS.md](STATUS.md) for the current Git/commit state and handoff, and [validation evidence](docs/VALIDATION.md) for the preserved M1 baseline and review commands. Follow the owner's existing commit policy; do not invent Git identity or publish automatically.

@@ -8,3 +8,4 @@ Accepted on 2026-09-10. Revisit only with new requirements or evidence; record a
 | [0002](0002-inventory-before-topology.md) | WMI inventory now, DisplayConfig/DXGI topology spike next |
 | [0003](0003-report-and-privacy-boundary.md) | Explicit states and typed privacy projection before every export |
 | [0004](0004-open-source-foundation.md) | MIT; local repository first; no publishing or telemetry |
+| [0005](0005-active-topology-and-instance-correlation.md) | Active DisplayConfig paths, exact SetupAPI bridge, no DXGI dependency, schema 0.2 |

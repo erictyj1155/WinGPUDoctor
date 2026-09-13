@@ -43,7 +43,7 @@ public class ModelAndPrivacyTests
     {
         var json = ReportWriter.Json(PrivacyPolicy.Prepare(Sample(count: 2), new(2026, 9, 10)));
         var report = JsonSerializer.Deserialize<DiagnosticReport>(json, ReportWriter.JsonOptions)!;
-        Assert.Equal("0.1.0", report.SchemaVersion);
+        Assert.Equal("0.2.0", report.SchemaVersion);
         Assert.Equal(2, report.Facts.Gpus.Value!.Count);
         Assert.Equal(DataState.Unsupported, report.Facts.Displays.State);
         Assert.Single(report.Findings);

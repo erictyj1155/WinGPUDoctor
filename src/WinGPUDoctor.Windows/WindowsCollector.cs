@@ -4,8 +4,14 @@ using WinGPUDoctor.Core;
 
 namespace WinGPUDoctor.Windows;
 
-public sealed class WindowsCollector(IWmiReader reader) : IDiagnosticCollector
+public sealed class WindowsCollector : IDiagnosticCollector
 {
+    private readonly IWmiReader reader;
+    private readonly DisplayTopologyCollector? topology;
+    public WindowsCollector(IWmiReader reader) : this(reader, null) { }
+    internal WindowsCollector(IWmiReader reader, DisplayTopologyCollector? topology) { this.reader = reader; this.topology = topology; }
+    public static WindowsCollector CreateLocal() => new(new WmiReader(),
+        new DisplayTopologyCollector(new DisplayConfigApi(), new SetupApiAdapterResolver(), DisplayTopologyCollector.CurrentQueryMode));
     private static Observation<string> Missing(DataSource source, ReasonCode reason = ReasonCode.MissingValue) =>
         Observation<string>.Absent(DataState.Unknown, source, reason);
     private static Observation<string> Text(WmiRow row, string name, DataSource source) =>
@@ -82,7 +88,9 @@ public sealed class WindowsCollector(IWmiReader reader) : IDiagnosticCollector
         var gpus = video.State == DataState.Available
             ? Observation<IReadOnlyList<GpuFacts>>.Known(gpuList.ToArray(), DataSource.WmiVideoController)
             : Observation<IReadOnlyList<GpuFacts>>.Absent(video.State, DataSource.WmiVideoController, video.Reason);
-        var displays = Observation<IReadOnlyList<DisplayFacts>>.Absent(DataState.Unsupported, DataSource.NotCollected, ReasonCode.NotImplemented);
+        var identities = video.State == DataState.Available ? video.Rows.Select((r, i) => new GpuCorrelationIdentity(gpuList[i].Id, r.Get("PNPDeviceID"))).ToArray() : [];
+        var displayResult = topology?.Collect(identities);
+        var displays = displayResult?.Displays ?? Observation<IReadOnlyList<DisplayFacts>>.Absent(DataState.Unsupported, DataSource.NotCollected, ReasonCode.NotImplemented);
         static CollectorRun Run(WmiResult result, DataSource source, bool partial) =>
             new(source, result.State == DataState.Available ? partial ? CollectorStatus.Partial : CollectorStatus.Succeeded : CollectorStatus.Failed,
                 result.State == DataState.Available ? partial ? ReasonCode.MissingValue : ReasonCode.None : result.Reason);
@@ -91,7 +99,7 @@ public sealed class WindowsCollector(IWmiReader reader) : IDiagnosticCollector
             Run(os, DataSource.WmiOperatingSystem, system.WindowsVersion.State != DataState.Available || system.WindowsBuild.State != DataState.Available),
             Run(machine, DataSource.WmiComputerSystem, system.Manufacturer.State != DataState.Available || system.Model.State != DataState.Available),
             Run(video, DataSource.WmiVideoController, gpuList.Any(g => g.Name.State != DataState.Available)),
-            new(DataSource.DisplayConfig, CollectorStatus.Unsupported, ReasonCode.NotImplemented)
+            displayResult?.Run ?? new(DataSource.DisplayConfig, CollectorStatus.Unsupported, ReasonCode.NotImplemented) { Attempts = 0 }
         };
         if (drivers is not null) collection.Add(Run(drivers, DataSource.WmiSignedDriver,
             gpuList.Any(g => g.Driver.Provider.State != DataState.Available || g.Driver.Version.State != DataState.Available || g.Driver.Date.State != DataState.Available)));

@@ -13,7 +13,7 @@ $destination = Join-Path $outputDir ('hardware-smoke-' + [guid]::NewGuid().ToStr
 & $sdk $cli --format json --output $destination --yes
 $collectorExit = $LASTEXITCODE
 if ($collectorExit -notin @(0,3)) { throw 'Live collector/export failed.' }
-if (!(Test-Json -LiteralPath $destination -SchemaFile (Join-Path $projectRoot 'schemas\report-0.1.0.schema.json'))) { throw 'Report schema check failed.' }
+if (!(Test-Json -LiteralPath $destination -SchemaFile (Join-Path $projectRoot 'schemas\report-0.2.0.schema.json'))) { throw 'Report schema check failed.' }
 $report = Get-Content -LiteralPath $destination -Raw | ConvertFrom-Json
 if ($report.facts.gpus.state -eq 'available') {
     # Same-provider comparison verifies plumbing, not independent hardware truth.

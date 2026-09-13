@@ -1,0 +1,714 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WinGPUDoctor diagnostic report 0.2.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "toolVersion",
+    "collectedOnUtc",
+    "facts",
+    "findings",
+    "warnings",
+    "collection",
+    "privacy"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "0.2.0"
+    },
+    "toolVersion": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "collectedOnUtc": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "facts": {
+      "$ref": "#/$defs/facts"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "inventoryOnly",
+          "providerReportedValues",
+          "topologyNotCollected",
+          "reviewBeforeSharing",
+          "collectionIncomplete",
+          "valuesRedacted",
+          "topologyIsNotRendering"
+        ]
+      }
+    },
+    "collection": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/collector"
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyVersion",
+        "redactedFields"
+      ],
+      "properties": {
+        "policyVersion": {
+          "const": "0.2"
+        },
+        "redactedFields": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "enum": [
+        "wmiOperatingSystem",
+        "wmiComputerSystem",
+        "wmiVideoController",
+        "wmiSignedDriver",
+        "displayConfig",
+        "notCollected",
+        "setupApiInstanceJoin"
+      ]
+    },
+    "reason": {
+      "enum": [
+        "none",
+        "missingValue",
+        "notImplemented",
+        "nonPciDevice",
+        "invalidValue",
+        "noMatchingDriver",
+        "ambiguousDriver",
+        "accessDenied",
+        "providerUnavailable",
+        "timeout",
+        "queryFailed",
+        "sensitiveValue",
+        "apiUnavailable",
+        "notSupported",
+        "sessionAccessDenied",
+        "topologyChanged",
+        "nativeError",
+        "unmatchedAdapter",
+        "ambiguousAdapter",
+        "invalidModeIndex",
+        "targetUnavailable",
+        "inactivePathSkipped",
+        "resourceLimit",
+        "interopLayoutUnsupported"
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "value",
+        "source",
+        "reason"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "available",
+            "unknown",
+            "unsupported",
+            "failed",
+            "redacted"
+          ]
+        },
+        "value": {},
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        }
+      },
+      "if": {
+        "properties": {
+          "state": {
+            "const": "available"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "not": {
+              "type": "null"
+            }
+          },
+          "reason": {
+            "const": "none"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "value": {
+            "type": "null"
+          },
+          "reason": {
+            "not": {
+              "const": "none"
+            }
+          }
+        }
+      }
+    },
+    "text": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/observation"
+        },
+        {
+          "properties": {
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 160
+            }
+          }
+        }
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "gpus",
+        "displays"
+      ],
+      "properties": {
+        "system": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "windowsVersion",
+            "windowsBuild",
+            "manufacturer",
+            "model"
+          ],
+          "properties": {
+            "windowsVersion": {
+              "$ref": "#/$defs/text"
+            },
+            "windowsBuild": {
+              "$ref": "#/$defs/text"
+            },
+            "manufacturer": {
+              "$ref": "#/$defs/text"
+            },
+            "model": {
+              "$ref": "#/$defs/text"
+            }
+          }
+        },
+        "gpus": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "maxItems": 128,
+                  "items": {
+                    "$ref": "#/$defs/gpu"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "displays": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "$ref": "#/$defs/display"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "gpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "pciVendorId",
+        "pciDeviceId",
+        "classification",
+        "driver"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^gpu-[1-9][0-9]*$"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "pciVendorId": {
+          "$ref": "#/$defs/text"
+        },
+        "pciDeviceId": {
+          "$ref": "#/$defs/text"
+        },
+        "classification": {
+          "$ref": "#/$defs/text"
+        },
+        "driver": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "version",
+            "date"
+          ],
+          "properties": {
+            "provider": {
+              "$ref": "#/$defs/text"
+            },
+            "version": {
+              "$ref": "#/$defs/text"
+            },
+            "date": {
+              "$ref": "#/$defs/text"
+            }
+          }
+        }
+      }
+    },
+    "display": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^display-[1-9][0-9]*$"
+        },
+        "sourceId": {
+          "type": "string",
+          "pattern": "^source-[1-9][0-9]*$"
+        },
+        "targetId": {
+          "type": "string",
+          "pattern": "^target-[1-9][0-9]*$"
+        },
+        "sourceAdapterId": {
+          "type": "string",
+          "pattern": "^adapter-[1-9][0-9]*$"
+        },
+        "targetAdapterId": {
+          "type": "string",
+          "pattern": "^adapter-[1-9][0-9]*$"
+        },
+        "sourceAdapter": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/adapterMatch"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "targetAdapter": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/adapterMatch"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "sourceGdiName": {
+          "$ref": "#/$defs/text"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "outputTechnology": {
+          "$ref": "#/$defs/text"
+        },
+        "rotation": {
+          "$ref": "#/$defs/text"
+        },
+        "scanLineOrdering": {
+          "$ref": "#/$defs/text"
+        },
+        "cloneGroupId": {
+          "$ref": "#/$defs/text"
+        },
+        "sourceResolution": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/pixelSize"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "pathRefreshRate": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/rate"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "signalRefreshRate": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/rate"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "refreshRateBoost": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "properties": {
+                "value": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/$defs/flagValue"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "pathActive": {
+          "const": true
+        },
+        "targetAvailable": {
+          "type": "boolean"
+        },
+        "queryMode": {
+          "enum": [
+            "activePaths",
+            "virtualModeAware",
+            "virtualModeAndRefreshAware"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "sourceId",
+        "targetId",
+        "sourceAdapterId",
+        "targetAdapterId",
+        "sourceAdapter",
+        "targetAdapter",
+        "sourceGdiName",
+        "name",
+        "outputTechnology",
+        "rotation",
+        "scanLineOrdering",
+        "cloneGroupId",
+        "sourceResolution",
+        "pathRefreshRate",
+        "signalRefreshRate",
+        "refreshRateBoost",
+        "pathActive",
+        "targetAvailable",
+        "queryMode"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "message",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "information",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^facts\\."
+          }
+        }
+      }
+    },
+    "collector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "status",
+        "reason",
+        "attempts",
+        "queryMode",
+        "issues"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "partial",
+            "failed",
+            "unsupported"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "attempts": {
+          "maximum": 3,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "queryMode": {
+          "$ref": "#/$defs/queryMode"
+        },
+        "issues": {
+          "items": {
+            "$ref": "#/$defs/issue"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "pixelSize": {
+      "properties": {
+        "widthPixels": {
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "heightPixels": {
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "widthPixels",
+        "heightPixels"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "rate": {
+      "properties": {
+        "denominator": {
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "numerator": {
+          "maximum": 4294967295,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "flagValue": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "adapterMatch": {
+      "properties": {
+        "gpuId": {
+          "type": "string",
+          "pattern": "^gpu-[1-9][0-9]*$"
+        },
+        "confidence": {
+          "const": "exact"
+        },
+        "evidence": {
+          "const": "exactSetupApiInstanceId"
+        }
+      },
+      "required": [
+        "gpuId",
+        "evidence",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "queryMode": {
+      "enum": [
+        "notQueried",
+        "activePaths",
+        "virtualModeAware",
+        "virtualModeAndRefreshAware"
+      ]
+    },
+    "issue": {
+      "properties": {
+        "reason": {
+          "$ref": "#/$defs/reason"
+        },
+        "nativeErrorCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "queryPaths",
+            "sourceName",
+            "targetName",
+            "adapterName",
+            "resolveAdapter",
+            "decodeMode",
+            "validatePath"
+          ]
+        }
+      },
+      "required": [
+        "operation",
+        "reason",
+        "nativeErrorCode"
+      ],
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

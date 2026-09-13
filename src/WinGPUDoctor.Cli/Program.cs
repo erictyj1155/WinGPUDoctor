@@ -8,7 +8,7 @@ static int Run(string[] args)
 {
     if (args.Length == 1 && args[0] is "--help" or "-h")
     {
-        Console.WriteLine("WinGPUDoctor 0.1.0-poc — read-only Windows GPU inventory\nUsage: wingpudoctor [--format markdown|json] [--output FILE] [--yes]\nDefault: sanitized Markdown preview on stdout; no file is written.\n--output: preview on stderr, then type EXPORT to save that exact snapshot.\n--yes: explicitly accept export without an interactive prompt; requires --output.\nExisting files are never overwritten. UNC/device paths are rejected. No upload.\nExit codes: 0 complete; 2 arguments/platform; 3 partial/failed collection; 4 export declined; 5 export failed.");
+        Console.WriteLine("WinGPUDoctor 0.2.0-poc — read-only GPU inventory and active display paths\nUsage: wingpudoctor [--format markdown|json] [--output FILE] [--yes]\nDefault: sanitized Markdown preview on stdout; no file is written.\n--output: preview on stderr, then type EXPORT to save that exact snapshot.\n--yes: explicitly accept export without an interactive prompt; requires --output.\nExisting files are never overwritten. UNC/device paths are rejected. No upload.\nTopology does not identify the GPU used by applications.\nExit codes: 0 complete; 2 arguments/platform; 3 partial/failed collection; 4 export declined; 5 export failed.");
         return 0;
     }
     var format = "markdown";
@@ -43,7 +43,7 @@ static int Run(string[] args)
         { Console.Error.WriteLine("Invalid local export destination."); return 2; }
     }
     CollectionSnapshot snapshot;
-    try { snapshot = new WindowsCollector(new WmiReader()).Collect(); }
+    try { snapshot = WindowsCollector.CreateLocal().Collect(); }
     catch (Exception)
     {
         // Do not expose native exception text or dump the process environment on failure.
@@ -72,7 +72,7 @@ static int Run(string[] args)
         { Console.Error.WriteLine("Export failed. Check the local destination; existing files are not overwritten. A new partial file may remain after a write failure."); return 5; }
         Console.Error.WriteLine("Report saved locally. Nothing was uploaded.");
     }
-    return snapshot.Collection.Any(c => c.Status is CollectorStatus.Failed or CollectorStatus.Partial) ? 3 : 0;
+    return snapshot.Collection.Any(c => c.IsIncomplete()) ? 3 : 0;
 }
 
 static int Usage() { Console.Error.WriteLine("Invalid arguments. Use --help."); return 2; }

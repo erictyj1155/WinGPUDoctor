@@ -1,31 +1,31 @@
 {
-  "schemaVersion": "0.1.0",
-  "toolVersion": "0.1.0-poc",
+  "schemaVersion": "0.2.0",
+  "toolVersion": "0.2.0-poc",
   "collectedOnUtc": "2026-09-10",
   "facts": {
     "system": {
       "windowsVersion": {
         "state": "available",
-        "value": "10.0.26100",
-        "source": "wmiOperatingSystem",
+        "value": "10.0.26200",
+        "source": "wmiVideoController",
         "reason": "none"
       },
       "windowsBuild": {
         "state": "available",
-        "value": "26100",
-        "source": "wmiOperatingSystem",
+        "value": "26200",
+        "source": "wmiVideoController",
         "reason": "none"
       },
       "manufacturer": {
         "state": "available",
-        "value": "Example Manufacturer",
-        "source": "wmiComputerSystem",
+        "value": "Example OEM",
+        "source": "wmiVideoController",
         "reason": "none"
       },
       "model": {
         "state": "available",
-        "value": "Example Laptop",
-        "source": "wmiComputerSystem",
+        "value": "Example Model",
+        "source": "wmiVideoController",
         "reason": "none"
       }
     },
@@ -36,19 +36,19 @@
           "id": "gpu-1",
           "name": {
             "state": "available",
-            "value": "Example GPU A",
+            "value": "Example GPU",
             "source": "wmiVideoController",
             "reason": "none"
           },
           "pciVendorId": {
             "state": "available",
-            "value": "1234",
+            "value": "10DE",
             "source": "wmiVideoController",
             "reason": "none"
           },
           "pciDeviceId": {
             "state": "available",
-            "value": "5678",
+            "value": "1234",
             "source": "wmiVideoController",
             "reason": "none"
           },
@@ -61,20 +61,67 @@
           "driver": {
             "provider": {
               "state": "available",
-              "value": "Example Driver Provider",
-              "source": "wmiSignedDriver",
+              "value": "Example Vendor",
+              "source": "wmiVideoController",
               "reason": "none"
             },
             "version": {
               "state": "available",
               "value": "1.2.3.4",
-              "source": "wmiSignedDriver",
+              "source": "wmiVideoController",
               "reason": "none"
             },
             "date": {
               "state": "available",
               "value": "2026-09-01",
-              "source": "wmiSignedDriver",
+              "source": "wmiVideoController",
+              "reason": "none"
+            }
+          }
+        },
+        {
+          "id": "gpu-2",
+          "name": {
+            "state": "available",
+            "value": "Example GPU",
+            "source": "wmiVideoController",
+            "reason": "none"
+          },
+          "pciVendorId": {
+            "state": "available",
+            "value": "10DE",
+            "source": "wmiVideoController",
+            "reason": "none"
+          },
+          "pciDeviceId": {
+            "state": "available",
+            "value": "1234",
+            "source": "wmiVideoController",
+            "reason": "none"
+          },
+          "classification": {
+            "state": "unsupported",
+            "value": null,
+            "source": "notCollected",
+            "reason": "notImplemented"
+          },
+          "driver": {
+            "provider": {
+              "state": "available",
+              "value": "Example Vendor",
+              "source": "wmiVideoController",
+              "reason": "none"
+            },
+            "version": {
+              "state": "available",
+              "value": "1.2.3.4",
+              "source": "wmiVideoController",
+              "reason": "none"
+            },
+            "date": {
+              "state": "available",
+              "value": "2026-09-01",
+              "source": "wmiVideoController",
               "reason": "none"
             }
           }
@@ -84,48 +131,150 @@
       "reason": "none"
     },
     "displays": {
-      "state": "unsupported",
-      "value": null,
-      "source": "notCollected",
-      "reason": "notImplemented"
+      "state": "available",
+      "value": [
+        {
+          "id": "display-1",
+          "sourceId": "source-1",
+          "targetId": "target-1",
+          "sourceAdapterId": "adapter-1",
+          "targetAdapterId": "adapter-1",
+          "sourceAdapter": {
+            "state": "available",
+            "value": {
+              "gpuId": "gpu-2",
+              "evidence": "exactSetupApiInstanceId",
+              "confidence": "exact"
+            },
+            "source": "setupApiInstanceJoin",
+            "reason": "none"
+          },
+          "targetAdapter": {
+            "state": "available",
+            "value": {
+              "gpuId": "gpu-2",
+              "evidence": "exactSetupApiInstanceId",
+              "confidence": "exact"
+            },
+            "source": "setupApiInstanceJoin",
+            "reason": "none"
+          },
+          "sourceGdiName": {
+            "state": "available",
+            "value": "\\\\.\\DISPLAY8",
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "name": {
+            "state": "available",
+            "value": "Example Panel",
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "outputTechnology": {
+            "state": "available",
+            "value": "displayPortEmbedded",
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "sourceResolution": {
+            "state": "available",
+            "value": {
+              "widthPixels": 2560,
+              "heightPixels": 1600
+            },
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "pathRefreshRate": {
+            "state": "available",
+            "value": {
+              "numerator": 165,
+              "denominator": 1
+            },
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "signalRefreshRate": {
+            "state": "available",
+            "value": {
+              "numerator": 165000,
+              "denominator": 1000
+            },
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "rotation": {
+            "state": "available",
+            "value": "identity",
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "scanLineOrdering": {
+            "state": "available",
+            "value": "progressive",
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "pathActive": true,
+          "targetAvailable": true,
+          "refreshRateBoost": {
+            "state": "available",
+            "value": {
+              "enabled": false
+            },
+            "source": "displayConfig",
+            "reason": "none"
+          },
+          "cloneGroupId": {
+            "state": "unknown",
+            "value": null,
+            "source": "displayConfig",
+            "reason": "missingValue"
+          },
+          "queryMode": "virtualModeAndRefreshAware"
+        }
+      ],
+      "source": "displayConfig",
+      "reason": "none"
     }
   },
-  "findings": [],
+  "findings": [
+    {
+      "id": "inventory.multiple-adapters",
+      "severity": "information",
+      "message": "Windows reports multiple video controllers. This alone does not establish hybrid mode, display routing, GPU power state, or which GPU an application uses.",
+      "evidence": [
+        "facts.gpus"
+      ]
+    }
+  ],
   "warnings": [
     "inventoryOnly",
     "providerReportedValues",
-    "topologyNotCollected",
+    "topologyIsNotRendering",
     "reviewBeforeSharing"
   ],
   "collection": [
     {
-      "source": "wmiOperatingSystem",
-      "status": "succeeded",
-      "reason": "none"
-    },
-    {
-      "source": "wmiComputerSystem",
-      "status": "succeeded",
-      "reason": "none"
-    },
-    {
       "source": "wmiVideoController",
       "status": "succeeded",
-      "reason": "none"
-    },
-    {
-      "source": "wmiSignedDriver",
-      "status": "succeeded",
-      "reason": "none"
+      "reason": "none",
+      "attempts": 1,
+      "queryMode": "notQueried",
+      "issues": []
     },
     {
       "source": "displayConfig",
-      "status": "unsupported",
-      "reason": "notImplemented"
+      "status": "succeeded",
+      "reason": "none",
+      "attempts": 1,
+      "queryMode": "virtualModeAndRefreshAware",
+      "issues": []
     }
   ],
   "privacy": {
-    "policyVersion": "0.1",
+    "policyVersion": "0.2",
     "redactedFields": 0
   }
 }
