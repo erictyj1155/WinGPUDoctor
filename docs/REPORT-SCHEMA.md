@@ -48,7 +48,7 @@ Refresh ratios are not rounded in JSON. Markdown adds a rounded human-readable H
 
 Each source result has `status`, `reason`, `attempts`, `queryMode`, and `issues`. Each issue contains a fixed `operation`, safe `reason`, and an actual integer `nativeErrorCode` when available; otherwise that optional error metadata is null. No exception strings or device-specific paths are permitted. WMI uses `notQueried` for display query mode.
 
-An insufficient-buffer race is retried at most three times. Recovered races remain recorded while a final complete query can succeed. Exhaustion is `failed/topologyChanged`. Access denial records a session/access limitation; unsupported APIs remain unsupported; generic errors remain generic. Names, modes, adapter resolution, and target availability can make a result partial while other path data remains usable. Missing optional clone-group data alone is not treated as partial.
+An insufficient-buffer race is retried at most three times. Recovered races remain recorded while a final complete query can succeed. Exhaustion is `failed/topologyChanged`. Access denial records a session/access limitation; unsupported APIs remain unsupported; generic errors remain generic. Source-name failures, target-name API failures, modes, adapter resolution, and target availability can make a result partial while other path data remains usable. A successful target-name query with an empty optional friendly name keeps the name `unknown/null/missingValue` and a `targetName/missingValue` issue, but does not independently make the run partial or add `collectionIncomplete`; missing optional clone-group data alone is likewise not treated as partial.
 
 ## Export and compatibility
 

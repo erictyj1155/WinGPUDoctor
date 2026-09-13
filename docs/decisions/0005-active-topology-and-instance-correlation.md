@@ -1,6 +1,6 @@
 # ADR 0005: Active CCD paths and exact SetupAPI instance correlation
 
-Status: accepted, 2026-09-10. Extends ADRs 0001–0003 without changing their core/privacy/CLI boundaries. Supersedes the provisional requirement to introduce DXGI for M2.
+Status: accepted, 2026-09-10. Extends ADRs 0001–0003 without changing their core/privacy/CLI boundaries. Supersedes the provisional requirement to introduce DXGI for M2. ADR 0006 supersedes only the later missing-friendly-name severity consequence below.
 
 Context: M2 asks which Windows display paths are active and which adapters own their source/target endpoints. It does not ask which GPU renders applications. The M1 reserved display shape could not express clone relationships or distinct path/signal timing.
 

@@ -2,7 +2,7 @@
 
 **Read → Explain → Report.** An early, read-only Windows GPU/display diagnostics project, separate from any university or research work.
 
-Milestones 1 and 2 provide a small CLI for inventory and **active display paths**, not a finished troubleshooting application. It reports Windows observations; it does not certify GPU health.
+Milestones 1–3 provide a small CLI for inventory and **active display paths**, not a finished troubleshooting application. It reports Windows observations; it does not certify GPU health.
 
 ## Implemented
 
@@ -16,7 +16,7 @@ Milestones 1 and 2 provide a small CLI for inventory and **active display paths*
 
 Topology does not establish application GPU use, GPU utilization/power, MUX state, or Optimus/Advanced Optimus. iGPU/dGPU classification, inactive-display enumeration, vendor APIs, and a GUI remain unimplemented. No automatic fixes, telemetry, network client, background service, configuration writes, or elevation requests are implemented.
 
-The local M2 check found one internal path at 2560 × 1600 and approximately 165 Hz mapped to Intel Graphics. Windows returned no monitor friendly name; that field remained unknown with partial-collection exit `3`. This describes that run only, not a persistent mode or broad compatibility claim.
+The local M2 check found one internal path at 2560 × 1600 and approximately 165 Hz mapped to Intel Graphics. Windows returned no monitor friendly name; that historical run remained unknown with partial-collection exit `3`. M3 keeps the name explicitly unknown but treats absence of that optional metadata as non-blocking, so six repeat collections completed with exit `0` while all path and correlation evidence stayed consistent. This describes this laptop only, not a persistent mode or broad compatibility claim.
 
 ## Build and run
 
@@ -43,13 +43,15 @@ dotnet src/WinGPUDoctor.Cli/bin/Release/net10.0-windows/wingpudoctor.dll --forma
 
 `--output` shows a Markdown preview on stderr and asks you to type `EXPORT`. It saves that same snapshot without recollecting. In deliberate automation, `--yes` with `--output` accepts export without the prompt; preview still goes to stderr. Existing files are never overwritten. The parent directory must exist. Direct UNC/device paths, alternate data streams, and non-fixed drives are rejected. See [privacy](PRIVACY.md) for indirect/cloud folder limitations.
 
-Exit codes: `0` collection completed; `2` invalid arguments/platform/destination; `3` incomplete collection; `4` export declined; `5` export failed. A partial report can still be previewed or saved with exit code `3`. Missing names can make collection partial without invalidating available path/adapter facts. Attempted but unsupported topology is also incomplete; intentionally deferred features do not cause failure by themselves.
+Exit codes: `0` collection completed; `2` invalid arguments/platform/destination; `3` incomplete collection; `4` export declined; `5` export failed. A partial report can still be previewed or saved with exit code `3`. An empty optional monitor friendly name remains explicit `unknown/missingValue` without independently making collection partial; target-name API failures, missing required identity, invalid modes, unavailable targets, correlation failures, provider failures, and retry exhaustion remain incomplete. Attempted but unsupported topology is also incomplete; intentionally deferred features do not cause failure by themselves.
 
 For this initial workspace, a SHA512-verified portable SDK is in ignored `.tools/dotnet`. The supplied scripts require PowerShell 7. `scripts/dev.ps1` uses the portable SDK when present, otherwise the installed SDK; it keeps SDK state/package cache under `.tools` and disables telemetry and certificate generation. This folder is a local development convenience, not part of the distributed app.
 
 ```powershell
 ./scripts/dev.ps1 -Action test
 ./scripts/dev.ps1 -Action preview
+# Opt-in repeatability check for the current laptop build:
+./scripts/validate-m3.ps1
 ```
 
 ## Project map

@@ -1,6 +1,6 @@
 # Architectural decision records
 
-Accepted on 2026-09-10. Revisit only with new requirements or evidence; record a superseding ADR rather than erasing the earlier rationale.
+Accepted on 2026-09-10 through 2026-09-13. Revisit only with new requirements or evidence; record a superseding ADR rather than erasing the earlier rationale.
 
 | Record | Decision |
 |---|---|
@@ -9,3 +9,4 @@ Accepted on 2026-09-10. Revisit only with new requirements or evidence; record a
 | [0003](0003-report-and-privacy-boundary.md) | Explicit states and typed privacy projection before every export |
 | [0004](0004-open-source-foundation.md) | MIT; local repository first; no publishing or telemetry |
 | [0005](0005-active-topology-and-instance-correlation.md) | Active DisplayConfig paths, exact SetupAPI bridge, no DXGI dependency, schema 0.2 |
+| [0006](0006-optional-monitor-name-severity.md) | Empty optional monitor friendly name stays diagnostic-only; M3 keeps substantive failures incomplete |

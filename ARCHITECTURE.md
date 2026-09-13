@@ -1,6 +1,6 @@
 # Architecture
 
-Status: M1 foundation extended by M2 active topology, 2026-09-10. Core, Windows, and CLI boundaries are preserved.
+Status: M1 foundation extended by M2 active topology and M3 single-laptop hardening, 2026-09-13. Core, Windows, and CLI boundaries are preserved.
 
 ## Stack
 
@@ -38,7 +38,7 @@ For each distinct source/target LUID, `DISPLAYCONFIG_ADAPTER_NAME` returns an in
 
 Domain/export references use per-report GPU/path/source/target/adapter/clone labels. Source and target adapters can differ. Inventory retains adapters without active paths; this does not establish their workload or power state.
 
-Queries allow at most three sizing/query attempts, cap counts at 128 paths/512 modes, validate returned counts, and record recovered races. Mode lookups require matching type, LUID, and endpoint ID. Name/bridge failures preserve other path facts. Availability is separate from path-active state. Generic errors stay generic. `CollectionIssue` records operation/reason and an actual numeric error when available, with no raw strings. Display failures do not erase WMI results.
+Queries allow at most three sizing/query attempts, cap counts at 128 paths/512 modes, validate returned counts, and record recovered races. Mode lookups require matching type, LUID, and endpoint ID. Name/bridge failures preserve other path facts. A successful target-name query with an empty optional friendly name keeps an explicit `unknown/missingValue` diagnostic without independently making the run partial; actual target-name API failures remain substantive. Availability is separate from path-active state. Generic errors stay generic. `CollectionIssue` records operation/reason and an actual numeric error when available, with no raw strings. Display failures do not erase WMI results.
 
 Windows 10 enables virtual-mode awareness; Windows 11 build 22000+ also enables virtual-refresh awareness. Earlier API contexts select active paths only; older OS/.NET support is not claimed. Invalid-parameter errors are reported rather than hidden by fallback. Virtual-aware paths use packed 16-bit indexes; others use full 32-bit indexes. Path refresh and signal VSync remain separate rationals, accompanied by query mode and the Windows 11 boost flag. No FPS, VRR activity, or GPU workload is inferred. The desktop-image union is laid out but not exported.
 

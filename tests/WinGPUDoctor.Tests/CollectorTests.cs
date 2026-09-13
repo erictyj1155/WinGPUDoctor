@@ -1,3 +1,4 @@
+using System.Text.Json;
 using WinGPUDoctor.Core;
 using WinGPUDoctor.Windows;
 using Xunit;
@@ -117,5 +118,21 @@ public class CollectorTests
         Assert.Equal(DataState.Available, result.Facts.Displays.State);
         Assert.Equal(ReasonCode.UnmatchedAdapter, result.Facts.Displays.Value![0].SourceAdapter.Reason);
         Assert.Equal(DataState.Failed, result.Facts.Gpus.State);
+    }
+    [Fact] public void MissingFriendlyNameDoesNotHideIndependentWmiFailure()
+    {
+        var api = TopologyTests.Single(); api.EmptyFriendly = true;
+        api.InstanceIds[TopologyTests.RawPathA] = @"PCI\VEN_10DE&DEV_1234\PRIVATE_SUFFIX";
+        var wmi = new FakeReader();
+        wmi.Results[WmiQuery.OperatingSystem] = new(DataState.Failed, [], ReasonCode.Timeout);
+        var result = new WindowsCollector(wmi, new DisplayTopologyCollector(api, api, DisplayQueryMode.VirtualModeAndRefreshAware)).Collect();
+        var displayRun = result.Collection.Single(c => c.Source == DataSource.DisplayConfig);
+        Assert.Equal(CollectorStatus.Succeeded, displayRun.Status);
+        Assert.False(displayRun.IsIncomplete());
+
+        var report = JsonSerializer.Deserialize<DiagnosticReport>(
+            ReportWriter.Json(PrivacyPolicy.Prepare(result, new(2026, 9, 13))), ReportWriter.JsonOptions)!;
+        Assert.Contains(report.Collection, c => c.Source == DataSource.WmiOperatingSystem && c.IsIncomplete());
+        Assert.Contains(WarningCode.CollectionIncomplete, report.Warnings);
     }
 }

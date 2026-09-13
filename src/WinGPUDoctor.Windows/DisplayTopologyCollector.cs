@@ -210,10 +210,13 @@ internal sealed class DisplayTopologyCollector(IDisplayConfigApi api, IAdapterIn
                 queryMode == DisplayQueryMode.VirtualModeAndRefreshAware ? Known(new FlagValue((path.Flags & Ccd.PathBoostRefresh) != 0)) :
                     Observation<FlagValue>.Absent(DataState.Unsupported, DataSource.DisplayConfig, ReasonCode.NotSupported), cloneId, queryMode));
         }
-        // A recovered size race is documented but does not make the final coherent path arrays partial.
-        var incomplete = issues.Any(i => i.Operation != CollectionOperation.QueryPaths);
+        // Recovered size races stay in issue history, while the optional friendly-name absence is
+        // non-blocking metadata. Substantive issues still determine the summary reason.
+        var blockingIssues = issues.Where(i => i.BlocksCompletion()).ToArray();
+        var incomplete = blockingIssues.Length > 0;
         return new(Observation<IReadOnlyList<DisplayFacts>>.Known(displays.ToArray(), DataSource.DisplayConfig),
-            new(DataSource.DisplayConfig, incomplete ? CollectorStatus.Partial : CollectorStatus.Succeeded, incomplete ? issues.First(i => i.Operation != CollectionOperation.QueryPaths).Reason : ReasonCode.None)
+            new(DataSource.DisplayConfig, incomplete ? CollectorStatus.Partial : CollectorStatus.Succeeded,
+                incomplete ? blockingIssues[0].Reason : ReasonCode.None)
             { Attempts = attempts, QueryMode = queryMode, Issues = issues.ToArray() });
     }
 

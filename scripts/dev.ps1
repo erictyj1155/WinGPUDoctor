@@ -20,6 +20,7 @@ try {
         & $sdk test WinGPUDoctor.slnx --no-build --no-restore -c Release -m:1 -nodeReuse:false --logger 'trx;LogFileName=unit-tests.trx' --results-directory artifacts/test-results
         if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
         & (Join-Path $PSScriptRoot 'verify-schema.ps1')
+        & (Join-Path $PSScriptRoot 'test-m3-validation.ps1')
     }
     if ($Action -eq 'preview') {
         & $sdk 'src/WinGPUDoctor.Cli/bin/Release/net10.0-windows/wingpudoctor.dll'

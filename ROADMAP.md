@@ -16,16 +16,16 @@ Read-only WMI inventory, core/Windows/CLI boundaries, JSON/Markdown, privacy pro
 
 M2 does not determine application rendering GPU, utilization/power, MUX position, hybrid mode, or Optimus. Local hardware validation covers this machine in its unchanged current configuration only. Synthetic clone/multi-monitor tests are not physical compatibility evidence.
 
-## Milestone 3 scope — single-laptop validation and hardening (not started)
+## Milestone 3 — single-laptop validation and hardening (complete locally)
 
-Do not begin automatically; see `STATUS.md` for the current checkpoint. The owner has only the laptop/internal display and no external monitor, TV, or second display. Do not wait for unavailable hardware or require physical Extend/Duplicate/clone/hot-plug tests to complete this milestone.
+- [x] Six fresh non-administrator CLI collections on the unchanged internal-display configuration, split into two batches with a pause between them.
+- [x] Stable one-path, exact-correlation, 2560 × 1600, identity/progressive, rational-rate, privacy, schema, and exit-status checks; reports and anomalies retained under ignored `artifacts/`.
+- [x] Empty optional monitor friendly name kept as explicit `unknown/missingValue` with a diagnostic, without independently making collection partial or changing CLI exit to `3`.
+- [x] Substantive source/target API, mode, adapter, provider, and retry failures remain incomplete (exit `3`); export refusal/failure remain exits `4`/`5`, and privacy redaction retains its existing warning/count semantics.
+- [x] Tightened deterministic coverage for affected severity combinations, retry growth/shrink, count guards, repeated collector use, path isolation, and multi-path privacy references.
+- [x] Updated the validation record, schema guidance, README, and ADR 0006; schema remains 0.2.0.
 
-When authorized to execute M3:
-
-- Repeatedly collect on the current unchanged internal-display configuration. Check stable active-path count, adapter correlation, resolution/refresh, absence of stale state, privacy, and non-administrator operation.
-- Review the severity of missing optional monitor friendly names. Current M2 behavior is partial/exit `3`; do not describe the review as a completed correction. Preserve explicit unknown values and distinguish optional metadata absence from substantive collection failures.
-- Harden the existing model/collector where evidence supports a change. Inspect current fixtures before adding missing deterministic synthetic cases for multiple displays, clone/extend, unmatched/ambiguous adapters, topology changes/retries, and partial failures.
-- Record physical observations separately from synthetic compatibility tests in `docs/VALIDATION.md`. Do not claim real hardware validation from mocked responses.
+M3 remains a single-laptop validation result. It does not claim external-display, hot-plug, AMD, ARM64, RDP, or broad compatibility validation. Final read-only review and fresh checkpoint validation passed; M3 is locally checkpointed with no publication or release. M4 has not started.
 
 Do not change graphics modes, MUX/BIOS state, drivers, or power settings. The existing external-display/remote-session manual checklist remains optional future coverage when hardware/session access becomes available, not a completion gate for this single-laptop milestone.
 

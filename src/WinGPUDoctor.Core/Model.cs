@@ -53,7 +53,17 @@ public sealed record DisplayFacts(string Id, string SourceId, string TargetId, s
 public sealed record CollectedFacts(SystemFacts System, Observation<IReadOnlyList<GpuFacts>> Gpus,
     Observation<IReadOnlyList<DisplayFacts>> Displays);
 public enum CollectionOperation { QueryPaths, SourceName, TargetName, AdapterName, ResolveAdapter, DecodeMode, ValidatePath }
-public sealed record CollectionIssue(CollectionOperation Operation, ReasonCode Reason, int? NativeErrorCode);
+public sealed record CollectionIssue(CollectionOperation Operation, ReasonCode Reason, int? NativeErrorCode)
+{
+    // A successful target-name packet may legitimately omit only the optional monitor friendly name.
+    // Keep that metadata diagnostic visible without treating it as incomplete collection.
+    private bool IsNonBlockingMetadata() =>
+        Operation == CollectionOperation.TargetName && Reason == ReasonCode.MissingValue;
+
+    // Only recovered insufficient-buffer retries reach a successful transform, so they remain
+    // visible in CollectionIssue history without making the final coherent snapshot partial.
+    public bool BlocksCompletion() => Operation != CollectionOperation.QueryPaths && !IsNonBlockingMetadata();
+}
 public sealed record CollectorRun(DataSource Source, CollectorStatus Status, ReasonCode Reason)
 {
     public int Attempts { get; init; } = 1;

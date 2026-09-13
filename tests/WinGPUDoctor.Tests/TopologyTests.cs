@@ -20,32 +20,41 @@ public class TopologyTests
         internal NativeMode[] Modes = [];
         internal int SizeError, SourceError, TargetError, AdapterError, ResolverError;
         internal bool ThrowUnavailable, ThrowSource, EmptyFriendly;
-        internal uint? SizePathOverride;
+        internal uint? SizePathOverride, SizeModeOverride, ReturnedPathCountOverride, ReturnedModeCountOverride;
         internal int SizeCalls, QueryCalls, AdapterCalls, ResolverCalls;
         internal uint LastFlags;
         internal Queue<int> QueryErrors { get; } = new();
+        internal Queue<uint> SizePathSequence { get; } = new();
+        internal Queue<uint> SizeModeSequence { get; } = new();
+        internal HashSet<uint> TargetFailureIds { get; } = [];
         internal Dictionary<Luid, string> AdapterPaths { get; } = new() { [AdapterA] = RawPathA, [AdapterB] = "OTHER_INTERFACE" };
         internal Dictionary<string, string> InstanceIds { get; } = new() { [RawPathA] = RawInstanceA, ["OTHER_INTERFACE"] = "OTHER-DEVICE" };
         public int GetBufferSizes(uint flags, out uint paths, out uint modes)
         {
             SizeCalls++; LastFlags = flags;
             if (ThrowUnavailable) throw new EntryPointNotFoundException("PRIVATE_ERROR_PATH");
-            paths = SizePathOverride ?? (uint)Paths.Length; modes = (uint)Modes.Length; return SizeError;
+            paths = SizePathOverride ?? (SizePathSequence.Count > 0 ? SizePathSequence.Dequeue() : (uint)Paths.Length);
+            modes = SizeModeOverride ?? (SizeModeSequence.Count > 0 ? SizeModeSequence.Dequeue() : (uint)Modes.Length);
+            return SizeError;
         }
         public int Query(uint flags, ref uint paths, NativePath[] pathArray, ref uint modes, NativeMode[] modeArray)
         {
             QueryCalls++; LastFlags = flags;
             var error = QueryErrors.Count > 0 ? QueryErrors.Dequeue() : 0;
             if (error != 0) return error;
-            Paths.CopyTo(pathArray, 0); Modes.CopyTo(modeArray, 0);
-            paths = (uint)Paths.Length; modes = (uint)Modes.Length; return 0;
+            Array.Copy(Paths, pathArray, Math.Min(Paths.Length, pathArray.Length));
+            Array.Copy(Modes, modeArray, Math.Min(Modes.Length, modeArray.Length));
+            paths = ReturnedPathCountOverride ?? (uint)Paths.Length;
+            modes = ReturnedModeCountOverride ?? (uint)Modes.Length;
+            return 0;
         }
         public NativeResult<string> SourceName(Luid adapter, uint source)
         {
             if (ThrowSource) throw new InvalidOperationException("PRIVATE_ERROR_PATH");
             return new(SourceError, @"\\.\DISPLAY" + (source + 1));
         }
-        public NativeResult<NativeTargetName> TargetName(Luid adapter, uint target) => new(TargetError,
+        public NativeResult<NativeTargetName> TargetName(Luid adapter, uint target) => new(
+            TargetFailureIds.Count > 0 && !TargetFailureIds.Contains(target) ? 0 : TargetError,
             new() { FriendlyName = EmptyFriendly ? "" : "Example Panel", MonitorDevicePath = RawMonitor, EdidManufacturer = 54321, EdidProduct = 45678, ConnectorInstance = 987654 });
         public NativeResult<string> AdapterName(Luid adapter) { AdapterCalls++; return new(AdapterError, AdapterPaths.GetValueOrDefault(adapter, "")); }
         public NativeResult<string> Resolve(string path) { ResolverCalls++; return new(ResolverError, InstanceIds.GetValueOrDefault(path, "")); }
@@ -210,6 +219,27 @@ public class TopologyTests
         Assert.Equal(2, fake.SizeCalls); Assert.Equal(2, result.Run.Attempts);
         Assert.Equal(ReasonCode.TopologyChanged, Assert.Single(result.Run.Issues).Reason);
     }
+    [Fact] public void InsufficientBufferRetryUsesGrownAllocationAndChangedTopology()
+    {
+        var fake = Single();
+        fake.Paths = [fake.Paths[0], Path(AdapterA, 8, 14, 2, 3)];
+        fake.Modes = [..fake.Modes, SourceMode(AdapterA, 8), TargetMode(AdapterA, 14)];
+        fake.SizePathSequence.Enqueue(0); fake.SizeModeSequence.Enqueue(0); fake.QueryErrors.Enqueue(Ccd.InsufficientBuffer);
+        var result = Collect(fake);
+        Assert.Equal(CollectorStatus.Succeeded, result.Run.Status);
+        Assert.Equal(2, result.Run.Attempts);
+        Assert.Equal(2, result.Displays.Value!.Count);
+        Assert.Contains(result.Run.Issues, i => i.Operation == CollectionOperation.QueryPaths && i.Reason == ReasonCode.TopologyChanged);
+    }
+    [Fact] public void InsufficientBufferRetryCanConvergeToSmallerFinalTopology()
+    {
+        var fake = Single();
+        fake.SizePathSequence.Enqueue(2); fake.SizeModeSequence.Enqueue(2); fake.QueryErrors.Enqueue(Ccd.InsufficientBuffer);
+        var result = Collect(fake);
+        Assert.Equal(CollectorStatus.Succeeded, result.Run.Status);
+        Assert.Equal(2, result.Run.Attempts);
+        Assert.Single(result.Displays.Value!);
+    }
     [Fact] public void PerpetualSizeRaceIsBounded()
     {
         var fake = Single(); for (var i = 0; i < 4; i++) fake.QueryErrors.Enqueue(122);
@@ -228,12 +258,84 @@ public class TopologyTests
         var fake = Single(); fake.SizePathOverride = 129;
         Assert.Equal(ReasonCode.ResourceLimit, Collect(fake).Displays.Reason); Assert.Equal(0, fake.QueryCalls);
     }
+    [Fact] public void ExcessiveModeCountIsRejectedBeforeAllocation()
+    {
+        var fake = Single(); fake.SizeModeOverride = 513;
+        Assert.Equal(ReasonCode.ResourceLimit, Collect(fake).Displays.Reason); Assert.Equal(0, fake.QueryCalls);
+    }
+    [Theory] [InlineData(true)] [InlineData(false)]
+    public void SuccessfulReturnedCountExceedingAllocationIsRejected(bool pathCount)
+    {
+        var fake = Single();
+        if (pathCount) fake.ReturnedPathCountOverride = (uint)fake.Paths.Length + 1;
+        else fake.ReturnedModeCountOverride = (uint)fake.Modes.Length + 1;
+        Assert.Equal(ReasonCode.InvalidValue, Collect(fake).Displays.Reason);
+    }
+    [Fact] public void RepeatedCollectorRunsDoNotLeakPriorFactsOrDiagnostics()
+    {
+        var fake = Single();
+        var collector = new DisplayTopologyCollector(fake, fake, DisplayQueryMode.VirtualModeAndRefreshAware);
+        var first = collector.Collect(Inventory);
+        Assert.Equal("gpu-2", Assert.Single(first.Displays.Value!).SourceAdapter.Value!.GpuId);
+
+        for (var i = 0; i < DisplayTopologyCollector.MaxAttempts; i++) fake.QueryErrors.Enqueue(Ccd.InsufficientBuffer);
+        var second = collector.Collect(Inventory);
+        Assert.Equal(DataState.Failed, second.Displays.State);
+        Assert.Equal(ReasonCode.TopologyChanged, second.Displays.Reason);
+        Assert.Equal(DisplayTopologyCollector.MaxAttempts, second.Run.Attempts);
+        Assert.Equal("gpu-2", Assert.Single(first.Displays.Value!).SourceAdapter.Value!.GpuId);
+
+        fake.Paths = [Path(AdapterB, 7, 13, 0, 1)];
+        fake.Modes = [SourceMode(AdapterB, 7), TargetMode(AdapterB, 13)];
+        var third = collector.Collect(Inventory);
+        Assert.Equal(DataState.Available, third.Displays.State);
+        Assert.Equal("gpu-1", Assert.Single(third.Displays.Value!).SourceAdapter.Value!.GpuId);
+        Assert.Equal("gpu-2", Assert.Single(first.Displays.Value!).SourceAdapter.Value!.GpuId);
+    }
     [Fact] public void MissingFriendlyNameDoesNotLosePathOrInventInternalPanelName()
     {
         var fake = Single(); fake.EmptyFriendly = true;
         var result = Collect(fake); var d = Assert.Single(result.Displays.Value!);
         Assert.Equal(DataState.Unknown, d.Name.State); Assert.Null(d.Name.Value);
         Assert.Equal(DataState.Available, d.SourceResolution.State);
+        Assert.Equal(CollectorStatus.Succeeded, result.Run.Status);
+        Assert.Equal(ReasonCode.None, result.Run.Reason);
+        Assert.False(result.Run.IsIncomplete());
+        var issue = Assert.Single(result.Run.Issues);
+        Assert.Equal(CollectionOperation.TargetName, issue.Operation);
+        Assert.Equal(ReasonCode.MissingValue, issue.Reason);
+        Assert.False(issue.BlocksCompletion());
+    }
+    [Fact] public void MissingFriendlyNameDoesNotHideInvalidModeFailure()
+    {
+        var fake = Single(); fake.EmptyFriendly = true; fake.Paths[0].Source.ModeIndex = 99;
+        var result = Collect(fake);
+        Assert.Equal(CollectorStatus.Partial, result.Run.Status);
+        Assert.Equal(ReasonCode.InvalidModeIndex, result.Run.Reason);
+        Assert.True(result.Run.IsIncomplete());
+        Assert.Contains(result.Run.Issues, i => i.Operation == CollectionOperation.TargetName && i.Reason == ReasonCode.MissingValue);
+        Assert.Contains(result.Run.Issues, i => i.Operation == CollectionOperation.DecodeMode && i.Reason == ReasonCode.InvalidModeIndex);
+    }
+    [Theory] [InlineData(false)] [InlineData(true)]
+    public void MissingFriendlyNameDoesNotMaskAdapterCorrelationProblems(bool ambiguous)
+    {
+        var fake = Single(); fake.EmptyFriendly = true;
+        var inventory = ambiguous
+            ? new GpuCorrelationIdentity[] { new("gpu-1", RawInstanceA), new("gpu-2", RawInstanceA) }
+            : [new("gpu-1", "OTHER-DEVICE")];
+        var result = Collect(fake, inventory);
+        var expected = ambiguous ? ReasonCode.AmbiguousAdapter : ReasonCode.UnmatchedAdapter;
+        Assert.Equal(CollectorStatus.Partial, result.Run.Status);
+        Assert.Equal(expected, result.Run.Reason);
+        Assert.Equal(expected, result.Displays.Value![0].SourceAdapter.Reason);
+    }
+    [Fact] public void TargetNameApiFailureRemainsBlocking()
+    {
+        var fake = Single(); fake.EmptyFriendly = true; fake.TargetError = 31;
+        var result = Collect(fake);
+        Assert.Equal(CollectorStatus.Partial, result.Run.Status);
+        Assert.Equal(ReasonCode.NativeError, result.Run.Reason);
+        Assert.Equal(DataState.Failed, result.Displays.Value![0].Name.State);
     }
     [Theory] [InlineData(true)] [InlineData(false)]
     public void FailedNameQueryKeepsOtherPathFacts(bool source)
@@ -248,6 +350,21 @@ public class TopologyTests
     {
         var fake = Single(); fake.ThrowSource = true;
         Assert.Equal(ReasonCode.NativeError, Collect(fake).Displays.Value![0].SourceGdiName.Reason);
+    }
+    [Fact] public void OneTargetMetadataFailureDoesNotCorruptAnotherValidPath()
+    {
+        var fake = Single();
+        fake.Paths = [fake.Paths[0], Path(AdapterA, 8, 14, 2, 3)];
+        fake.Modes = [..fake.Modes, SourceMode(AdapterA, 8), TargetMode(AdapterA, 14)];
+        fake.TargetError = 31; fake.TargetFailureIds.Add(13);
+        var result = Collect(fake);
+        Assert.Equal(CollectorStatus.Partial, result.Run.Status);
+        Assert.Equal(ReasonCode.NativeError, result.Run.Reason);
+        var displays = result.Displays.Value!;
+        Assert.Equal(DataState.Failed, displays[0].Name.State);
+        Assert.Equal(ReasonCode.NativeError, displays[0].Name.Reason);
+        Assert.Equal("Example Panel", displays[1].Name.Value);
+        Assert.All(displays, d => Assert.Equal("gpu-2", d.SourceAdapter.Value!.GpuId));
     }
     [Theory] [InlineData(true)] [InlineData(false)]
     public void AdapterResolutionFailuresDoNotEraseTopology(bool interfaceQuery)
@@ -322,6 +439,44 @@ public class TopologyTests
         var parsed = JsonSerializer.Deserialize<DiagnosticReport>(json, ReportWriter.JsonOptions)!;
         Assert.Equal("gpu-2", parsed.Facts.Displays.Value![0].SourceAdapter.Value!.GpuId);
         Assert.Contains("Display source adapter", md); Assert.DoesNotContain("GPU currently rendering", md);
+    }
+    [Fact] public void MissingFriendlyNameExportsUnknownWithoutCollectionIncompleteWarning()
+    {
+        var fake = Single(); fake.EmptyFriendly = true;
+        var safe = PrivacyPolicy.Prepare(WithTopology(Collect(fake)), new(2026, 9, 13));
+        var json = ReportWriter.Json(safe);
+        var markdown = ReportWriter.Markdown(safe);
+        Assert.DoesNotContain("collectionIncomplete", json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CollectionIncomplete", markdown, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TargetName: MissingValue", markdown);
+        // Distinctive markers survive JSON/Markdown escaping, unlike the full raw path.
+        Assert.DoesNotContain("PRIVATE", json); Assert.DoesNotContain("PRIVATE", markdown);
+        var report = JsonSerializer.Deserialize<DiagnosticReport>(json, ReportWriter.JsonOptions)!;
+        var display = Assert.Single(report.Facts.Displays.Value!);
+        Assert.Equal(DataState.Unknown, display.Name.State);
+        Assert.Equal(ReasonCode.MissingValue, display.Name.Reason);
+        var run = report.Collection.Single(c => c.Source == DataSource.DisplayConfig);
+        Assert.Equal(CollectorStatus.Succeeded, run.Status);
+        Assert.False(run.IsIncomplete());
+        Assert.Contains(run.Issues, i => i.Operation == CollectionOperation.TargetName && i.Reason == ReasonCode.MissingValue);
+        Assert.DoesNotContain(WarningCode.CollectionIncomplete, report.Warnings);
+    }
+    [Fact] public void MultiPathPrivacyPreservesRelationshipsAndRemovesRawIdentifiers()
+    {
+        var fake = Single();
+        fake.Paths = [fake.Paths[0], Path(AdapterA, 7, 14, 2, 3)];
+        fake.Modes = [..fake.Modes, SourceMode(AdapterA, 7), TargetMode(AdapterA, 14)];
+        var json = ReportWriter.Json(PrivacyPolicy.Prepare(WithTopology(Collect(fake)), new(2026, 9, 13)));
+        var report = JsonSerializer.Deserialize<DiagnosticReport>(json, ReportWriter.JsonOptions)!;
+        var displays = report.Facts.Displays.Value!;
+        Assert.Equal(2, displays.Count);
+        Assert.Equal(displays[0].SourceId, displays[1].SourceId);
+        Assert.Equal(displays[0].SourceAdapterId, displays[1].SourceAdapterId);
+        Assert.NotEqual(displays[0].TargetId, displays[1].TargetId);
+        Assert.All(displays, d => Assert.Equal("gpu-2", d.SourceAdapter.Value!.GpuId));
+        foreach (var secret in new[] { "PRIVATE_ADAPTER_INSTANCE", "PRIVATE_EDID_MONITOR", "SERIAL_ABC123",
+            "99887766", "11335577", "54321", "45678", "987654" })
+            Assert.DoesNotContain(secret, json, StringComparison.OrdinalIgnoreCase);
     }
     [Fact] public void PrivacyRegeneratesKeysAndFiltersEveryDisplayString()
     {
