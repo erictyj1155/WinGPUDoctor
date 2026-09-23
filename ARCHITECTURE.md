@@ -1,6 +1,6 @@
 # Architecture
 
-Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. M4 is checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`; M5 informational findings have passed independent semantics/privacy review and scoped physical integration validation on the current laptop. The M5 checkpoint has not occurred; final readiness review remains before owner-controlled checkpoint steps. Physical validation remains limited to one laptop.
+Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. M4 remains a historical checkpoint at commit `57abbec81ac8db83e04a2a588d39fe18c1650070`; M5 — Explainable Active-Display Associations — passed independent semantics/privacy review and scoped physical integration validation on the current laptop, then was checkpointed at commit `43d3bc39a6310a48ca7f819bf307650f3afaa6a1` (tree `e5187c757c29a2f492832dee11730ee9c1b8b404`). M5 is the latest committed technical milestone; schema 0.2.0 and M3/M4 collection and lifecycle boundaries remain unchanged. Physical validation remains limited to one laptop. M6 has not started and requires separate scoping and authorization; no push, tag, or release occurred.
 
 ## Stack
 

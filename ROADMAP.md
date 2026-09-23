@@ -56,13 +56,15 @@ At the time of the M4 completion record, no later milestone had started. M5 is s
 
 Gate 2 keeps schema, privacy projection, production collector normalization, exact adapter correlation, report semantics, and CLI exit codes unchanged. `WindowsCollector` remains a reference/test aggregate; the Worker reuses its mapping helpers and the production CLI uses the supervised path. Controlled cancellation is out-of-band and deliberately produces no report fixture.
 
-## Milestone 5 — Explainable Active-Display Associations (implementation complete locally; checkpoint pending)
+## Milestone 5 — Explainable Active-Display Associations (complete; checkpointed locally)
+
+Checkpoint commit: `43d3bc39a6310a48ca7f819bf307650f3afaa6a1` (tree `e5187c757c29a2f492832dee11730ee9c1b8b404`). No push, tag, or release occurred.
 
 The owner accepted the M5 scope and froze its rule, message and evidence contract before implementation. The four informational findings are topology.endpoint-adapter-association, topology.correlation-unresolved, topology.active-path-target-unavailable, and topology.no-active-paths. They use already projected active-path facts, preserve both endpoints and unavailable states, and reference report-local evidence. They do not infer rendering ownership, power, MUX state, health or a hardware cause.
 
-Gate progression: Gate 0 scope accepted; Gate 1 contract frozen; Gate 2 implementation completed locally; Gate 3 independent semantics/privacy review passed, including correction and independent closure of the test-only F1; Gate 4 scoped physical validation passed on the current laptop. The final checkpoint-readiness review found no technical correction but required this documentation reconciliation. The physical result is limited to the current one-active-path configuration; synthetic tests cover unobserved states. Schema 0.2.0, collection, worker/supervisor behavior and CLI exits remain unchanged.
+Gate progression: Gate 0 scope accepted; Gate 1 contract frozen; Gate 2 implementation completed; Gate 3 independent semantics/privacy review passed, including correction and independent closure of the test-only F1; Gate 4 scoped physical validation passed on the current laptop; final checkpoint-readiness review passed and the M5 checkpoint was created. The physical result is limited to the current one-active-path configuration; synthetic tests cover unobserved states. Schema 0.2.0, collection, worker/supervisor behavior and CLI exits remain unchanged.
 
-The required documentation reconciliation is complete. M5 is still not complete or checkpointed. The remaining sequence is final checkpoint-readiness re-review; if it passes, separate owner staging authorization; staged-diff verification; separate owner commit authorization; and creation of the M5 checkpoint. M4 remains the latest committed technical milestone, and no M6 scope is started.
+M5 is complete and checkpointed, and is now the latest committed technical milestone. M6 has not started and requires separate scoping and owner authorization. Git staging and commit permissions remain task-specific.
 
 ## Later, separately authorized
 
