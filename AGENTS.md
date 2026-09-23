@@ -24,6 +24,34 @@ git log -5 --oneline
 
 If there is no commit, consult the baseline instructions in `STATUS.md`; do not treat an unborn branch as a clean or empty project. Read relevant untracked files too: ordinary `git diff` omits them.
 
+## Agent and model routing
+
+Route by task capability and risk, unresolved ambiguity, and required review independence, not model prestige or cost alone. The repository is authoritative: model choice never overrides `AGENTS.md`, `STATUS.md`, live Git state, code/tests, ADRs, or owner authorization. Keep the user's selected primary model and effort unless the user changes them.
+
+| Capability class | Current default |
+|---|---|
+| Bounded maintenance, documentation, and repository inspection | GPT-6 Luna |
+| Established engineering and integration | GPT-6 Sol |
+| Frozen, detailed specification implementation | DeepSeek |
+| Architecture, native/security boundaries, and milestone gates | GPT-6 Astra |
+
+These mappings are advisory and may change as available models and observed quality change. Capability classes remain stable; future agents must follow the same repository-first, scope, authorization, and review-independence rules.
+
+- **Luna** is preferred for bounded, low-risk inspection, factual status/documentation maintenance, repetitive validation/evidence checks, fixed-behavior deterministic tests, and low-risk Git hygiene. Escalate to Sol if behavior is ambiguous, documentation conflicts with Git or tests, semantics may change, validation is anomalous, or staging boundaries are unclear.
+- **Sol** is the default general engineering model for ordinary features, nontrivial bugs, integration, test design, implementation review, checkpoint preparation, and complex Git/index verification. Escalate to Astra if accepted architecture no longer works; a public contract, schema, or trust boundary changes; native ownership/lifetime, process containment/IPC, privacy/security, or lifecycle concurrency is involved; tests and evidence materially disagree; conclusions conflict; or a milestone verdict is needed.
+- **Astra** is preferred for architecture, native Win32 ownership/lifetime, process containment, security/privacy boundaries, difficult lifecycle/concurrency reasoning, conflicting evidence, and milestone checkpoint-readiness. Do not use it reflexively for mechanical work a narrower model can handle.
+- **DeepSeek** implements substantial work only from an approved, explicit, frozen specification, including mechanical changes, bounded refactors, and tests for decided behavior. It must not invent architecture or silently expand scope, approve its own boundary-sensitive work, or declare a substantial milestone ready. Substantial work normally gets Sol review; native, security, privacy, protocol, or lifecycle changes require Astra review. Use effort settings only when the selected DeepSeek workflow exposes them.
+
+The practical escalation path is **Luna → Sol → Astra** as unresolved judgment or risk increases; it is not a universal intelligence ranking. DeepSeek sits beside that path: frozen approved specification → implementation → Sol review → Astra gate when boundary-sensitive.
+
+Use lower effort for bounded/mechanical work, normal effort for everyday engineering, high effort for difficult integration/review, and the highest justified effort for architecture, security, lifecycle races, or milestone gates. Model selection and reasoning effort are separate decisions; maximum effort is not the default. As non-normative examples, Luna often needs medium for repository/documentation work, Sol high for substantive engineering, Astra high or extra-high for high-risk review, and DeepSeek high for substantial frozen-spec implementation where that setting is available.
+
+Independent high-capability review is required for architecture, native ownership/lifetime, containment/IPC, public protocol/schema semantics, privacy/security boundaries, cancellation/lifecycle races, and substantial milestone readiness. A different model name alone does not make review independent: the reviewer must reconstruct the decision from repository state, code, tests, validation evidence, and ADRs instead of treating the implementer's summary as authoritative. An implementer must not be the sole final gate reviewer for its high-risk change.
+
+Routine switching among Astra, Sol, and Luna may happen in the same WinGpuDoctor Work; a model change alone does not require a new Work. Consider a separate Work for a deliberately clean-room review, isolated benchmark, experimental branch/task, or credible context-contamination concern. In every Work, reconstruct current state from the repository, not copied chat memory.
+
+**Model selection is not authorization.** No routing assignment authorizes staging, committing, amending, resetting, cleaning, stashing, adding a remote, pushing, tagging, or releasing. The existing owner-authorization and Git-preservation rules below remain controlling.
+
 ## Where information belongs
 
 | Record | Responsibility |
