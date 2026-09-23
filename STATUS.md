@@ -13,10 +13,10 @@ Last updated: 2026-09-23 (Asia/Kuala_Lumpur). Record language: English.
 ## Git state: read before editing
 
 - M1 `7eefff9a995a0d3bfd6ef53e86e7a3b3db4c3bee`; M2/management `d3eaaea347f8c63d67cac493a9640e2baf2c1974`; M3 `16f19ae42f6df6c71f18224cb3e7599fcd05446e`; M4 `57abbec81ac8db83e04a2a588d39fe18c1650070` (parent M3).
-- M1 tree `fcc13aed94b20fab57acad9749fac1700ba789b3` matches `refs/baselines/milestone-1`; M3 commit tree `f68fbfdbade9c9e7ad63e767423b0efb649b498a`; M4 HEAD tree `d9ebe8ae5ee476229bd08b930f4c80d9b0e3f12c`.
+- This file records project and milestone state; use live Git status/history for the current branch, HEAD, index, and working tree. M1 tree `fcc13aed94b20fab57acad9749fac1700ba789b3` matches `refs/baselines/milestone-1`; M3 commit tree `f68fbfdbade9c9e7ad63e767423b0efb649b498a`; M4 remains the latest completed technical milestone, checkpointed by commit `57abbec81ac8db83e04a2a588d39fe18c1650070` with tree `d9ebe8ae5ee476229bd08b930f4c80d9b0e3f12c`. Later documentation/operating-state commits include `702a1ac43e54bf1a0baf0637ff3ff7d1f9f3d15b` (post-M4 housekeeping) and `dedad9a3940ec3a009433b137d072536ed2f9616` (routing-policy guidance); neither represents a later technical milestone.
 - The M4 checkpoint contains 97 reviewed paths (73 additions and 24 modifications); its commit tree is `d9ebe8ae5ee476229bd08b930f4c80d9b0e3f12c`. M1-M3 history and the M1 baseline ref are unchanged.
 - The working tree was clean immediately after the M4 commit. No remote, push, tag, or release exists. Raw, build, and private validation evidence remains ignored and uncommitted.
-- M4 source, projects, tests, scripts and ADR are tracked in the checkpoint. The only current working-tree changes are the post-M4 documentation updates; the index is empty and no nonignored untracked files remain. SDK/cache/build output, real reports and local validation evidence remain ignored.
+- M4 source, projects, tests, scripts and ADR are tracked in the checkpoint. For current staged, unstaged, and untracked files, inspect live Git state. SDK/cache/build output, real reports and local validation evidence remain ignored.
 
 ## Verification and limits
 
