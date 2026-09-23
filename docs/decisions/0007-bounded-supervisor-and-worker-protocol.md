@@ -1,6 +1,6 @@
 # ADR 0007: Bounded worker supervision and private protocol v1
 
-Status: accepted for M4, 2026-09-15; Gate 1 corrections recorded 2026-09-20 and subsequently approved. Gate 2 switched production routing afterward. Its integrated corrections passed targeted re-review. The final timing/checkpoint review then failed; its narrow F1-F5 corrections dated 2026-09-22 are implemented and locally validated. M4 remains unstaged, incomplete and **pending final checkpoint-readiness re-review**, followed by any separately authorized checkpoint commit.
+Status: The bounded Supervisor/Worker architecture was accepted for M4 on 2026-09-15; Gate 1 corrections recorded 2026-09-20 were subsequently approved. Gate 2 later routed production collection through the design, and the integrated semantics/privacy corrections passed targeted re-review. Controlled cancellation and calibrated internal timing were completed, followed by a passing final checkpoint-readiness review. M4 was checkpointed locally in `57abbec81ac8db83e04a2a588d39fe18c1650070` (`Milestone 4: bounded collection and controlled cancellation`). No remote, push, tag, or release exists.
 
 The existing in-process WMI and DisplayConfig calls can exceed nominal provider timeouts. The approved process boundary preserves completed independent facts while allowing the parent to stop accepting results and terminate a contained worker. Phase 1 exercised synthetic workers only; real production routing was introduced later in Gate 2.
 

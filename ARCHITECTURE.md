@@ -1,6 +1,6 @@
 # Architecture
 
-Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 Gate 1/2 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. The integrated semantics/privacy re-review passed; the final timing/checkpoint review failed, its targeted corrections are implemented, and M4 is pending final checkpoint-readiness re-review.
+Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. The final checkpoint-readiness review passed, and M4 is checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`. The checkpoint has not been published; physical validation remains limited to one laptop.
 
 ## Stack
 
@@ -68,7 +68,7 @@ An internal opt-in lifecycle probe (`WINGPUDOCTOR_M4_PROCESS_PROBE=1`) supplies 
 - One dependency-derived recursive deployment closure, including nested runtime assets; PDBs excluded, other unexpected files rejected. Shared loaded/deployed MVIDs and hashes must match, and runtime selection is pinned to the recognized parent runtime.
 - Request/Ready/Start sequencing: build identity is verified before topology input is sent. Complete topology run/issues/attempts and unavailable inventory identities are representable; successful/partial results undergo semantic and reference validation.
 
-Schema 0.2.0, privacy projection, report writers and CLI exit meanings are unchanged. Cancellation is out-of-band and creates no report state or fixture, and `host-cancelled` remains an internal supervisor code. The M4 checkpoint commit and the independent final review remain pending. Fresh evidence and limits are in [VALIDATION.md](docs/VALIDATION.md).
+Schema 0.2.0, privacy projection, report writers and CLI exit meanings are unchanged. Cancellation is out-of-band and creates no report state or fixture, and `host-cancelled` remains an internal supervisor code. The final checkpoint-readiness review passed, and the M4 checkpoint is local only. Fresh evidence and limits are in [VALIDATION.md](docs/VALIDATION.md).
 ## M2 topology semantics
 
 For each distinct source/target LUID, `DISPLAYCONFIG_ADAPTER_NAME` returns an interface path. `SetupDiOpenDeviceInterfaceW` and the documented device-info-only `SetupDiGetDeviceInterfaceDetailW` query resolve its devnode; `SetupDiGetDeviceInstanceIdW` reads its instance ID. Unique ordinal case-insensitive equality with WMI controller instance IDs gives `exactSetupApiInstanceId` evidence and `exact` confidence. Zero/multiple matches remain unmatched/ambiguous. Confidence describes this identity join only, not health, chronology, or rendering. No path parsing, PCI-only/name/order join, or DXGI fallback is used. A SafeHandle disposes SetupAPI information sets.

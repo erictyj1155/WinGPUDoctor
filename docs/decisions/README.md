@@ -10,4 +10,4 @@ Accepted on 2026-09-10 through 2026-09-15. Revisit only with new requirements or
 | [0004](0004-open-source-foundation.md) | MIT; local repository first; no publishing or telemetry |
 | [0005](0005-active-topology-and-instance-correlation.md) | Active DisplayConfig paths, exact SetupAPI bridge, no DXGI dependency, schema 0.2 |
 | [0006](0006-optional-monitor-name-severity.md) | Empty optional monitor friendly name stays diagnostic-only; M3 keeps substantive failures incomplete |
-| [0007](0007-bounded-supervisor-and-worker-protocol.md) | Gate 1 and integrated corrections approved; final timing/checkpoint review failed, targeted atomic-handoff/evidence corrections implemented; pending final checkpoint-readiness re-review |
+| [0007](0007-bounded-supervisor-and-worker-protocol.md) | Bounded Supervisor/Worker isolation for Windows provider collection, with short-lived contained workers, deadlines and private protocol v1; Gate 2 production routing completed and M4 checkpointed locally in `57abbec81ac8db83e04a2a588d39fe18c1650070` |
