@@ -20,6 +20,7 @@ public class TopologyTests
         internal NativeMode[] Modes = [];
         internal int SizeError, SourceError, TargetError, AdapterError, ResolverError;
         internal bool ThrowUnavailable, ThrowSource, EmptyFriendly;
+        internal string FriendlyName = "Example Panel";
         internal uint? SizePathOverride, SizeModeOverride, ReturnedPathCountOverride, ReturnedModeCountOverride;
         internal int SizeCalls, QueryCalls, AdapterCalls, ResolverCalls;
         internal uint LastFlags;
@@ -55,7 +56,7 @@ public class TopologyTests
         }
         public NativeResult<NativeTargetName> TargetName(Luid adapter, uint target) => new(
             TargetFailureIds.Count > 0 && !TargetFailureIds.Contains(target) ? 0 : TargetError,
-            new() { FriendlyName = EmptyFriendly ? "" : "Example Panel", MonitorDevicePath = RawMonitor, EdidManufacturer = 54321, EdidProduct = 45678, ConnectorInstance = 987654 });
+            new() { FriendlyName = EmptyFriendly ? "" : FriendlyName, MonitorDevicePath = RawMonitor, EdidManufacturer = 54321, EdidProduct = 45678, ConnectorInstance = 987654 });
         public NativeResult<string> AdapterName(Luid adapter) { AdapterCalls++; return new(AdapterError, AdapterPaths.GetValueOrDefault(adapter, "")); }
         public NativeResult<string> Resolve(string path) { ResolverCalls++; return new(ResolverError, InstanceIds.GetValueOrDefault(path, "")); }
     }

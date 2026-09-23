@@ -2,7 +2,7 @@
 
 **Read → Explain → Report.** An early, read-only Windows GPU/display diagnostics project, separate from any university or research work.
 
-Milestones 1–3 provide a small CLI for inventory and **active display paths**, not a finished troubleshooting application. It reports Windows observations; it does not certify GPU health.
+Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 Gate 2 routes the five fixed real read-only operations through short-lived workers under the reviewed supervisor, with controlled cancellation and calibrated internal timing; the pre-M4 aggregate remains a reference/test path. This is not a finished troubleshooting application, and it does not certify GPU health.
 
 ## Implemented
 
@@ -15,6 +15,10 @@ Milestones 1–3 provide a small CLI for inventory and **active display paths**,
 - Deterministic tests using synthetic data; separate manual hardware checks.
 
 Topology does not establish application GPU use, GPU utilization/power, MUX state, or Optimus/Advanced Optimus. iGPU/dGPU classification, inactive-display enumeration, vendor APIs, and a GUI remain unimplemented. No automatic fixes, telemetry, network client, background service, configuration writes, or elevation requests are implemented.
+
+The Release CLI output contains a `worker/` directory with the framework-dependent `wingpudoctor-worker` deployment and its reviewed runtime inputs. The supervisor validates the recursive runtime closure, hashes and loaded/deployed assembly identities before launch, checks Ready identity before Start, and runs one worker per fixed operation. Provider/timeout failures remain incomplete reports; fatal host admission/deployment/cleanup failures stop preview/export. Schema 0.2.0, exit meanings, and report privacy are unchanged.
+
+The first Ctrl+C while collection remains active cancels it in a controlled way: the in-flight worker uses bounded cleanup, no later operation starts, nothing is previewed or exported, and the process returns `3` with a plain cancellation notice. An atomic handoff decides cancellation versus normal output; after output is committed, a late interrupt follows ordinary/default behavior. A second Ctrl+C also permits default forced termination, with no cleanup, exit-code or report promise. Internal timing remains 60 s overall, 10 s per operation, 2 s cleanup and 8 s frame, supported by one-laptop measurements and engineering reserves; no timeout is user-configurable. Live evidence covers this laptop only. Targeted final corrections are implemented; M4 is **pending final checkpoint-readiness re-review**.
 
 The local M2 check found one internal path at 2560 × 1600 and approximately 165 Hz mapped to Intel Graphics. Windows returned no monitor friendly name; that historical run remained unknown with partial-collection exit `3`. M3 keeps the name explicitly unknown but treats absence of that optional metadata as non-blocking, so six repeat collections completed with exit `0` while all path and correlation evidence stayed consistent. This describes this laptop only, not a persistent mode or broad compatibility claim.
 
@@ -47,11 +51,16 @@ Exit codes: `0` collection completed; `2` invalid arguments/platform/destination
 
 For this initial workspace, a SHA512-verified portable SDK is in ignored `.tools/dotnet`. The supplied scripts require PowerShell 7. `scripts/dev.ps1` uses the portable SDK when present, otherwise the installed SDK; it keeps SDK state/package cache under `.tools` and disables telemetry and certificate generation. This folder is a local development convenience, not part of the distributed app.
 
+The default local development/build workflow enforces locked restore but skips vulnerability auditing. This does not enforce offline operation: uncached packages may still be downloaded. Vulnerability auditing is a separate check, `./scripts/dev.ps1 -Action audit`, which uses locked restore with auditing enabled and may need network access to advisory sources. CI retains audited restore; this unpublished repository has no executed CI evidence. A deterministic test pass is not a dependency-security audit.
+
 ```powershell
 ./scripts/dev.ps1 -Action test
 ./scripts/dev.ps1 -Action preview
 # Opt-in repeatability check for the current laptop build:
 ./scripts/validate-m3.ps1
+# Opt-in live checks (require an existing Release build and real hardware):
+./scripts/validate-m4-final.ps1
+./scripts/test-m4-cancel.ps1 -Mode Cancel -Runs 1
 ```
 
 ## Project map
@@ -61,7 +70,10 @@ For any new contributor or coding agent, start with [AGENTS.md](AGENTS.md) → [
 ```text
 src/
   WinGPUDoctor.Core/       Facts, states, rules, privacy boundary, JSON/Markdown
+  WinGPUDoctor.Protocol/   Strict internal worker protocol v1 frames and payloads
   WinGPUDoctor.Windows/    Local WMI, isolated DisplayConfig/SetupAPI, matching
+  WinGPUDoctor.Supervisor/ Parent budget, worker deployment, Job/process/pipe transport
+  WinGPUDoctor.Worker/     Framework-dependent internal operation dispatcher
   WinGPUDoctor.Cli/        Arguments, preview, explicit local export
 tests/WinGPUDoctor.Tests/  Synthetic unit and collector-contract tests
 docs/                     Feasibility, schema guide, decisions, validation

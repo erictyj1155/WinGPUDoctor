@@ -40,3 +40,17 @@ Build tools are distinct from the runtime program. SDK installation/restore and 
 ## New fields and future bundles
 
 Before adding a field: document its diagnostic need, source, sensitivity, retention, unknown states, export representation, and a negative privacy test. Do not add raw dumps to make troubleshooting easier. Future ZIP bundles must contain only reviewed generated reports and a manifest; no automatic log scraping, screenshots, minidumps, account identifiers, or arbitrary user files.
+
+## M4 IPC working data
+
+Production collection now uses the private parent/worker transport for the five fixed operations. The current-user pipe DACL, inherited client handle, Job Object handle, worker process/token handles, and operation identifiers are transient local IPC/containment state. Hardware identifiers, provider values, and topology identities are not placed on the command line, in the environment, in logs, or in persistent files. Only after Ready build identity verification does Start carry transient GPU labels and full WMI instance IDs in the private pipe; missing identities remain null. The parent uses those values for exact driver/topology joins and drops them when assembling Core facts. The same-user DACL is not protection against a hostile process already running as that user.
+
+The worker does not export reports or invoke privacy projection, and M4 introduces no persistent hardware identifier, telemetry, network transport, or temporary transport file. `IntegratedBoundaryTests` now exercise real dispatch, wire encoding/decoding, parent reconstruction, Core-before-projection assertions, and both exports with synthetic identifiers. Earlier Gate 2 scripted DTO tests alone did not establish that full path. Oversized worker output is replaced by a fixed ResourceLimit failure containing no provider text or native-error invention. Managed strings and OS buffers are not claimed to be securely erased.
+
+Development execution fingerprints retain selected host/runtime installation metadata in ignored local validation evidence, separate from diagnostic reports. The worker's internal metadata-only probe reads its execution identity without collecting WMI/display data. Historical evidence is not reconstructed.
+
+## Cancellation and timing evidence
+
+Controlled cancellation writes no report, no export and no new persisted state: the console handler only records cancellation in memory, and the CLI returns `3` with a plain notice. The timing sink is opt-in and defaults to a no-op in production; it records only safe stage and operation names with durations, never hardware identifiers, provider text or exception messages. Calibrated budgets are compile-time policy rather than collected data, and calibration/validation samples stay in ignored local `artifacts/` directories outside the report contract.
+
+The separate development lifecycle hook is enabled only by `WINGPUDOCTOR_M4_PROCESS_PROBE=1` in the validation harness. Its stderr records contain process IDs and birth identities, fixed operation/attempt names and monotonic timestamps, with no hardware identities/provider text; this process metadata stays in ignored private evidence and never enters Core or reports. Normal CLI execution has no lifecycle sink. Cancellation and output commitment now share one atomic state; a late callback after output commitment cannot create a hidden controlled cancellation.

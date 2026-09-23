@@ -1,10 +1,11 @@
 using System.Text;
+using WinGPUDoctor.Cli;
 using WinGPUDoctor.Core;
-using WinGPUDoctor.Windows;
+using WinGPUDoctor.Supervisor;
 
-return Run(args);
+return await RunAsync(args);
 
-static int Run(string[] args)
+static async Task<int> RunAsync(string[] args)
 {
     if (args.Length == 1 && args[0] is "--help" or "-h")
     {
@@ -42,13 +43,16 @@ static int Run(string[] args)
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
         { Console.Error.WriteLine("Invalid local export destination."); return 2; }
     }
-    CollectionSnapshot snapshot;
-    try { snapshot = WindowsCollector.CreateLocal().Collect(); }
-    catch (Exception)
-    {
-        // Do not expose native exception text or dump the process environment on failure.
-        Console.Error.WriteLine("Collection could not complete. No report was exported."); return 3;
-    }
+    using var consoleCancellation = new ConsoleCancellation();
+    consoleCancellation.Register();
+    var collector = new SupervisedWindowsCollector(progress: M4CollectionProbe.FromEnvironment());
+    return await CollectionOutput.RunAsync(collector.CollectAsync,
+        consoleCancellation.Controller, consoleCancellation.Unregister,
+        snapshot => WriteReport(snapshot, format, fullPath, yes), Console.Error.WriteLine);
+}
+
+static int WriteReport(CollectionSnapshot snapshot, string format, string? fullPath, bool yes)
+{
     var report = PrivacyPolicy.Prepare(snapshot, DateOnly.FromDateTime(DateTime.UtcNow));
     var content = format == "json" ? ReportWriter.Json(report) : ReportWriter.Markdown(report);
     if (fullPath is null) Console.Write(content);
@@ -76,3 +80,41 @@ static int Run(string[] args)
 }
 
 static int Usage() { Console.Error.WriteLine("Invalid arguments. Use --help."); return 2; }
+
+internal sealed class ConsoleCancellation : IDisposable
+{
+    private readonly HostCancellationController _controller = new();
+    private bool _registered;
+
+    internal HostCancellationController Controller => _controller;
+
+    internal void Register()
+    {
+        if (_registered) return;
+        try
+        {
+            Console.CancelKeyPress += HandleCancel;
+            _registered = true;
+        }
+        catch (PlatformNotSupportedException)
+        {
+            // Non-console hosts have no console cancellation event.
+        }
+    }
+
+    internal void Unregister()
+    {
+        if (!_registered) return;
+        Console.CancelKeyPress -= HandleCancel;
+        _registered = false;
+    }
+
+    private void HandleCancel(object? sender, ConsoleCancelEventArgs args) =>
+        args.Cancel = _controller.Interrupt() == HostInterruptResult.Controlled;
+
+    public void Dispose()
+    {
+        Unregister();
+        _controller.Dispose();
+    }
+}

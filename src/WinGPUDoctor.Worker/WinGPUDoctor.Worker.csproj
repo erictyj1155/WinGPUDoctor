@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>wingpudoctor-worker</AssemblyName>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WinGPUDoctor.Protocol/WinGPUDoctor.Protocol.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
+  </ItemGroup>
+</Project>

@@ -106,8 +106,28 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "wingpudoctor-worker": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Protocol": "[1.0.0, )",
+          "WinGPUDoctor.Windows": "[1.0.0, )"
+        }
+      },
       "wingpudoctor.core": {
         "type": "Project"
+      },
+      "wingpudoctor.protocol": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[1.0.0, )"
+        }
+      },
+      "wingpudoctor.supervisor": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[1.0.0, )",
+          "WinGPUDoctor.Protocol": "[1.0.0, )"
+        }
       },
       "wingpudoctor.windows": {
         "type": "Project",

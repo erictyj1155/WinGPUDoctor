@@ -4,8 +4,14 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <AssemblyName>wingpudoctor</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <WorkerOutputDirectory>$(MSBuildThisFileDirectory)..\WinGPUDoctor.Worker\bin\$(Configuration)\net10.0-windows</WorkerOutputDirectory>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../WinGPUDoctor.Supervisor/WinGPUDoctor.Supervisor.csproj" />
     <ProjectReference Include="../WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
+  <Target Name="CopyWorkerDeployment" AfterTargets="Build">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\copy-worker-deployment.ps1&quot; -WorkerOutput &quot;$(WorkerOutputDirectory)&quot; -Destination &quot;$(OutDir)worker&quot;" />
+  </Target>
 </Project>

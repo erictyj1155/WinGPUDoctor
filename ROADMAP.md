@@ -25,14 +25,37 @@ M2 does not determine application rendering GPU, utilization/power, MUX position
 - [x] Tightened deterministic coverage for affected severity combinations, retry growth/shrink, count guards, repeated collector use, path isolation, and multi-path privacy references.
 - [x] Updated the validation record, schema guidance, README, and ADR 0006; schema remains 0.2.0.
 
-M3 remains a single-laptop validation result. It does not claim external-display, hot-plug, AMD, ARM64, RDP, or broad compatibility validation. Final read-only review and fresh checkpoint validation passed; M3 is locally checkpointed with no publication or release. M4 has not started.
+M3 remains a single-laptop validation result. It does not claim external-display, hot-plug, AMD, ARM64, RDP, or broad compatibility validation. Final read-only review and fresh checkpoint validation passed; M3 is locally checkpointed with no publication or release. M4 is separately bounded below.
 
 Do not change graphics modes, MUX/BIOS state, drivers, or power settings. The existing external-display/remote-session manual checklist remains optional future coverage when hardware/session access becomes available, not a completion gate for this single-laptop milestone.
 
 Do not add new data sources, DXGI, classification, vendor APIs, monitoring, GUI, or remediation in this validation milestone unless a specific failure requires a separately reviewed scope decision.
 
+## Milestone 4 — bounded collection supervisor
+
+Phase 1 passed GPT Gate 1 after the targeted corrections. Gate 2 real collector integration initially failed the integrated semantics/privacy review; targeted corrections then passed its re-review. The final timing/checkpoint review subsequently failed. Its F1-F5 corrections now provide an atomic cancellation/output handoff, corrected live readiness/process/timing evidence, per-run fingerprints and reconciled timing rationale. M4 is **pending final checkpoint-readiness re-review**, remains incomplete and has no commit.
+
+- [x] Added `WinGPUDoctor.Protocol`, `WinGPUDoctor.Supervisor`, and framework-dependent `wingpudoctor-worker` projects.
+- [x] Added strict protocol v1 framing, fixed operations, concrete payloads, bounds, duplicate/order/state validation, and `ResourceLimit` mapping.
+- [x] Added the monotonic supervisor budget/state machine with exactly one terminal outcome, deadline equality timeout, late-result/late-timer protection, cleanup allowance, reservations, and poisoned admission.
+- [x] Added embedded worker deployment manifest generation, hash/length/identity validation, and `<CLI output>/worker/` deployment.
+- [x] Added creation-time Job Object containment with `JOB_LIST`/`HANDLE_LIST`, kill-on-close, active-process limit one, no breakaway, and explicit non-elevation checks.
+- [x] Added a private current-user first-instance named pipe with remote-client rejection, explicit pipe-client/NUL inheritance, absolute asynchronous I/O deadlines, and retained ownership with process-wide poisoning on unconfirmed cleanup.
+- [x] Added deterministic fake-clock tests, protocol/parser tests, native layout tests, and synthetic child-process tests.
+- [x] GPT Review Gate 1: native/transport correctness passed after corrections.
+- [x] Gate 2: real Worker dispatch for the five fixed operations and production supervisor-backed collection composition.
+- [x] Parent assembly of the existing `CollectionSnapshot`, conditional driver operation, exact correlation, M3 optional-name behavior, privacy projection, schema and CLI exit preservation.
+- [x] Targeted integrated corrections implemented and tested locally; this is not a re-review pass.
+- [x] Integrated semantics/privacy review passed after those corrections.
+- [x] Controlled Ctrl+C: the first interrupt closes result acceptance, prevents later operations, cleans up within the existing bounded contract, skips preview/export and returns `3`; a second interrupt keeps default forced termination. Covered by deterministic tests and a scoped live console-signal check on this laptop.
+- [x] Internal timing calibration on one available laptop and selection of `CollectionTimingPolicy.CalibratedProduction`; fake-clock tests remain the authoritative boundary proof and no public timeout option was added.
+- [x] Three corrected fresh-process healthy collections with explicit per-run before/after fingerprints and tracked-worker liveness checks; same-host admission reuse remains a deterministic-test claim. Historical six-run evidence is qualified in `docs/VALIDATION.md`.
+- [ ] Final GPT checkpoint-readiness review, and only if separately authorized, the M4 commit.
+
+Gate 2 keeps schema, privacy projection, production collector normalization, exact adapter correlation, report semantics, and CLI exit codes unchanged. `WindowsCollector` remains a reference/test aggregate; the Worker reuses its mapping helpers and the production CLI uses the supervised path. Controlled cancellation is out-of-band and deliberately produces no report fixture.
+
 ## Later, separately authorized
 
-Potential work includes SetupAPI/WMI inventory comparison, hard collection cancellation, privacy-reviewed ZIP packaging, and a separate GUI decision. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised.
+Potential work includes SetupAPI/WMI inventory comparison, privacy-reviewed ZIP packaging, and a separate GUI decision. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised.
 
 BIOS/MUX/driver/service/registry/power-plan changes, telemetry, AI features, automatic fixes, and generic optimization remain outside current scope.

@@ -44,10 +44,11 @@ internal sealed class DisplayTopologyCollector(IDisplayConfigApi api, IAdapterIn
         catch (Exception) { return new(-3, default!); }
     }
 
-    internal TopologyResult Collect(IReadOnlyList<GpuCorrelationIdentity> inventory)
+    internal TopologyResult Collect(IReadOnlyList<GpuCorrelationIdentity> inventory, Action<int>? attemptStarted = null)
     {
         var issues = new List<CollectionIssue>();
         var attempts = 0;
+        var notifyingAttempt = false;
         TopologyResult Failure(ReasonCode reason, int? error = null)
         {
             issues.Add(new(CollectionOperation.QueryPaths, reason, error is { } code ? ExportError(code) : null));
@@ -61,6 +62,10 @@ internal sealed class DisplayTopologyCollector(IDisplayConfigApi api, IAdapterIn
             var flags = Flags(queryMode);
             for (attempts = 1; attempts <= MaxAttempts; attempts++)
             {
+                // Progress transport failure must escape, not become a fabricated native failure.
+                notifyingAttempt = true;
+                attemptStarted?.Invoke(attempts);
+                notifyingAttempt = false;
                 var error = api.GetBufferSizes(flags, out var pathCount, out var modeCount);
                 if (error != 0) return Failure(ErrorReason(error), error);
                 if (pathCount > 128 || modeCount > 512) return Failure(ReasonCode.ResourceLimit);
@@ -80,9 +85,9 @@ internal sealed class DisplayTopologyCollector(IDisplayConfigApi api, IAdapterIn
             }
             return Failure(ReasonCode.TopologyChanged);
         }
-        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or PlatformNotSupportedException)
+        catch (Exception ex) when (!notifyingAttempt && (ex is DllNotFoundException or EntryPointNotFoundException or PlatformNotSupportedException))
         { return Failure(ReasonCode.ApiUnavailable); }
-        catch (Exception) { return Failure(ReasonCode.NativeError); }
+        catch (Exception) when (!notifyingAttempt) { return Failure(ReasonCode.NativeError); }
     }
 
     private TopologyResult Transform(NativePath[] paths, NativeMode[] modes, IReadOnlyList<GpuCorrelationIdentity> inventory,

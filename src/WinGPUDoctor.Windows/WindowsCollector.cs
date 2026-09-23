@@ -12,11 +12,11 @@ public sealed class WindowsCollector : IDiagnosticCollector
     internal WindowsCollector(IWmiReader reader, DisplayTopologyCollector? topology) { this.reader = reader; this.topology = topology; }
     public static WindowsCollector CreateLocal() => new(new WmiReader(),
         new DisplayTopologyCollector(new DisplayConfigApi(), new SetupApiAdapterResolver(), DisplayTopologyCollector.CurrentQueryMode));
-    private static Observation<string> Missing(DataSource source, ReasonCode reason = ReasonCode.MissingValue) =>
+    internal static Observation<string> Missing(DataSource source, ReasonCode reason = ReasonCode.MissingValue) =>
         Observation<string>.Absent(DataState.Unknown, source, reason);
-    private static Observation<string> Text(WmiRow row, string name, DataSource source) =>
+    internal static Observation<string> Text(WmiRow row, string name, DataSource source) =>
         string.IsNullOrWhiteSpace(row.Get(name)) ? Missing(source) : Observation<string>.Known(row.Get(name)!, source);
-    private static Observation<string> Single(WmiResult result, string property, DataSource source)
+    internal static Observation<string> Single(WmiResult result, string property, DataSource source)
     {
         if (result.State != DataState.Available) return Observation<string>.Absent(result.State, source, result.Reason);
         return result.Rows.Count == 1 ? Text(result.Rows[0], property, source) : Missing(source, result.Rows.Count == 0 ? ReasonCode.MissingValue : ReasonCode.InvalidValue);
@@ -52,7 +52,7 @@ public sealed class WindowsCollector : IDiagnosticCollector
         return Missing(source, ReasonCode.InvalidValue);
     }
 
-    private static DriverFacts Driver(string? instanceId, WmiResult result)
+    internal static DriverFacts Driver(string? instanceId, WmiResult result)
     {
         const DataSource source = DataSource.WmiSignedDriver;
         DriverFacts Absent(DataState state, ReasonCode reason)

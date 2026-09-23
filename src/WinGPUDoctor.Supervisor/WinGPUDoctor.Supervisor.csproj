@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WinGPUDoctor.Core/WinGPUDoctor.Core.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Protocol/WinGPUDoctor.Protocol.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="GenerateWorkerDeploymentManifest" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <WorkerOutputDirectory>$(MSBuildThisFileDirectory)..\WinGPUDoctor.Worker\bin\$(Configuration)\net10.0-windows</WorkerOutputDirectory>
+      <GeneratedWorkerManifest>$(IntermediateOutputPath)WorkerDeploymentManifest.g.cs</GeneratedWorkerManifest>
+    </PropertyGroup>
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\generate-worker-manifest.ps1&quot; -WorkerOutput &quot;$(WorkerOutputDirectory)&quot; -OutputPath &quot;$(GeneratedWorkerManifest)&quot;" />
+    <ItemGroup>
+      <Compile Include="$(GeneratedWorkerManifest)" />
+    </ItemGroup>
+  </Target>
+</Project>

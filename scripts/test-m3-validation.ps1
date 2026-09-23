@@ -108,19 +108,26 @@ $passed.Add('Unicode escaped PCI identifier')
 
 $cli = Join-Path $projectRoot 'src/WinGPUDoctor.Cli/bin/Release/net10.0-windows/wingpudoctor.dll'
 $fingerprint = @(Get-M3ApplicationFingerprint $cli)
-$expectedFiles = @('wingpudoctor.dll', 'WinGPUDoctor.Core.dll', 'WinGPUDoctor.Windows.dll')
-if ($fingerprint.Count -ne 3 -or @($fingerprint | Where-Object File -notin $expectedFiles).Count -ne 0 -or
+$expectedParentFiles = @('wingpudoctor.dll', 'WinGPUDoctor.Core.dll', 'WinGPUDoctor.Windows.dll',
+    'WinGPUDoctor.Protocol.dll', 'WinGPUDoctor.Supervisor.dll', 'wingpudoctor.deps.json', 'wingpudoctor.runtimeconfig.json',
+    'host/dotnet.exe', 'runtime/System.Private.CoreLib.dll')
+$requiredWorkerFiles = @('worker/wingpudoctor-worker.dll', 'worker/WinGPUDoctor.Protocol.dll',
+    'worker/WinGPUDoctor.Core.dll', 'worker/WinGPUDoctor.Windows.dll')
+$actualFiles = @($fingerprint | Select-Object -ExpandProperty File)
+if (@($expectedParentFiles | Where-Object { $_ -notin $actualFiles }).Count -ne 0 -or
+    @($requiredWorkerFiles | Where-Object { $_ -notin $actualFiles }).Count -ne 0 -or
+    @($fingerprint | Where-Object Scope -notin @('parent', 'worker', 'host', 'runtime')).Count -ne 0 -or
     @($fingerprint | Where-Object Sha256 -notmatch '^[0-9A-F]{64}$').Count -ne 0) {
-    throw 'Build manifest did not yield exactly the three application assemblies with SHA256 hashes.'
+    throw 'Build manifest did not yield the required parent and worker runtime inputs with SHA256 hashes.'
 }
-$passed.Add('application-owned assembly discovery excludes framework packages')
+$passed.Add('parent and worker runtime input discovery')
 if (!(Test-M3ApplicationFingerprint $fingerprint $fingerprint)) { throw 'Unchanged build rejected.' }
 $passed.Add('unchanged application fingerprint')
-foreach ($file in $expectedFiles) {
+foreach ($entry in $fingerprint) {
     $changed = @($fingerprint | ConvertTo-Json | ConvertFrom-Json)
-    ($changed | Where-Object File -eq $file).Sha256 = '0' * 64
-    if (Test-M3ApplicationFingerprint $fingerprint $changed) { throw "Changed assembly missed: $file" }
-    $passed.Add("changed $file detected")
+    ($changed | Where-Object File -eq $entry.File).Sha256 = '0' * 64
+    if (Test-M3ApplicationFingerprint $fingerprint $changed) { throw "Changed runtime input missed: $($entry.File)" }
+    $passed.Add("changed $($entry.File) detected")
 }
 if (Test-M3ApplicationFingerprint $fingerprint @($fingerprint[0])) { throw 'Missing assemblies accepted.' }
 $passed.Add('missing application assemblies detected')

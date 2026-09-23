@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/WinGPUDoctor.Core/WinGPUDoctor.Core.csproj" />
+    <Project Path="src/WinGPUDoctor.Protocol/WinGPUDoctor.Protocol.csproj" />
     <Project Path="src/WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
+    <Project Path="src/WinGPUDoctor.Supervisor/WinGPUDoctor.Supervisor.csproj" />
+    <Project Path="src/WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" />
     <Project Path="src/WinGPUDoctor.Cli/WinGPUDoctor.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">

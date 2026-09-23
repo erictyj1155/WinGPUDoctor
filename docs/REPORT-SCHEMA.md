@@ -55,3 +55,7 @@ An insufficient-buffer race is retried at most three times. Recovered races rema
 Both formats use the same privacy-projected snapshot. Schema/tool/privacy versions are 0.2.0/0.2.0-poc/0.2. The schema forbids undeclared fields. Topology keys are regenerated and references remapped before writing, while GDI aliases and connector/rotation/scan-line strings have field-specific allowlists. Preview remains necessary for arbitrary OEM/monitor descriptions.
 
 The future ZIP design remains a wrapper for sanitized JSON/Markdown plus a minimal reviewed manifest. No ZIP implementation or raw-log inclusion was added in M2.
+
+M4 does not change this schema. Production collection now uses the worker supervisor to obtain the existing facts, but the parent reconstructs the prior `CollectionSnapshot` shape before privacy projection. Provider failures, supervisor timeouts, partial/failed runs, attempts, missing optional names, and collection-incomplete warnings remain representable under schema 0.2.0. Integrated fixtures cover WMI/topology timeout, intentional driver omission, zero observed attempts, partial unmatched topology and optional missing names. Worker output bounds become existing `failed/resourceLimit` observations without native-error or QueryPaths diagnostics; that internal failure frame adds no public schema field.
+
+Controlled Ctrl+C stays out-of-band: it produces no report, no `Cancelled` state and no new fixture, and the CLI returns `3` with nothing exported. Calibrated timing budgets are internal policy and add no schema field.

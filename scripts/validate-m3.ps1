@@ -29,7 +29,7 @@ if ($administrator) { throw 'This validation protocol requires a non-administrat
 
 $outputRoot = Join-Path $projectRoot ('artifacts\m3-validation-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
-$buildFingerprint = @(Get-M3ApplicationFingerprint $cli)
+$buildFingerprint = @(Get-M3ApplicationFingerprint -Cli $cli -DotnetHost $sdk)
 $protocolStartedOnUtc = [DateTime]::UtcNow.ToString('o')
 
 function Invoke-Collection([int]$runNumber) {
@@ -79,7 +79,7 @@ for ($run = 1; $run -le $Runs; $run++) {
     $matchedBefore = $false
     $matchedAfter = $false
     try {
-        $buildBefore = @(Get-M3ApplicationFingerprint $cli)
+        $buildBefore = @(Get-M3ApplicationFingerprint -Cli $cli -DotnetHost $sdk)
         $matchedBefore = Test-M3ApplicationFingerprint $buildFingerprint $buildBefore
     } catch { $failures.Add('application fingerprint could not be read before run') }
     if (!$matchedBefore) { $failures.Add('application build missing or changed before run; collection skipped') }
@@ -87,7 +87,7 @@ for ($run = 1; $run -le $Runs; $run++) {
         [pscustomobject]@{ Destination = (Join-Path $outputRoot ('run-{0:D2}.json' -f $run)); ExitCode = $null; DurationMs = 0 }
     }
     try {
-        $buildAfter = @(Get-M3ApplicationFingerprint $cli)
+        $buildAfter = @(Get-M3ApplicationFingerprint -Cli $cli -DotnetHost $sdk)
         $matchedAfter = Test-M3ApplicationFingerprint $buildFingerprint $buildAfter
     } catch { $failures.Add('application fingerprint could not be read after run') }
     if (!$matchedAfter) { $failures.Add('application build missing or changed after run') }
@@ -138,7 +138,8 @@ $summary = [pscustomobject]@{
     AdministratorToken = $administrator
     AdministratorGuardPassed = !$administrator
     FingerprintAlgorithm = 'SHA256'
-    ApplicationAssemblies = $buildFingerprint
+    FingerprintFormat = 2
+    ExecutionInputs = $buildFingerprint
     Parameters = [pscustomobject]@{
         Runs = $Runs; BatchSize = $BatchSize; PauseSeconds = $PauseSeconds
         ExpectedPathRateNumerator = $ExpectedPathRateNumerator; ExpectedPathRateDenominator = $ExpectedPathRateDenominator

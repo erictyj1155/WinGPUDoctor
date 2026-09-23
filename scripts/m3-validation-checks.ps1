@@ -1,41 +1,13 @@
 # Shared checks for the opt-in M3 laptop protocol and deterministic synthetic tests.
 # Loading this file performs no collection, export, or system change.
-function Get-M3ApplicationFingerprint([string]$Cli) {
-    $directory = Split-Path $Cli -Parent
-    $depsPath = [IO.Path]::ChangeExtension($Cli, '.deps.json')
-    $deps = Get-Content -LiteralPath $depsPath -Raw | ConvertFrom-Json -AsHashtable
-    $target = $deps.targets[$deps.runtimeTarget.name]
-    $assemblies = @(
-        foreach ($library in $deps.libraries.Keys) {
-            if ($deps.libraries[$library].type -ne 'project') { continue }
-            foreach ($asset in $target[$library].runtime.Keys) {
-                if ([IO.Path]::GetExtension($asset) -ne '.dll' -or [IO.Path]::GetFileName($asset) -ne $asset) {
-                    throw 'Unexpected application assembly layout in build manifest.'
-                }
-                $path = Join-Path $directory $asset
-                $file = Get-Item -LiteralPath $path -ErrorAction Stop
-                [pscustomobject]@{
-                    File = $asset
-                    Library = $library
-                    Length = $file.Length
-                    Sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256 -ErrorAction Stop).Hash
-                }
-            }
-        }
-    )
-    # These are the three project libraries verified in the current build and project references.
-    foreach ($name in @('wingpudoctor', 'WinGPUDoctor.Core', 'WinGPUDoctor.Windows')) {
-        if (@($assemblies | Where-Object { ($_.Library -split '/')[0] -ceq $name }).Count -ne 1) {
-            throw 'Required application assembly is missing or ambiguous in build manifest.'
-        }
-    }
-    $assemblies | Sort-Object File
+function Get-M3ApplicationFingerprint([string]$Cli, [string]$DotnetHost) {
+    . (Join-Path $PSScriptRoot 'execution-fingerprint.ps1')
+    Get-ExecutionFingerprint -Cli $Cli -DotnetHost $DotnetHost
 }
-
 function Test-M3ApplicationFingerprint([object[]]$Expected, [object[]]$Actual) {
     if ($Expected.Count -eq 0 -or $Actual.Count -ne $Expected.Count) { return $false }
-    $left = @($Expected | Sort-Object File | Select-Object File, Library, Length, Sha256) | ConvertTo-Json -Compress
-    $right = @($Actual | Sort-Object File | Select-Object File, Library, Length, Sha256) | ConvertTo-Json -Compress
+    $left = @($Expected | Sort-Object File | Select-Object Scope, File, Library, Length, Sha256, Identity) | ConvertTo-Json -Compress
+    $right = @($Actual | Sort-Object File | Select-Object Scope, File, Library, Length, Sha256, Identity) | ConvertTo-Json -Compress
     return $left -ceq $right
 }
 
