@@ -57,7 +57,8 @@ Active paths reported: 1
 
 ## Interpreted findings
 
-- **inventory.multiple-adapters** (information): Windows reports multiple video controllers. This alone does not establish hybrid mode, display routing, GPU power state, or which GPU an application uses. Evidence: facts.gpus
+- **inventory\.multiple\-adapters** (information): Windows reports multiple video controllers\. This alone does not establish hybrid mode, display routing, GPU power state, or which GPU an application uses\. Evidence: facts\.gpus
+- **topology\.endpoint\-adapter\-association** (information): For display\-1, the source endpoint is exactly associated with gpu\-2, and the target endpoint is exactly associated with gpu\-2, through identity correlation in this report\. These associations do not establish application rendering, workload ownership, electrical routing, GPU preference, power state, graphics mode, health, or driver correctness\. Evidence: facts\.displays\.value\[0\]\.id, facts\.displays\.value\[0\]\.pathActive, facts\.displays\.value\[0\]\.sourceAdapter, facts\.displays\.value\[0\]\.targetAdapter
 
 ## Warnings
 

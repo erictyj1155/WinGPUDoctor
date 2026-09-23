@@ -247,6 +247,17 @@
       "evidence": [
         "facts.gpus"
       ]
+    },
+    {
+      "id": "topology.endpoint-adapter-association",
+      "severity": "information",
+      "message": "For display-1, the source endpoint is exactly associated with gpu-2, and the target endpoint is exactly associated with gpu-2, through identity correlation in this report. These associations do not establish application rendering, workload ownership, electrical routing, GPU preference, power state, graphics mode, health, or driver correctness.",
+      "evidence": [
+        "facts.displays.value[0].id",
+        "facts.displays.value[0].pathActive",
+        "facts.displays.value[0].sourceAdapter",
+        "facts.displays.value[0].targetAdapter"
+      ]
     }
   ],
   "warnings": [

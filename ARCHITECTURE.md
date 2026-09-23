@@ -1,6 +1,6 @@
 # Architecture
 
-Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. The final checkpoint-readiness review passed, and M4 is checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`. The checkpoint has not been published; physical validation remains limited to one laptop.
+Status: M1 foundation extended by M2 active topology, M3 single-laptop hardening, and M4 supervisor-backed collection. The production CLI uses short-lived workers for the five fixed operations. M4 is checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`; M5 informational findings have passed independent semantics/privacy review and scoped physical integration validation on the current laptop. The M5 checkpoint has not occurred; final readiness review remains before owner-controlled checkpoint steps. Physical validation remains limited to one laptop.
 
 ## Stack
 
@@ -22,7 +22,7 @@ Future GUI ──────> same collector and core interfaces
 3. **Display collection:** `DisplayTopologyCollector` queries active paths through injectable native interfaces. Each domain entry preserves source/target keys and adapters, source dimensions, rational path/signal rates, rotation, and target availability. Clone/extended relationships remain representable. `WindowsCollector.CreateLocal()` composes WMI and topology; the WMI-only injectable constructor remains for M1 tests.
 4. **Normalization/model:** `Observation<T>` enforces state/value/reason consistency. Collectors return projected facts and structured collection outcomes, with no conclusions or raw provider dumps.
 5. **Privacy:** `PrivacyPolicy.Prepare` copies permitted facts. `TopologyPrivacy` regenerates labels, remaps unique GPU references, validates GDI/enum text, and filters names. Native LUIDs, paths, instance IDs, and EDID fields never enter domain facts. Public writers cannot accept raw collector objects. This is a code boundary, not a sandbox against malicious extensions or reflection.
-6. **Rules:** pure functions over sanitized facts. M1 explains multiple or zero reported controllers only. Findings contain evidence paths and do not infer mode, health, activity, or causes.
+6. **Rules:** pure functions over privacy-projected facts. M1 explains multiple or zero reported controllers. M5 appends bounded informational interpretations of active endpoint associations, unresolved correlation, unavailable targets and available empty topology. Findings contain report-local evidence paths and do not infer mode, health, activity, or causes.
 7. **Reports:** one `ShareableReport` feeds JSON and Markdown. No raw export escape hatch. A future ZIP writer can package the same two outputs plus a sanitized manifest; arbitrary log/file inclusion is not permitted by this design.
 8. **CLI:** validates arguments before collecting, previews without writing by default, asks for explicit export acceptance, and never overwrites an existing file. File I/O belongs to the CLI, not the collector/core.
 

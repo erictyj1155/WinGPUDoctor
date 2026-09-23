@@ -2,6 +2,50 @@
 
 Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGENTS.md) for the operating workflow. Dated sections below describe their own checked snapshot; historical next-step proposals do not override current scope or accepted superseding ADRs.
 
+## M5 — Explainable Active-Display Associations: Gate 3 correction and Gate 4 physical validation — 2026-09-23
+
+### Gate 3 F1 correction and closure
+
+The independent semantics/privacy review found no production semantics or privacy defect. It identified one test-only example-reproducibility issue: checkout line endings could make otherwise identical generated examples compare differently. The test now normalizes example-file text from CRLF to LF and lone CR to LF while preserving LF. Comparison remains otherwise exact, so final-newline differences, other whitespace differences, and genuine content mismatches remain detectable. The independent F1 re-review passed. Gate 3 is complete.
+
+The focused M5 re-review passed **34 tests**. The full correction-pass workflow passed locked restore, a Release build with **0 warnings / 0 errors**, and **304 xUnit tests passed, 0 failed, 0 skipped**.
+
+| Correction-pass check | Result |
+|---|---|
+| Synthetic schema positive and negative checks | Passed |
+| Integrated schema fixtures | **8 passed** |
+| M3 helper checks | **49 passed** |
+| M4 admission probe / deployment checks | **1 / 10 passed** |
+| Execution fingerprint / M4 process-evidence checks | **8 / 6 passed** |
+| git diff --check | Passed |
+
+The build, test, schema and helper outcomes above are correction-pass and focused re-review results; they were inspected, not rerun, during this documentation reconciliation or the final readiness review. git diff --check was rerun after this documentation update and passed. The earlier Gate 2 **301/301** result and restricted **289/299** attempt remain historical records above; they are not rewritten as the latest result.
+
+### Gate 4 scoped physical validation
+
+After a fresh successful Release build, the authorized existing hardware-smoke.ps1 workflow performed one live collection on the current laptop as a non-administrator. The CLI returned **0**, and all five collection operations succeeded. The sanitized report contained available topology with one active path: display-1; exact source association to gpu-2; exact target association to gpu-2; target available = true.
+
+Findings appeared in order: inventory.multiple-adapters, then topology.endpoint-adapter-association. M5 evidence references resolved. JSON and Markdown findings matched from the same snapshot. Schema 0.2.0 passed, and privacy/report checks returned zero failures. The optional monitor friendly name remained unknown/missingValue and nonblocking; no collectionIncomplete warning was emitted. Candidate-file hashes were unchanged by the physical run. Raw reports, preview, logs, and other run evidence remain ignored/private local evidence and are not included here.
+
+This physical result covers only the current laptop and its current one-active-path configuration. It does not physically validate unresolved correlation, unavailable target, empty or unavailable topology, external displays, clone/extend/hot-plug, AMD, other Intel/NVIDIA configurations, ARM64, eGPU, RDP, virtual displays, other machines, or universal timing. Synthetic tests cover the unobserved semantic states.
+
+## M5 Gate 2 implementation — 2026-09-23
+
+The owner authorized implementation of the frozen four-finding interpretation contract, tests, generated synthetic examples and existing documentation. At the Gate 2 snapshot, independent Gate 3 semantics/privacy review and separate checkpoint authorization were still pending. This pass did not alter Windows collection, Worker, Protocol, Supervisor, native code, dependencies, schema version or CLI exit logic. The generated examples use the synthetic topology fixture through `PrivacyPolicy.Prepare` and both production writers; an xUnit test checks exact agreement with the tracked example files.
+
+| Fresh check | Result |
+|---|---|
+| `./scripts/dev.ps1 -Action test` with ordinary process permissions | Locked restore and Release build passed, **0 warnings / 0 errors**; **301/301** xUnit passed, 0 failed, 0 skipped |
+| Synthetic schema | Version 0.2.0 example accepted; contradictory failed-with-value observation and undeclared field rejected |
+| Existing integrated schema fixtures | **8** passed |
+| M3 helper / M4 admission / deployment | **49 / 1 / 10** passed |
+| Execution fingerprint / M4 process evidence helpers | **8 / 6** passed |
+| New M5 cases | **31** deterministic cases in the 301-test result, covering rules, state variants, evidence resolution/rejection, ordering, privacy, writer escaping and production-generated examples |
+
+An initial run under the restricted process sandbox built successfully but failed 10 existing `WorkerProcessTests` at private-pipe client creation (**289 passed / 10 failed**). This matches the historical environment restriction and is not an M5 rule failure. The workflow was rerun with the permissions required by those process tests, without changing product code or settings; after two additional focused regressions, the final run passed 301/301. The final result supersedes the restricted run for the complete test verdict; both outcomes are reported.
+
+No new physical M5 validation was performed during Gate 2. Earlier M4 single-laptop collections and cancellation checks remain historical evidence. No opt-in live hardware or CLI collection script was run here, and no new machine/configuration coverage is claimed.
+
 ## M4 targeted final checkpoint corrections — 2026-09-22
 
 The final timing/checkpoint-readiness review returned FAIL. This authorized correction pass addresses F1-F5 without changing production timing constants, containment, correlation, privacy semantics, schema 0.2.0 or CLI exits. **M4 is pending final checkpoint-readiness re-review**, remains incomplete and is unstaged/uncommitted. Earlier dated sections are historical; the corrections below supersede their overstatements.

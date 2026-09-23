@@ -16,7 +16,34 @@ Each observation has `state`, `value`, `source`, and `reason`:
 | `failed` | Attempted collection failed; null plus a safe reason |
 | `redacted` | Privacy policy removed the value; null plus `sensitiveValue` |
 
-A failed inventory is never an available empty list. Numeric values remain directly reported facts, with calendar-date/PCI normalization documented in the collectors. No uncertain field receives a guessed substitute. Findings remain the two conservative M1 inventory rules; topology adds observations and warnings without new mode/health verdicts.
+A failed inventory is never an available empty list. Numeric values remain directly reported facts, with calendar-date/PCI normalization documented in the collectors. No uncertain field receives a guessed substitute. M5 adds four informational topology interpretations to the two conservative M1 inventory rules without a mode or health verdict.
+
+## M5 interpreted findings
+
+Rules run on the privacy-projected facts used by both exporters. The existing inventory rules retain their predicates, messages, severity and evidence. They appear before M5 topology findings. An empty findings array means only that no configured rule fired; it is not an all-clear or evidence-completeness claim.
+
+| ID | Predicate for available topology | Meaning |
+|---|---|---|
+| `topology.endpoint-adapter-association` | Active path; both source and target associations are exact | Names the two projected GPU labels through the existing identity correlation; neither label identifies an application rendering GPU |
+| `topology.correlation-unresolved` | Active path; at least one endpoint association is unavailable | Preserves each endpoint independently, including any exact label and the unavailable state/source/reason; it does not assert that no GPU exists |
+| `topology.active-path-target-unavailable` | Active path; `targetAvailable` is false | Reports that flag without assigning a cable, monitor, port, GPU or driver cause |
+| `topology.no-active-paths` | Available display observation containing zero entries | Describes this report's available empty active-path collection, not the raw native record count or absence of display hardware |
+
+All four use `information`. For each valid active path, exactly one association/unresolved finding appears, then the target-unavailable finding if applicable. Paths follow projected array order. An available empty collection produces one no-active-paths finding; a nonavailable whole-topology observation produces none. Partial collector status does not suppress usable path facts. Finding severity does not change collection status, warnings or CLI exits.
+
+M5 evidence is limited to `facts.displays` for the empty observation, or these exact fields for zero-based projected array position `i`:
+
+```text
+facts.displays.value[i].id
+facts.displays.value[i].pathActive
+facts.displays.value[i].sourceAdapter
+facts.displays.value[i].targetAdapter
+facts.displays.value[i].targetAvailable
+```
+
+Association and unresolved findings list `id`, `pathActive`, `sourceAdapter`, `targetAdapter` in that order. Target-unavailable lists `id`, `pathActive`, `targetAvailable`. Adapter evidence points to the complete observation object, so unavailable state/source/reason remain visible even when its value is null. Evidence paths use projected positions and neutral labels only; tests resolve them against the same exported report. The schema checks their `facts.` prefix but does not itself prove resolution.
+
+The ID denotes the rule kind, so repeated IDs across paths are expected. The evidence index supplies report-local instance context, not stable cross-run identity. JSON and Markdown use the same findings in the same order; Markdown escapes finding-provided text for display. Neither format establishes rendering, workload, power, graphics mode, electrical wiring, health or driver correctness from a topology association.
 
 ## Active display path model
 

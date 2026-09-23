@@ -92,7 +92,7 @@ public static class ReportWriter
         }
         b.AppendLine("## Interpreted findings").AppendLine();
         if (r.Findings.Count == 0) b.AppendLine("No rules produced a finding; this is not a health verdict.");
-        foreach (var f in r.Findings) b.AppendLine($"- **{f.Id}** ({f.Severity}): {f.Message} Evidence: {string.Join(", ", f.Evidence)}");
+        foreach (var f in r.Findings) b.AppendLine($"- **{Escape(f.Id)}** ({Escape(f.Severity)}): {Escape(f.Message)} Evidence: {string.Join(", ", f.Evidence.Select(Escape))}");
         b.AppendLine().AppendLine("## Warnings").AppendLine();
         foreach (var w in r.Warnings) b.AppendLine($"- {w}: {WarningText(w)}");
         b.AppendLine().AppendLine("## Collection metadata").AppendLine();
