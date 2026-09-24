@@ -69,7 +69,7 @@ Exit codes: `0` collection completed; `2` invalid arguments/platform/destination
 
 For this initial workspace, a SHA512-verified portable SDK is in ignored `.tools/dotnet`. The supplied scripts require PowerShell 7. `scripts/dev.ps1` uses the portable SDK when present, otherwise the installed SDK; it keeps SDK state/package cache under `.tools` and disables telemetry and certificate generation. This folder is a local development convenience, not part of the distributed app.
 
-The default local development/build workflow enforces locked restore but skips vulnerability auditing. This does not enforce offline operation: uncached packages may still be downloaded. Vulnerability auditing is a separate check, `./scripts/dev.ps1 -Action audit`, which uses locked restore with auditing enabled and may need network access to advisory sources. CI retains audited restore; check the GitHub Actions run history for hosted CI results once an upstream exists. A deterministic test pass is not a dependency-security audit.
+The default local development/build workflow enforces locked restore but skips vulnerability auditing. This does not enforce offline operation: uncached packages may still be downloaded. Vulnerability auditing is a separate check, `./scripts/dev.ps1 -Action audit`, which uses locked restore with auditing enabled and may need network access to advisory sources. CI retains audited restore; check the [GitHub Actions history](https://github.com/erictyj1155/WinGPUDoctor/actions) for hosted CI results. A deterministic test pass is not a dependency-security audit.
 
 ```powershell
 ./scripts/dev.ps1 -Action test
