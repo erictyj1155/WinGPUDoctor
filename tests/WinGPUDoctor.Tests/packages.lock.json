@@ -109,8 +109,8 @@
       "wingpudoctor-worker": {
         "type": "Project",
         "dependencies": {
-          "WinGPUDoctor.Protocol": "[1.0.0, )",
-          "WinGPUDoctor.Windows": "[1.0.0, )"
+          "WinGPUDoctor.Protocol": "[0.1.0, )",
+          "WinGPUDoctor.Windows": "[0.1.0, )"
         }
       },
       "wingpudoctor.core": {
@@ -119,21 +119,21 @@
       "wingpudoctor.protocol": {
         "type": "Project",
         "dependencies": {
-          "WinGPUDoctor.Core": "[1.0.0, )"
+          "WinGPUDoctor.Core": "[0.1.0, )"
         }
       },
       "wingpudoctor.supervisor": {
         "type": "Project",
         "dependencies": {
-          "WinGPUDoctor.Core": "[1.0.0, )",
-          "WinGPUDoctor.Protocol": "[1.0.0, )"
+          "WinGPUDoctor.Core": "[0.1.0, )",
+          "WinGPUDoctor.Protocol": "[0.1.0, )"
         }
       },
       "wingpudoctor.windows": {
         "type": "Project",
         "dependencies": {
           "System.Management": "[10.0.12, )",
-          "WinGPUDoctor.Core": "[1.0.0, )"
+          "WinGPUDoctor.Core": "[0.1.0, )"
         }
       }
     }

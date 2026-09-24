@@ -46,7 +46,7 @@ public static class PrivacyPolicy
             displays.State == DataState.Available ? WarningCode.TopologyIsNotRendering : WarningCode.TopologyNotCollected, WarningCode.ReviewBeforeSharing };
         if (snapshot.Collection.Any(c => c.IsIncomplete())) warnings.Add(WarningCode.CollectionIncomplete);
         if (removed > 0) warnings.Add(WarningCode.ValuesRedacted);
-        return new(new("0.2.0", "0.2.0-poc", collectedOnUtc, facts, DiagnosticRules.Evaluate(facts),
+        return new(new("0.2.0", ToolIdentity.Version, collectedOnUtc, facts, DiagnosticRules.Evaluate(facts),
             warnings.ToArray(), snapshot.Collection.Select(c => c with { Issues = c.Issues.ToArray() }).ToArray(), new("0.2", removed)));
     }
 }

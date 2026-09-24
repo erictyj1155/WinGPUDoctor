@@ -1,6 +1,6 @@
 # WinGPUDoctor diagnostic report
 
-Schema: 0.2.0 | Tool: 0.2.0-poc | UTC date: 2026-09-10
+Schema: 0.2.0 | Tool: 0.1.0 | UTC date: 2026-09-10
 
 ## Collected facts
 

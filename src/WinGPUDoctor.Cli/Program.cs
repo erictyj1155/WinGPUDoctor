@@ -9,7 +9,7 @@ static async Task<int> RunAsync(string[] args)
 {
     if (args.Length == 1 && args[0] is "--help" or "-h")
     {
-        Console.WriteLine("WinGPUDoctor 0.2.0-poc — read-only GPU inventory and active display paths\nUsage: wingpudoctor [--format markdown|json] [--output FILE] [--yes]\nDefault: sanitized Markdown preview on stdout; no file is written.\n--output: preview on stderr, then type EXPORT to save that exact snapshot.\n--yes: explicitly accept export without an interactive prompt; requires --output.\nExisting files are never overwritten. UNC/device paths are rejected. No upload.\nTopology does not identify the GPU used by applications.\nExit codes: 0 complete; 2 arguments/platform; 3 partial/failed collection; 4 export declined; 5 export failed.");
+        Console.WriteLine($"WinGPUDoctor {ToolIdentity.Version} — read-only GPU inventory and active display paths\nUsage: wingpudoctor [--format markdown|json] [--output FILE] [--yes]\nDefault: privacy-projected Markdown preview on stdout; no file is written.\n--output: preview on stderr, then type EXPORT to save that exact snapshot.\n--yes: explicitly accept export without an interactive prompt; requires --output.\nReview descriptions before sharing; filtering cannot guarantee anonymity.\nExisting files are never overwritten. UNC/device paths are rejected. No upload.\nTopology does not identify the GPU used by applications.\nExit codes: 0 complete; 2 arguments/platform; 3 incomplete collection or controlled first Ctrl+C (no report); 4 export declined; 5 export failed.");
         return 0;
     }
     var format = "markdown";

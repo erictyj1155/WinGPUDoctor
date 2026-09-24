@@ -1,6 +1,6 @@
 # Security
 
-This is a pre-release proof of concept, with no security audit or production-hardening claim. There is no established supported-release maintenance policy yet. Test only builds whose source you trust.
+This is a v0.1 release candidate, with no comprehensive security-audit or production-hardening claim. The tested scope is Windows 11 x64 on one ordinary-user laptop; other configurations are unvalidated. There is no response SLA or established maintenance schedule. Use only builds whose source you trust.
 
 ## Reporting a vulnerability
 

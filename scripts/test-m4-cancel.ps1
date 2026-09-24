@@ -4,7 +4,8 @@ param(
     [ValidateRange(1,6)][int]$Runs = 1,
     [string]$EvidenceRoot,
     [switch]$ProbeWorker,
-    [string]$EvidenceDir
+    [string]$EvidenceDir,
+    [string]$CliExecutable
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'm4-process-evidence.ps1')
@@ -12,6 +13,11 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 $localSdk = Join-Path $projectRoot '.tools\dotnet\dotnet.exe'
 $sdk = if (Test-Path -LiteralPath $localSdk) { $localSdk } else { (Get-Command dotnet -ErrorAction Stop).Source }
 $cli = Join-Path $projectRoot 'src\WinGPUDoctor.Cli\bin\Release\net10.0-windows\wingpudoctor.dll'
+if ($CliExecutable) {
+    $CliExecutable = [IO.Path]::GetFullPath($CliExecutable)
+    if (!(Test-Path -LiteralPath $CliExecutable -PathType Leaf) -or
+        [IO.Path]::GetExtension($CliExecutable) -ine '.exe') { throw 'An existing packaged CLI executable is required.' }
+}
 if ($ProbeWorker) {
     Add-Type -Namespace WgdCancelProbe -Name Api -MemberDefinition @'
 [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
@@ -32,7 +38,11 @@ public static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProc
     $previousProbe = $env:WINGPUDOCTOR_M4_PROCESS_PROBE
     try {
         $env:WINGPUDOCTOR_M4_PROCESS_PROBE = '1'
-        $inner = '"{0}" "{1}" --format json --output "{2}" --yes 1> "{3}" 2> "{4}"' -f $sdk, $cli, $report, $outPath, $errorPath
+        $inner = if ($CliExecutable) {
+            '"{0}" --format json --output "{1}" --yes 1> "{2}" 2> "{3}"' -f $CliExecutable, $report, $outPath, $errorPath
+        } else {
+            '"{0}" "{1}" --format json --output "{2}" --yes 1> "{3}" 2> "{4}"' -f $sdk, $cli, $report, $outPath, $errorPath
+        }
         $rootProcess = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') -ArgumentList '/c', ('"' + $inner + '"') -PassThru -WindowStyle Hidden -WorkingDirectory $projectRoot
         $result.ConsoleRootPid = $rootProcess.Id
         $preparation = [Diagnostics.Stopwatch]::StartNew()
@@ -130,7 +140,7 @@ public static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProc
     }
     exit $(if ($failures.Count) { 1 } else { 0 })
 }
-if (!(Test-Path -LiteralPath $cli)) { throw 'Build Release first.' }
+if (!$CliExecutable -and !(Test-Path -LiteralPath $cli)) { throw 'Build Release first.' }
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 try { $administrator = ([Security.Principal.WindowsPrincipal]::new($identity)).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) }
 finally { $identity.Dispose() }
@@ -139,8 +149,10 @@ $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
 $totalFailures = 0
 for ($run = 1; $run -le $Runs; $run++) {
     $dir = New-M4EvidenceDirectory -Root $EvidenceRoot -Prefix ('m4-' + $Mode.ToLowerInvariant() + '-')
-    $child = Start-Process -FilePath $pwsh -ArgumentList @('-NoProfile','-File',('"' + $PSCommandPath + '"'),
-        '-ProbeWorker','-Mode',$Mode,'-EvidenceDir',('"' + $dir + '"')) -PassThru -Wait -NoNewWindow
+    $arguments = @('-NoProfile','-File',('"' + $PSCommandPath + '"'),
+        '-ProbeWorker','-Mode',$Mode,'-EvidenceDir',('"' + $dir + '"'))
+    if ($CliExecutable) { $arguments += @('-CliExecutable', ('"' + $CliExecutable + '"')) }
+    $child = Start-Process -FilePath $pwsh -ArgumentList $arguments -PassThru -Wait -NoNewWindow
     try {
         $resultPath = Join-Path $dir 'probe-result.json'
         if ($child.ExitCode -ne 0 -or !(Test-Path -LiteralPath $resultPath)) { $totalFailures++ }

@@ -1,22 +1,27 @@
 # Opt-in integration checks: invokes live read-only collection for preview/refusal/overwrite cases.
 # Requires PowerShell 7 and an existing Release build. No real reports are committed.
-param()
+param([string]$CliExecutable)
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path $PSScriptRoot -Parent
 $localSdk=Join-Path $projectRoot '.tools\dotnet\dotnet.exe'
 $sdk=if(Test-Path -LiteralPath $localSdk){$localSdk}else{(Get-Command dotnet -ErrorAction Stop).Source}
 $cli=Join-Path $projectRoot 'src\WinGPUDoctor.Cli\bin\Release\net10.0-windows\wingpudoctor.dll'
+if ($CliExecutable) {
+    $CliExecutable = [IO.Path]::GetFullPath($CliExecutable)
+    if (!(Test-Path -LiteralPath $CliExecutable -PathType Leaf) -or
+        [IO.Path]::GetExtension($CliExecutable) -ine '.exe') { throw 'An existing packaged CLI executable is required.' }
+}
 $checkDir=Join-Path $projectRoot ('artifacts\cli-check-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $checkDir -Force | Out-Null
 function Invoke-CheckedCli([string[]]$Arguments, [int[]]$Expected) {
-    $start=[Diagnostics.ProcessStartInfo]::new($sdk)
+    $start=[Diagnostics.ProcessStartInfo]::new($(if ($CliExecutable) { $CliExecutable } else { $sdk }))
     $start.UseShellExecute=$false
     $start.CreateNoWindow=$true
     $start.RedirectStandardOutput=$true
     $start.RedirectStandardError=$true
     $start.RedirectStandardInput=$true
     $start.WorkingDirectory=$checkDir
-    $start.ArgumentList.Add($cli)
+    if (!$CliExecutable) { $start.ArgumentList.Add($cli) }
     foreach($arg in $Arguments){$start.ArgumentList.Add($arg)}
     $process=[Diagnostics.Process]::new()
     $process.StartInfo=$start
