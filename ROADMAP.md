@@ -64,11 +64,23 @@ The owner accepted the M5 scope and froze its rule, message and evidence contrac
 
 Gate progression: Gate 0 scope accepted; Gate 1 contract frozen; Gate 2 implementation completed; Gate 3 independent semantics/privacy review passed, including correction and independent closure of the test-only F1; Gate 4 scoped physical validation passed on the current laptop; final checkpoint-readiness review passed and the M5 checkpoint was created. The physical result is limited to the current one-active-path configuration; synthetic tests cover unobserved states. Schema 0.2.0, collection, worker/supervisor behavior and CLI exits remain unchanged.
 
-M5 is complete and checkpointed, and is now the latest committed technical milestone. M6 Gate 0 scope and Gate 1 implementation/release plan were accepted; Gate 2 implementation and non-live validation passed. The original candidate passed separately authorized live validation; F1/F2 were corrected, and the refreshed candidate passed its own non-live and separately authorized live validation. Focused Gate 3 F1/F2 re-review passed, with 0 blockers and 0 Should-fix findings. M6 is ready for owner-authorized staging but remains uncheckpointed and incomplete. The remaining lifecycle is owner-authorized staging, staged-snapshot verification, separate commit authorization, and checkpoint creation. Git permissions remain task-specific.
+M5 is complete and checkpointed. M6 is now the latest committed technical milestone; its checkpoint is recorded below. M1-M6 are complete, and M7 is not required for v0.1.
 
-## Milestone 6 — v0.1 Release Hardening and OSS Readiness (in progress)
+## Milestone 6 — v0.1 Release Hardening and OSS Readiness (complete; checkpointed locally)
 
-M6 is intended to finish local v0.1 development through three bounded workstreams: a framework-dependent Windows x64 application package, release identity/user documentation, and final validation. Release blockers RB1–RB5 cover the package path, coherent 0.1.0 tool identity, public instructions, distribution hygiene, and candidate evidence. Report schema 0.2.0 and established collection/privacy/diagnostic semantics remain unchanged. Gate 2 implementation and non-live validation are complete; the original candidate passed its separately authorized live validation. F1/F2 correction produced a refreshed candidate, which passed its own non-live and scoped live validation. Focused Gate 3 F1/F2 re-review passed with 0 blockers and 0 Should-fix findings. M6 is ready for owner-authorized staging but remains uncheckpointed and incomplete; local v0.1 completion awaits the separately authorized checkpoint commit. The remaining lifecycle is staging authorization, staged-snapshot verification, separate commit authorization, and checkpoint creation. A remote, push, tag, and public release are separate owner decisions; a real private vulnerability-reporting channel remains a publication-only prerequisite.
+Checkpoint commit: `f966e1b602561044c19eaca6a84cf4baa146b62a` (tree `f4972e15628c75d663b04604d376487b48395897`), subject `Milestone 6: harden v0.1 release readiness`.
+
+- [x] Gate 0 final v0.1 scope and definition of done accepted.
+- [x] Gate 1 implementation and release plan frozen.
+- [x] Gate 2 implementation, source validation, package construction, and non-live candidate checks completed.
+- [x] Original candidate received its separately authorized live validation; retained as historical candidate evidence.
+- [x] F1/F2 corrections completed; refreshed candidate passed its own non-live and separately authorized live validation.
+- [x] Focused Gate 3 re-review passed; F1/F2 closed with 0 blockers and 0 Should-fix findings.
+- [x] Exact 22-path staging and staged-snapshot verification passed; M6 technical checkpoint created.
+
+M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and established collection, privacy, diagnostic and lifecycle semantics remain unchanged. **No M7 is required for v0.1.** New features and broader hardware support are post-v0.1 future work that require separate scope and authorization.
+
+Public remote publication, push, tag, release and announcement have not occurred and remain separately unauthorized. A real private vulnerability-reporting channel is a publication-only prerequisite, not unfinished M6 engineering.
 
 ## Later, separately authorized
 
