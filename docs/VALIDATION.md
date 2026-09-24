@@ -2,6 +2,10 @@
 
 Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGENTS.md) for the operating workflow. Dated sections below describe their own checked snapshot; historical next-step proposals do not override current scope or accepted superseding ADRs.
 
+## Current reading guide — 2026-09-24
+
+M1–M6 technical milestones are complete locally. The M6 checkpoint is `f966e1b602561044c19eaca6a84cf4baa146b62a`; the focused Gate 3 re-review passed with F1/F2 closed, as recorded in `STATUS.md` and `ROADMAP.md`. The refreshed local candidate ZIP with SHA-256 `cdefbb10d1f401b3574119255924facece084c16f878081bfcc1183786cdcc8d` passed its own packaged validation on one Windows 11 x64 laptop before Phase B documentation changes. Because README and SECURITY are included in the package, this candidate is historical evidence rather than the final publication artifact; P1.3 requires a fresh package and checksum. Dated sections below retain their original wording and describe the state when each check was made, including then-pending M6 steps. Consult `STATUS.md` and live Git for current state. Public GitHub release and private vulnerability-reporting setup remain pending.
+
 ## M6 refreshed-candidate packaged live revalidation — 2026-09-24
 
 The owner authorized live checks of the corrected **734747-byte** ZIP with SHA-256 `cdefbb10d1f401b3574119255924facece084c16f878081bfcc1183786cdcc8d`. Before execution, `main` remained at `367769e33ed2bbc58f877756ae3d4e559d34f54b` with 19 modified tracked files, 3 nonignored untracked files and nothing staged. The checksum, single archive root, 25 entries and 9 Worker files matched; the executable was extracted to a fresh unique system-temporary directory outside source, build and staging folders, and its hash matched the ZIP entry. All live commands used that executable with a non-administrator token and ordinary process access. No hardware, display, driver, MUX or power setting was changed.

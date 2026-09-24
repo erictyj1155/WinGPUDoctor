@@ -12,4 +12,4 @@ WinGPUDoctor is an early MIT-licensed project. Contributions should support **Re
 
 No signing certificate, GitHub token, or administrator account is required for the documented local development workflow. Do not add third-party runtime code, generated interop, or vendor SDKs without a concrete need and license/security review. Avoid unrelated reformatting and over-engineering.
 
-No public upstream URL or maintainer contact has been assigned yet. Open pull requests/issues only after the owner publishes the repository. See `SECURITY.md` for handling potentially sensitive security reports.
+Once a public GitHub upstream is available, use its Issues and Pull Requests for contributions. Until then, there is no public submission route. Follow [SECURITY.md](SECURITY.md) for vulnerabilities and sensitive machine reports; do not put those details in public Issues.

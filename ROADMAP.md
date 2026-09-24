@@ -33,7 +33,7 @@ Do not add new data sources, DXGI, classification, vendor APIs, monitoring, GUI,
 
 ## Milestone 4 — bounded collection supervisor (complete locally)
 
-The final GPT checkpoint-readiness review passed. The bounded supervisor, production worker collection path, controlled cancellation, and calibrated internal timing are checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070` (`Milestone 4: bounded collection and controlled cancellation`). No push, tag, or release occurred; physical validation remains limited to the documented one-laptop scope.
+The final checkpoint-readiness review passed. The bounded supervisor, production worker collection path, controlled cancellation, and calibrated internal timing are checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070` (`Milestone 4: bounded collection and controlled cancellation`). No push, tag, or release occurred; physical validation remains limited to the documented one-laptop scope.
 
 - [x] Added `WinGPUDoctor.Protocol`, `WinGPUDoctor.Supervisor`, and framework-dependent `wingpudoctor-worker` projects.
 - [x] Added strict protocol v1 framing, fixed operations, concrete payloads, bounds, duplicate/order/state validation, and `ResourceLimit` mapping.
@@ -42,7 +42,7 @@ The final GPT checkpoint-readiness review passed. The bounded supervisor, produc
 - [x] Added creation-time Job Object containment with `JOB_LIST`/`HANDLE_LIST`, kill-on-close, active-process limit one, no breakaway, and explicit non-elevation checks.
 - [x] Added a private current-user first-instance named pipe with remote-client rejection, explicit pipe-client/NUL inheritance, absolute asynchronous I/O deadlines, and retained ownership with process-wide poisoning on unconfirmed cleanup.
 - [x] Added deterministic fake-clock tests, protocol/parser tests, native layout tests, and synthetic child-process tests.
-- [x] GPT Review Gate 1: native/transport correctness passed after corrections.
+- [x] Review Gate 1: native/transport correctness passed after corrections.
 - [x] Gate 2: real Worker dispatch for the five fixed operations and production supervisor-backed collection composition.
 - [x] Parent assembly of the existing `CollectionSnapshot`, conditional driver operation, exact correlation, M3 optional-name behavior, privacy projection, schema and CLI exit preservation.
 - [x] Targeted integrated corrections implemented and tested locally; this is not a re-review pass.
@@ -50,7 +50,7 @@ The final GPT checkpoint-readiness review passed. The bounded supervisor, produc
 - [x] Controlled Ctrl+C: the first interrupt closes result acceptance, prevents later operations, cleans up within the existing bounded contract, skips preview/export and returns `3`; a second interrupt keeps default forced termination. Covered by deterministic tests and a scoped live console-signal check on this laptop.
 - [x] Internal timing calibration on one available laptop and selection of `CollectionTimingPolicy.CalibratedProduction`; fake-clock tests remain the authoritative boundary proof and no public timeout option was added.
 - [x] Three corrected fresh-process healthy collections with explicit per-run before/after fingerprints and tracked-worker liveness checks; same-host admission reuse remains a deterministic-test claim. Historical six-run evidence is qualified in `docs/VALIDATION.md`.
-- [x] Final GPT checkpoint-readiness review passed and M4 checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`.
+- [x] Final checkpoint-readiness review passed and M4 checkpointed locally in commit `57abbec81ac8db83e04a2a588d39fe18c1650070`.
 
 At the time of the M4 completion record, no later milestone had started. M5 is separately authorized for Gate 2 implementation below.
 
