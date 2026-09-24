@@ -4,7 +4,7 @@ This is a v0.1 release candidate, with no comprehensive security-audit or produc
 
 ## Reporting a vulnerability
 
-No private vulnerability-reporting channel is configured or verified yet. Do not post secrets, full diagnostic dumps, exploit-sensitive details, or personal machine information in a public issue. During GitHub publication, enable and verify GitHub Private Vulnerability Reporting immediately after the repository becomes public. If it is unavailable, establish and document a working private alternative before proceeding to the v0.1.0 GitHub Release. No response SLA or contact address is promised before one is established.
+GitHub Private Vulnerability Reporting is enabled for this repository. To report a potential vulnerability privately, use the repository's [Security interface](https://github.com/erictyj1155/WinGPUDoctor/security) and select **Report a vulnerability**. Do not post secrets, full diagnostic dumps, exploit-sensitive details, or personal machine information in a public issue. No response SLA is promised.
 
 ## Security boundaries
 
@@ -26,4 +26,4 @@ The current-user pipe DACL is not authentication against hostile processes runni
 
 Provider timeouts are not a hard total deadline. Windows/driver/provider defects can still affect collection. The application cannot guarantee secret detection in arbitrary descriptions, secure erasure of managed memory, safe behavior by compromised providers, or zero transient device activity. Read-only means no intentional configuration-changing operations; it does not bypass OS security or make third-party drivers harmless.
 
-Before distributing binaries: enable private vulnerability reporting, review dependency advisories and licenses, test standard-user behavior across supported configurations, review packaging/signing and downloaded-binary warnings, and publish a precise support matrix.
+Before distributing binaries: verify the private vulnerability-reporting route remains available, review dependency advisories and licenses, test standard-user behavior across supported configurations, review packaging/signing and downloaded-binary warnings, and publish a precise support matrix.

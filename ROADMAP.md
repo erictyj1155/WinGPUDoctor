@@ -80,7 +80,7 @@ Checkpoint commit: `f966e1b602561044c19eaca6a84cf4baa146b62a` (tree `f4972e15628
 
 M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and established collection, privacy, diagnostic and lifecycle semantics remain unchanged. **No M7 is required for v0.1.** New features and broader hardware support are post-v0.1 future work that require separate scope and authorization.
 
-The private GitHub repository now exists and `main` has been pushed. Public visibility, tag creation, GitHub Release and announcement remain pending and separately unauthorized. A real private vulnerability-reporting channel is a publication-only prerequisite, not unfinished M6 engineering.
+The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. The v0.1.0 tag, GitHub Release, release assets and announcement remain pending and separately authorized.
 
 ## Later, separately authorized
 
