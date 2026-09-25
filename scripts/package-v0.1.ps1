@@ -36,6 +36,7 @@ if ((Test-Path -LiteralPath $zipPath) -or (Test-Path -LiteralPath $checksumPath)
 $source = Join-Path $projectRoot 'src/WinGPUDoctor.Cli/bin/Release/net10.0-windows'
 $workerSource = Join-Path $projectRoot 'src/WinGPUDoctor.Worker/bin/Release/net10.0-windows'
 . (Join-Path $PSScriptRoot 'worker-runtime-closure.ps1')
+. (Join-Path $PSScriptRoot 'package-path-guard.ps1')
 $workerFiles = @(Get-WorkerRuntimeFiles $workerSource)
 if ($workerFiles.Count -eq 0) { throw 'Worker runtime closure is empty.' }
 
@@ -93,6 +94,16 @@ $actual = @(Get-ChildItem -LiteralPath $stage -Recurse -File | ForEach-Object {
 if ($actual.Count -ne $expected.Count -or @($actual | Where-Object { !$expected.Contains($_) }).Count) {
     throw 'Package staging contains a missing, duplicate, or unexpected file.'
 }
+if (@($actual | Where-Object { Test-FirstPartyDllName $_ }).Count -ne 9) {
+    throw 'Expected 9 first-party DLL entries (5 parent + 4 Worker) for the CodeView check.'
+}
+# No packaged byte may carry the checkout path, the user-profile path, any X:\Users\ path or an unmapped first-party PDB path.
+$forbiddenRoots = @($projectRoot, $env:USERPROFILE)
+$stageLeaks = @(Get-DirectoryPathLeakFindings $stage $forbiddenRoots)
+if ($stageLeaks.Count) {
+    $stageLeaks | ForEach-Object { Write-Warning $_ }
+    throw 'Package staging contains a local build path; no ZIP was written. Build Release from a Git checkout.'
+}
 
 [IO.Compression.ZipFile]::CreateFromDirectory($stage, $zipPath, [IO.Compression.CompressionLevel]::Optimal, $true)
 $archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
@@ -103,6 +114,11 @@ try {
         !$_.StartsWith("$name/", [StringComparison]::Ordinal) -or !$expected.Contains($_.Substring($name.Length + 1))
     }).Count) { throw 'ZIP entries differ from the reviewed package file list.' }
 } finally { $archive.Dispose() }
+$zipLeaks = @(Get-ZipPathLeakFindings $zipPath $forbiddenRoots)
+if ($zipLeaks.Count) {
+    $zipLeaks | ForEach-Object { Write-Warning $_ }
+    throw 'The ZIP contains a local build path; no checksum was written.'
+}
 
 $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
 [IO.File]::WriteAllText($checksumPath, "$hash  $name.zip`n", [Text.UTF8Encoding]::new($false))

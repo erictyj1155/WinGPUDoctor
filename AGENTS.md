@@ -50,7 +50,7 @@ Keep each fact in its appropriate record and link to details instead of copying 
 ## Purpose, architecture, and conventions
 
 - **Read → Explain → Report:** read-only Windows GPU/display observations with conservative interpretation and reviewed local export. Keep the project separate from university/research material.
-- C#/.NET, SDK selected by `global.json`, locked packages, and xUnit. Follow `.editorconfig` (UTF-8, LF, final newline, spaces) and existing local naming/style. `Directory.Build.props` enables nullable references, deterministic builds, and warnings as errors. Avoid unrelated reformatting.
+- C#/.NET, SDK selected by `global.json`, locked packages, and xUnit. Follow `.editorconfig` (UTF-8, LF, final newline, spaces) and existing local naming/style. `Directory.Build.props` enables nullable references, deterministic builds (Release builds also map source paths to `/_/`), and warnings as errors. Avoid unrelated reformatting.
 - `src/WinGPUDoctor.Core/`: typed facts/states, pure rules, privacy projection, JSON/Markdown. No WMI, native API, hardware, GUI, or file-I/O dependencies.
 - `src/WinGPUDoctor.Windows/`: fixed local WMI queries, isolated DisplayConfig/SetupAPI interop, resource disposal, and exact identity matching; depends on Core.
 - `src/WinGPUDoctor.Cli/`: composition, arguments, preview, and explicit local export. Reuse the same sanitized snapshot for preview and export.

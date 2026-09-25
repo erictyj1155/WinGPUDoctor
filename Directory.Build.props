@@ -8,4 +8,9 @@
     <Version>0.1.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
+  <!-- Release outputs record /_/-rooted source and PDB paths, never the local checkout path.
+       This uses the SDK's Git-derived SourceRoot, so build Release from a Git checkout. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+  </PropertyGroup>
 </Project>
