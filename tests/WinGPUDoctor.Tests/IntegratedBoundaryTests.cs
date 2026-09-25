@@ -127,6 +127,27 @@ public class IntegratedBoundaryTests
         Assert.Equal("gpu-1", snapshot.Facts.Displays.Value![0].SourceAdapter.Value!.GpuId);
     }
 
+    [Fact]
+    public async Task SyntheticExampleFixtureUsesProductionProvenanceAndCollectorOrder()
+    {
+        // The published examples are generated from TopologyTests.WithTopology. Their values are synthetic,
+        // but per-field provenance and collector order must match the supervised production path.
+        static DiagnosticReport Published(CollectionSnapshot snapshot) => JsonSerializer.Deserialize<DiagnosticReport>(
+            ReportWriter.Json(PrivacyPolicy.Prepare(snapshot, new(2026, 9, 10))), ReportWriter.JsonOptions)!;
+        static DataSource[] SystemSources(CollectedFacts facts) =>
+            [facts.System.WindowsVersion.Source, facts.System.WindowsBuild.Source, facts.System.Manufacturer.Source, facts.System.Model.Source];
+        static DataSource[] GpuSources(GpuFacts gpu) => [gpu.Name.Source, gpu.PciVendorId.Source, gpu.PciDeviceId.Source,
+            gpu.Classification.Source, gpu.Driver.Provider.Source, gpu.Driver.Version.Source, gpu.Driver.Date.Source];
+        var production = Published(await Collect(new(Sources(), TopologyTests.Single(true))));
+        var example = Published(TopologyTests.WithTopology(TopologyTests.Collect(TopologyTests.Single(true))));
+        Assert.Equal(SystemSources(production.Facts), SystemSources(example.Facts));
+        Assert.Equal(production.Facts.Gpus.Source, example.Facts.Gpus.Source);
+        var expectedGpu = GpuSources(Assert.Single(production.Facts.Gpus.Value!));
+        Assert.All(example.Facts.Gpus.Value!, gpu => Assert.Equal(expectedGpu, GpuSources(gpu)));
+        Assert.Equal(production.Facts.Displays.Source, example.Facts.Displays.Source);
+        Assert.Equal(production.Collection.Select(run => run.Source), example.Collection.Select(run => run.Source));
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]

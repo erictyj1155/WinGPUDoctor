@@ -90,7 +90,7 @@ public class M5FindingTests
         Assert.Equal(["topology.endpoint-adapter-association", "topology.active-path-target-unavailable"],
             Topology(report).Select(f => f.Id));
         Assert.Contains(WarningCode.CollectionIncomplete, report.Warnings);
-        Assert.Equal(CollectorStatus.Partial, report.Collection.Last().Status);
+        Assert.Equal(CollectorStatus.Partial, report.Collection.Single(run => run.Source == DataSource.DisplayConfig).Status);
         var unresolved = Read(Prepare(WithPaths(Path() with {
             TargetAvailable = false, SourceAdapter = Absent(DataState.Unknown, ReasonCode.UnmatchedAdapter) })));
         Assert.Equal(["topology.correlation-unresolved", "topology.active-path-target-unavailable"],

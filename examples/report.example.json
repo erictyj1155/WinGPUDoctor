@@ -7,25 +7,25 @@
       "windowsVersion": {
         "state": "available",
         "value": "10.0.26200",
-        "source": "wmiVideoController",
+        "source": "wmiOperatingSystem",
         "reason": "none"
       },
       "windowsBuild": {
         "state": "available",
         "value": "26200",
-        "source": "wmiVideoController",
+        "source": "wmiOperatingSystem",
         "reason": "none"
       },
       "manufacturer": {
         "state": "available",
         "value": "Example OEM",
-        "source": "wmiVideoController",
+        "source": "wmiComputerSystem",
         "reason": "none"
       },
       "model": {
         "state": "available",
         "value": "Example Model",
-        "source": "wmiVideoController",
+        "source": "wmiComputerSystem",
         "reason": "none"
       }
     },
@@ -62,19 +62,19 @@
             "provider": {
               "state": "available",
               "value": "Example Vendor",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             },
             "version": {
               "state": "available",
               "value": "1.2.3.4",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             },
             "date": {
               "state": "available",
               "value": "2026-09-01",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             }
           }
@@ -109,19 +109,19 @@
             "provider": {
               "state": "available",
               "value": "Example Vendor",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             },
             "version": {
               "state": "available",
               "value": "1.2.3.4",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             },
             "date": {
               "state": "available",
               "value": "2026-09-01",
-              "source": "wmiVideoController",
+              "source": "wmiSignedDriver",
               "reason": "none"
             }
           }
@@ -268,6 +268,22 @@
   ],
   "collection": [
     {
+      "source": "wmiOperatingSystem",
+      "status": "succeeded",
+      "reason": "none",
+      "attempts": 1,
+      "queryMode": "notQueried",
+      "issues": []
+    },
+    {
+      "source": "wmiComputerSystem",
+      "status": "succeeded",
+      "reason": "none",
+      "attempts": 1,
+      "queryMode": "notQueried",
+      "issues": []
+    },
+    {
       "source": "wmiVideoController",
       "status": "succeeded",
       "reason": "none",
@@ -281,6 +297,14 @@
       "reason": "none",
       "attempts": 1,
       "queryMode": "virtualModeAndRefreshAware",
+      "issues": []
+    },
+    {
+      "source": "wmiSignedDriver",
+      "status": "succeeded",
+      "reason": "none",
+      "attempts": 1,
+      "queryMode": "notQueried",
       "issues": []
     }
   ],

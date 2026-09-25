@@ -427,7 +427,10 @@ public class TopologyTests
     {
         var s = ModelAndPrivacyTests.Sample(count: 2);
         var list = s.Facts.Gpus.Value!.Select((g, i) => g with { Id = $"gpu-{i + 1}" }).ToArray();
-        return new(s.Facts with { Gpus = Observation<IReadOnlyList<GpuFacts>>.Known(list, DataSource.WmiVideoController), Displays = topology.Displays }, [..s.Collection, topology.Run]);
+        // Production order: WMI inventory runs, then topology, then the conditional signed-driver run.
+        CollectorRun[] collection = [..s.Collection.Where(c => c.Source != DataSource.WmiSignedDriver), topology.Run,
+            ..s.Collection.Where(c => c.Source == DataSource.WmiSignedDriver)];
+        return new(s.Facts with { Gpus = Observation<IReadOnlyList<GpuFacts>>.Known(list, DataSource.WmiVideoController), Displays = topology.Displays }, collection);
     }
     [Fact] public void NativeCorrelationIdentifiersAndEdidNeverReachExports()
     {

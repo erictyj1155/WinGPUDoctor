@@ -8,15 +8,27 @@ namespace WinGPUDoctor.Tests;
 
 public class ModelAndPrivacyTests
 {
-    internal static Observation<string> Known(string value) => Observation<string>.Known(value, DataSource.WmiVideoController);
+    internal static Observation<string> Known(string value, DataSource source = DataSource.WmiVideoController) =>
+        Observation<string>.Known(value, source);
+    // Synthetic values use the production per-field provenance and collector order (see the
+    // example provenance test in IntegratedBoundaryTests); the signed-driver run is omitted for
+    // empty video inventory, as in production collection.
     internal static CollectionSnapshot Sample(string name = "Example GPU", int count = 1)
     {
+        const DataSource os = DataSource.WmiOperatingSystem, machine = DataSource.WmiComputerSystem, driver = DataSource.WmiSignedDriver;
         var gpu = new GpuFacts("PRIVATE-INSTANCE", Known(name), Known("10DE"), Known("1234"), Known("unverified"),
-            new(Known("Example Vendor"), Known("1.2.3.4"), Known("2026-09-01")));
-        return new(new(new(Known("10.0.26200"), Known("26200"), Known("Example OEM"), Known("Example Model")),
+            new(Known("Example Vendor", driver), Known("1.2.3.4", driver), Known("2026-09-01", driver)));
+        var collection = new List<CollectorRun>
+        {
+            new(os, CollectorStatus.Succeeded, ReasonCode.None),
+            new(machine, CollectorStatus.Succeeded, ReasonCode.None),
+            new(DataSource.WmiVideoController, CollectorStatus.Succeeded, ReasonCode.None)
+        };
+        if (count > 0) collection.Add(new(driver, CollectorStatus.Succeeded, ReasonCode.None));
+        return new(new(new(Known("10.0.26200", os), Known("26200", os), Known("Example OEM", machine), Known("Example Model", machine)),
             Observation<IReadOnlyList<GpuFacts>>.Known(Enumerable.Repeat(gpu, count).ToArray(), DataSource.WmiVideoController),
             Observation<IReadOnlyList<DisplayFacts>>.Absent(DataState.Unsupported, DataSource.NotCollected, ReasonCode.NotImplemented)),
-            [new(DataSource.WmiVideoController, CollectorStatus.Succeeded, ReasonCode.None)]);
+            collection.ToArray());
     }
 
     [Fact] public void ObservationRejectsContradictoryStates()

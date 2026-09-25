@@ -4,10 +4,10 @@ Schema: 0.2.0 | Tool: 0.1.0 | UTC date: 2026-09-10
 
 ## Collected facts
 
-- Windows version: 10\.0\.26200 — source: WmiVideoController
-- Windows build: 26200 — source: WmiVideoController
-- Manufacturer: Example OEM — source: WmiVideoController
-- Model: Example Model — source: WmiVideoController
+- Windows version: 10\.0\.26200 — source: WmiOperatingSystem
+- Windows build: 26200 — source: WmiOperatingSystem
+- Manufacturer: Example OEM — source: WmiComputerSystem
+- Model: Example Model — source: WmiComputerSystem
 
 Reported video controllers: 2
 
@@ -17,9 +17,9 @@ Reported video controllers: 2
 - PCI vendor ID: 10DE — source: WmiVideoController
 - PCI device ID: 1234 — source: WmiVideoController
 - Classification: Unsupported (NotImplemented) — source: NotCollected
-- Driver provider: Example Vendor — source: WmiVideoController
-- Driver version: 1\.2\.3\.4 — source: WmiVideoController
-- Driver date (provider-reported, not installation date): 2026\-09\-01 — source: WmiVideoController
+- Driver provider: Example Vendor — source: WmiSignedDriver
+- Driver version: 1\.2\.3\.4 — source: WmiSignedDriver
+- Driver date (provider-reported, not installation date): 2026\-09\-01 — source: WmiSignedDriver
 
 ### gpu-2
 
@@ -27,9 +27,9 @@ Reported video controllers: 2
 - PCI vendor ID: 10DE — source: WmiVideoController
 - PCI device ID: 1234 — source: WmiVideoController
 - Classification: Unsupported (NotImplemented) — source: NotCollected
-- Driver provider: Example Vendor — source: WmiVideoController
-- Driver version: 1\.2\.3\.4 — source: WmiVideoController
-- Driver date (provider-reported, not installation date): 2026\-09\-01 — source: WmiVideoController
+- Driver provider: Example Vendor — source: WmiSignedDriver
+- Driver version: 1\.2\.3\.4 — source: WmiSignedDriver
+- Driver date (provider-reported, not installation date): 2026\-09\-01 — source: WmiSignedDriver
 
 ## Active display paths
 
@@ -69,7 +69,10 @@ Active paths reported: 1
 
 ## Collection metadata
 
+- WmiOperatingSystem: Succeeded (None); attempts: 1; query mode: NotQueried
+- WmiComputerSystem: Succeeded (None); attempts: 1; query mode: NotQueried
 - WmiVideoController: Succeeded (None); attempts: 1; query mode: NotQueried
 - DisplayConfig: Succeeded (None); attempts: 1; query mode: VirtualModeAndRefreshAware
+- WmiSignedDriver: Succeeded (None); attempts: 1; query mode: NotQueried
 
 Privacy policy: 0.2; redacted fields: 0.
