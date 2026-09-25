@@ -82,8 +82,23 @@ M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and est
 
 The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. The v0.1.0 tag, GitHub Release, release assets and announcement remain pending and separately authorized.
 
+## Milestone 7 — Beginner desktop host (proposed; post-v0.1)
+
+Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in [ADR 0008](docs/decisions/0008-beginner-desktop-host.md); screens, explanation catalog, delivery steps and validation additions are in [docs/GUI_PLAN.md](docs/GUI_PLAN.md). Gate 1 has passed; each implementation step still needs separate owner authorization.
+
+- [x] Gate 0 scope accepted: WPF host over the unchanged engine; English-first resources.
+- [x] Gate 1: independent review passed with should-fix items, all addressed; ADR 0008 frozen by the owner on 2026-09-25.
+- [ ] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior.
+- [ ] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test.
+- [ ] Step 3 explanation catalog and detail views with completeness tests.
+- [ ] Step 4 save/export on shared host rules.
+- [ ] Step 5 packaging with distinct GUI executable name, allowlist and path guard.
+- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review.
+
+Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.
+
 ## Later, separately authorized
 
-Potential later work includes SetupAPI/WMI inventory comparison, privacy-reviewed *report* ZIP export, and a separate GUI decision. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised. These ideas do not block v0.1.
+Potential later work includes SetupAPI/WMI inventory comparison, privacy-reviewed *report* ZIP export, and a public sanitized collection-progress contract for the GUI. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised. These ideas do not block v0.1.
 
 BIOS/MUX/driver/service/registry/power-plan changes, telemetry, AI features, automatic fixes, and generic optimization remain outside current scope.
