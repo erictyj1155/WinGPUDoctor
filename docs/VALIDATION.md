@@ -4,7 +4,92 @@ Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGEN
 
 ## Current reading guide — 2026-09-25
 
-M1–M6 technical milestones are complete locally. The M6 checkpoint is `f966e1b602561044c19eaca6a84cf4baa146b62a`; the focused Gate 3 re-review passed with F1/F2 closed, as recorded in `STATUS.md` and `ROADMAP.md`. The refreshed local candidate ZIP with SHA-256 `cdefbb10d1f401b3574119255924facece084c16f878081bfcc1183786cdcc8d` passed its own packaged validation on one Windows 11 x64 laptop before Phase B documentation changes. Because README and SECURITY are included in the package, this candidate is historical evidence rather than the final publication artifact; P1.3 requires a fresh package and checksum. Dated sections below retain their original wording and describe the state when each check was made, including then-pending M6 steps. Consult `STATUS.md` and live Git for current state. The repository is Public with Private Vulnerability Reporting enabled and verified; the v0.1.0 tag and GitHub Release remain pending. P1.2 Phase F closed when its documentation reconciliation was committed and pushed as `5354cce40217acb6bd867bc7e408474d37fb9493` and hosted CI passed 304/304 tests and schema verification. P1.3 is current: P1.3A pre-freeze remediation is complete (its commit `a9a83c271fa268d836d11f432e1411c403f30b67` passed hosted CI), its changes to the packaged `README.md` and CLI help also differ from the historical candidate, and release source S has not been defined. The newest section below records that hosted result and the pre-freeze plan.
+M1–M6 technical milestones are complete locally. The M6 checkpoint is `f966e1b602561044c19eaca6a84cf4baa146b62a`; the focused Gate 3 re-review passed with F1/F2 closed, as recorded in `STATUS.md` and `ROADMAP.md`. The refreshed local candidate ZIP with SHA-256 `cdefbb10d1f401b3574119255924facece084c16f878081bfcc1183786cdcc8d` passed its own packaged validation on one Windows 11 x64 laptop before Phase B documentation changes. Because README and SECURITY are included in the package, this candidate is historical evidence rather than the final publication artifact; P1.3 requires a fresh package and checksum. Dated sections below retain their original wording and describe the state when each check was made, including then-pending M6 steps. Consult `STATUS.md` and live Git for current state. The repository is Public with Private Vulnerability Reporting enabled and verified; the v0.1.0 tag and GitHub Release remain pending. P1.2 Phase F closed when its documentation reconciliation was committed and pushed as `5354cce40217acb6bd867bc7e408474d37fb9493` and hosted CI passed 304/304 tests and schema verification. P1.3 is current: P1.3A pre-freeze remediation is complete (its commit `a9a83c271fa268d836d11f432e1411c403f30b67` passed hosted CI), and its changes to the packaged `README.md` and CLI help also differ from the historical candidate. The first release source, `bdefbac75dba0e5f65af59c67677e69ad4c7fb27`, was superseded because its package candidate embedded the local build path. The P1.3B remediation commit `62e25b7b12d04499f7b39bae417418d33cf297ee` is release source S2, and its release candidate ZIP (SHA-256 `65162553242aea18e5b1cebe963b769de76ebd7f7729d360ae151fa984ce63a8`) passed the final audit, path guard, non-live and live validation. The two newest sections below record this; the P1.3A pre-freeze plan describes its own snapshot. The v0.1.0 tag and GitHub Release remain pending.
+
+## P1.3 release-candidate and live validation from S2 — 2026-09-25
+
+**Release source.** S2 is `62e25b7b12d04499f7b39bae417418d33cf297ee` (`fix: map Release source paths to /_/ and guard packaged paths`, parent `bdefbac75dba0e5f65af59c67677e69ad4c7fb27`). It changes exactly `Directory.Build.props`, `AGENTS.md`, `scripts/package-v0.1.ps1` and the new `scripts/package-path-guard.ps1`; the next section describes them. Hosted GitHub Actions `deterministic-tests` run #8 (run `36105656989`, job `107977473007`) checked out that exact SHA and succeeded in 1 m 27 s: locked restore; Release build with **0 warnings / 0 errors**; standard-user tests **305 passed / 0 failed / 0 skipped**; `./scripts/verify-schema.ps1` PASS; **0** uploaded artifacts. The reviewed log showed runner paths only and masked tokens, and did not print the test-account password. The only annotation was the known Node.js 20 deprecation notice. The owner froze S2 as the intended `v0.1.0` tag target.
+
+**Environment.** The checks were owner-run PowerShell 7.6.6 batches, kept with the ignored local evidence, on the same Windows 11 x64 laptop (build 26200) with the portable .NET SDK 10.0.401 and the checkout at S2. `HEAD`, local `origin/main` and GitHub `main` were S2, and the tracked tree and index were clean before and after each batch.
+
+**Release-candidate validation (non-live).**
+
+| Gate | Result |
+|---|---|
+| Final vulnerability audit | `./scripts/dev.ps1 -Action audit` (locked restore with NuGet audit) reported no `NU19xx` diagnostics. `dotnet list WinGPUDoctor.slnx package --vulnerable --include-transitive --format json` reported **7 projects, 0 vulnerable direct or transitive packages, 0 problems** and empty stderr. All 7 lock files matched S2 before and after. |
+| Clean outputs | Only the 7 projects' 14 `bin`/`obj` directories were deleted, by explicit path. `.tools`, `artifacts` and the preserved ZIPs were untouched. |
+| Package | `scripts/package-v0.1.ps1` built Release with **0 warnings / 0 errors**, and its path guard passed on the staging folder and on the final ZIP. |
+| Release candidate | `WinGPUDoctor-0.1.0-win-x64.zip`, **734729 bytes**, SHA-256 `65162553242aea18e5b1cebe963b769de76ebd7f7729d360ae151fa984ce63a8`. The `.sha256` file matches exactly. The ZIP has **25** files, **0** directory entries, a single `WinGPUDoctor-0.1.0-win-x64/` root and **9** Worker files. `README.md`, `SECURITY.md`, `PRIVACY.md`, `LICENSE` and `THIRD-PARTY-NOTICES.md` are byte-identical to S2 (Git blob IDs). |
+| Path guard, independent rerun | **0** findings on the staging folder and **0** on the final ZIP. All 9 first-party DLL entries (5 parent, 4 Worker) have exactly one CodeView record rooted at `/_/src/…`. No embedded PDB, local checkout path, user-profile path or `X:\Users\` path is present. |
+| Comparison with the pre-fix `1a319aa6…` package | Same 25 entry names. The 16 non-first-party entries are byte-identical; exactly the 9 first-party DLLs differ. |
+| First-party DLL structure (Gate 6b) | PASS under the corrected rule below. |
+| Step 4a, fresh extraction outside source, build and staging folders | All 25 extracted hashes match the ZIP. `--help` exits `0`, identifies 0.1.0 and contains the clarified exit-code line. `--format xml`, unscoped `--yes` and a UNC `--output` each exit `2` before collection. `wingpudoctor.exe` and all 9 first-party DLLs have ProductVersion 0.1.0 and FileVersion 0.1.0.0. Both runtimeconfig files target `Microsoft.NETCore.App` 10.0.0 (`net10.0`). The execution fingerprint has 21 inputs (10 parent, 9 Worker, host and runtime), with hashes matching the ZIP; the runtime was 10.0.7. Authenticode is `NotSigned` for the exe and the 9 first-party DLLs (unsigned v0.1.0 build) and `Valid` for the 6 Microsoft-signed dependency DLLs. |
+| Final state | ZIP hash and size, checksum and the three preserved evidence folders (contents, hashes, checksum files, last-write times) unchanged. `HEAD` and local `origin/main` S2; tracked tree and index clean. |
+
+**Gate 6b rule correction.** The first release-candidate run stopped at Gate 6b. That rule expected the Supervisor's regenerated Worker manifest to differ only in SHA-256 and MVID strings. The manifest compiled into `WinGPUDoctor.Supervisor.dll` also pins each Worker file's length. The shorter `/_/` debug path reduced `wingpudoctor-worker.dll` by one 512-byte file-alignment unit (24576 to 24064 bytes), which changed one IL constant. The owner classified this as a validation-rule defect, not a release-candidate defect. A read-only re-check against the unchanged ZIP, with no rebuild or repackaging, applied the corrected rule and passed:
+
+- Eight DLLs have identical IL, metadata tables, `#Strings`/`#Blob`, user strings, CLR/PE flags and Win32 resources. They differ only in debug data (CodeView `/_/…`, PDB ID and checksum), MVID, timestamp and layout offsets.
+- The Supervisor differs additionally only in 1 IL byte inside the Worker file-length pin, and in 8 user strings that are the regenerated SHA-256 and MVID pins of the 4 rebuilt Worker DLLs.
+- All 9 Worker pins (path, length, SHA-256, assembly name and version, MVID) match the final `worker/` files exactly, and the pre-fix pins match the pre-fix files.
+
+No product-code change was found.
+
+**Live validation (Batch 4).** This owner-authorized session ran on the same laptop with its single active internal display path, from a non-administrator, Medium-integrity token. It used the packaged executable from a fresh temporary extraction outside source, build and staging folders, and all 25 extracted hashes matched the ZIP. No hardware, display, driver, MUX or power setting was changed.
+
+| Check | Result |
+|---|---|
+| `verify-cli.ps1 -CliExecutable <extracted exe>` | 7/7: help; invalid format, unscoped `--yes` and UNC destination rejected before collection (exit `2`); JSON preview passes schema and creates no file; redirected-input export refusal (exit `4`); existing-file refusal (exit `5`, synthetic file unchanged) |
+| Direct `--help` and JSON preview | `--help` exits `0` and identifies 0.1.0; the preview exits `0`, passes schema 0.2.0 and creates no file (output not stored) |
+| Explicit `--format json --output <ignored local path> --yes` | exit `0`; stdout empty; stderr has the preview and `Report saved locally. Nothing was uploaded.`; **9312-byte** report |
+| Report checks | Schema 0.2.0 PASS; tool/schema/privacy 0.1.0 / 0.2.0 / 0.2; 0 redacted fields; `Get-M3PrivacyFailures` 0 and `Get-M3ReportFailures` 0. All 5 collectors succeeded. 2 GPU entries and 1 active path are available, with one non-blocking `targetName`/`missingValue` issue. Findings are `inventory.multiple-adapters` and `topology.endpoint-adapter-association`, with all 5 evidence paths resolved. Warnings are `inventoryOnly`, `providerReportedValues`, `topologyIsNotRendering` and `reviewBeforeSharing`. |
+| `test-m4-cancel.ps1 -Mode Cancel -Runs 1 -CliExecutable <extracted exe>` | First Ctrl+C delivered and observed; exit `3`; no later Worker launch, report or preview; empty stdout; cancellation notice present. **4** tracked Workers cleanup-confirmed and `Exited`, **0** survived, 0 harness failures. Signal call to observed exit 33.8 ms, which includes delivery and observation overhead and is not a guarantee. |
+| Final state | ZIP, checksum and preserved ZIPs unchanged; `HEAD` S2; tracked tree and index clean; report and probe records only in ignored `artifacts/` |
+
+These results match the M6 refreshed-candidate live session. Coverage remains this laptop, session and one-active-internal-path configuration only; the limits in `STATUS.md` still apply. The live report is local-only evidence and is not committed or published.
+
+**Artifacts and remaining steps.** The final ZIP and checksum remain under ignored `artifacts/`. The first P1.3 candidate `1a319aa6…` is preserved as pre-fix evidence only and must not be published. The historical M6 candidates `cdefbb10…` and `0328525a…` also remain preserved. The v0.1.0 binaries are unsigned. This docs-only record follows S2 and is not part of the release source. No `v0.1.0` tag or GitHub Release exists; tagging S2 and publishing exactly the validated ZIP and checksum remain separately authorized.
+
+## P1.3 first package candidate, local build-path finding and S2 remediation — 2026-09-25
+
+**Superseded release source.** After its hosted CI passed (305/305, schema PASS), `bdefbac75dba0e5f65af59c67677e69ad4c7fb27` (`docs: record P1.3A hosted CI and pre-freeze plan`) was defined as release source S. From that checkout:
+
+- The final audit passed: 7 projects, 0 vulnerable direct or transitive packages, 0 problems.
+- The historical `cdefbb10…` ZIP and checksum were moved aside unchanged.
+- The 14 `bin`/`obj` directories were deleted by explicit path.
+- Packaging produced `WinGPUDoctor-0.1.0-win-x64.zip` with SHA-256 `1a319aa63a5f33a8da6d1ce09ed964f556870f147308ab1c34c3ff58614b4a2f`: 734887 bytes, 25 files, 9 Worker files, a matching checksum and packaged documents identical to S.
+
+Its comparison gate against `cdefbb10…` failed. The gate expected only `README.md`, `SECURITY.md` and `wingpudoctor.dll` to differ, but all 9 first-party DLLs differed. Structural review showed no unintended code change:
+
+- The SDK's SourceLink records the HEAD commit in the unpackaged PDB, so each commit changes the deterministic PDB ID, MVID and timestamp.
+- The CLI assembly additionally carried the P1.3A help-text change.
+- The Supervisor's Worker pins followed the changed Worker files.
+
+**Local build-path finding.** The same review found that every first-party DLL recorded the builder's absolute local checkout path, including the Windows user-profile directory name, in its CodeView debug record; the Microsoft dependency DLLs use `/_/…` paths. The `cdefbb10…` candidate had the same property. Nothing had been published. The owner declined to publish binaries containing the local path and superseded `bdefbac…` for release purposes. The `1a319aa6…` ZIP and checksum were preserved as pre-fix evidence only, with their hashes verified before and after the move.
+
+**Mechanism check (V0).** Before any tracked edit, SDK 10.0.401 built `WinGPUDoctor.Core` alone into ignored evidence with `-p:DeterministicSourcePaths=true`:
+
+- The compiler path map sent the Git checkout to `/_/` and the NuGet package root (`.tools/packages`) to a separate `/_1/`.
+- The CodeView path, all 9 PDB documents and the SourceLink key were rooted at `/_/`, and the SourceLink URL was unchanged.
+- IL and metadata were identical to the unmapped build except the MVID.
+
+**Remediation (S2).** `Directory.Build.props` sets `DeterministicSourcePaths=true` for Release builds only. This uses the SDK's Git-derived source root, so release packaging requires a Git checkout. `ContinuousIntegrationBuild` (broader CI semantics) and a manual `PathMap` (inconsistent with SourceLink) were rejected. `scripts/package-v0.1.ps1` calls the new `scripts/package-path-guard.ps1` twice: on the staging folder, before a ZIP is written, and on the final ZIP, before the checksum is written. Packaging fails if any packaged file contains:
+
+- the current checkout or user-profile path, in UTF-8 or UTF-16LE, with `\`, `/` or JSON-escaped separators;
+- any `X:\Users\` path;
+- an embedded PDB;
+- a first-party CodeView path not rooted at `/_/`.
+
+First-party DLLs are matched by file name, so `worker/` copies are included, and exactly 9 are required. `AGENTS.md` notes the mapping. No product code, dependency, lock file or version changed.
+
+**Checkpoint validation.** Before the commit, the owner ran these checks with the checkout at `bdefbac…` plus exactly the 4 reviewed files:
+
+- `git diff --check` was clean, and both scripts parse.
+- `./scripts/dev.ps1 -Action test` passed: Release build **0 warnings / 0 errors**, **305 passed / 0 failed / 0 skipped**, and all schema and helper checks.
+- All 31 first-party DLL copies in the Release outputs (including 12 Worker copies) have one CodeView record rooted at `/_/`, and all 7 SourceLink maps use only `/_/*`.
+- The exact 25 package inputs have 0 guard findings.
+- Against the preserved `1a319aa6…` and `cdefbb10…` ZIPs, the guard reported exactly **27** findings each: checkout or user-profile path, user-profile pattern and unmapped CodeView on each of the 9 first-party DLLs. It reported 0 findings on the other 16 entries.
+
+The four files were then committed and pushed as S2; its hosted CI is recorded above.
 
 ## P1.3A hosted CI result and pre-freeze record — 2026-09-25
 
