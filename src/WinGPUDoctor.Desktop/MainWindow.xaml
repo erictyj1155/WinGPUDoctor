@@ -385,13 +385,12 @@
                      AutomationProperties.HeadingLevel="Level1" />
           <TextBlock Text="{views:Text Save.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,18" />
 
-          <TextBlock x:Name="FormatLabel" Text="{views:Text Save.FormatLabel}" Style="{StaticResource Wgd.Heading}" Margin="0,0,0,8" />
+          <TextBlock Text="{views:Text Save.FormatLabel}" Style="{StaticResource Wgd.Heading}" Margin="0,0,0,8" />
           <WrapPanel Margin="0,0,0,14">
             <RadioButton x:Name="FormatMarkdown" GroupName="Format" Content="{views:Text Save.FormatMarkdown}"
-                         IsChecked="{Binding IsMarkdown}" Style="{StaticResource Wgd.Radio}"
-                         AutomationProperties.LabeledBy="{Binding ElementName=FormatLabel}" />
+                         IsChecked="{Binding IsMarkdown}" Style="{StaticResource Wgd.Radio}" />
             <RadioButton GroupName="Format" Content="{views:Text Save.FormatJson}" IsChecked="{Binding IsJson}"
-                         Style="{StaticResource Wgd.Radio}" AutomationProperties.LabeledBy="{Binding ElementName=FormatLabel}" />
+                         Style="{StaticResource Wgd.Radio}" />
           </WrapPanel>
 
           <Border Style="{StaticResource Wgd.Warn}" Margin="0,0,0,12">

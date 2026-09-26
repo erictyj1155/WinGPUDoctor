@@ -229,6 +229,22 @@ public class DesktopCatalogTests
         failure?.Throw();
     }
 
+    // A LabeledBy on a choice control replaces its own text as the screen-reader name, so both format
+    // options were announced as "Format" (found in the live check of the visual redesign).
+    [Fact]
+    public void ChoiceControlsKeepTheirOwnTextAsTheirAccessibleName()
+    {
+        var xaml = File.ReadAllText(System.IO.Path.Combine(Root, "src", "WinGPUDoctor.Desktop", "MainWindow.xaml"));
+        var choices = Regex.Matches(xaml, @"<(RadioButton|CheckBox)\b[^>]*>").Select(m => m.Value).ToArray();
+        Assert.Equal(3, choices.Length); // Markdown, JSON and "Show technical details".
+        Assert.All(choices, c =>
+        {
+            Assert.Matches(@"Content=""\{views:Text [^}]+\}""", c);
+            Assert.DoesNotContain("AutomationProperties.LabeledBy", c);
+            Assert.DoesNotContain("AutomationProperties.Name", c);
+        });
+    }
+
     [Fact]
     public void InfoTipOpensOnKeyboardFocusChangeFromAnotherElement()
     {
