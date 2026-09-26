@@ -134,7 +134,10 @@ if (@($actual | Where-Object { Test-FirstPartyDllName $_ }).Count -ne $firstPart
 }
 # No packaged byte may carry the checkout path, the user-profile path, any X:\Users\ path or an unmapped first-party PDB path.
 $forbiddenRoots = @($projectRoot, $env:USERPROFILE)
-$stageLeaks = @(Get-DirectoryPathLeakFindings $stage $forbiddenRoots)
+# The packaged executables may keep only the SDK apphost template's own PDB path (package-path-guard.ps1).
+$appHostSignatures = @(Get-AppHostTemplateSignatures (Split-Path $sdk -Parent))
+if ($appHostSignatures.Count -eq 0) { throw 'No SDK apphost template was found to recognize the packaged executables.' }
+$stageLeaks = @(Get-DirectoryPathLeakFindings $stage $forbiddenRoots $appHostSignatures)
 if ($stageLeaks.Count) {
     $stageLeaks | ForEach-Object { Write-Warning $_ }
     throw 'Package staging contains a local build path; no ZIP was written. Build Release from a Git checkout.'
@@ -149,7 +152,7 @@ try {
         !$_.StartsWith("$name/", [StringComparison]::Ordinal) -or !$expected.Contains($_.Substring($name.Length + 1))
     }).Count) { throw 'ZIP entries differ from the reviewed package file list.' }
 } finally { $archive.Dispose() }
-$zipLeaks = @(Get-ZipPathLeakFindings $zipPath $forbiddenRoots)
+$zipLeaks = @(Get-ZipPathLeakFindings $zipPath $forbiddenRoots $appHostSignatures)
 if ($zipLeaks.Count) {
     $zipLeaks | ForEach-Object { Write-Warning $_ }
     throw 'The ZIP contains a local build path; no checksum was written.'
