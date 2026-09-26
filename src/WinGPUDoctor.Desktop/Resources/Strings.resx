@@ -9,12 +9,22 @@
   <data name="App.Title" xml:space="preserve"><value>WinGPUDoctor</value></data>
   <data name="Error.Unexpected" xml:space="preserve"><value>WinGPUDoctor ran into an unexpected error and will close. Start it again to scan.</value></data>
 
-  <data name="Welcome.Intro" xml:space="preserve"><value>WinGPUDoctor reads the graphics adapter, driver and active display information that Windows reports, and explains it in plain language.</value></data>
-  <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Scanning only reads information. It does not change settings, drivers or hardware.</value></data>
+  <data name="Welcome.Eyebrow" xml:space="preserve"><value>GRAPHICS &amp; DISPLAY DIAGNOSTICS</value></data>
+  <data name="Welcome.Title" xml:space="preserve"><value>See what Windows reports about your graphics</value></data>
+  <data name="Welcome.Intro" xml:space="preserve"><value>Graphics adapters, drivers and active display paths as Windows reports them, explained in plain language.</value></data>
+  <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Reads only. Scanning doesn't change settings, drivers or hardware.</value></data>
   <data name="Welcome.PromiseNoUpload" xml:space="preserve"><value>WinGPUDoctor never uploads anything.</value></data>
-  <data name="Welcome.PromiseReview" xml:space="preserve"><value>You review exactly what a report contains before you save it.</value></data>
-  <data name="Welcome.Scan" xml:space="preserve"><value>Scan this PC</value></data>
-
+  <data name="Welcome.PromiseReview" xml:space="preserve"><value>You review the exact report before you save it.</value></data>
+  <data name="Welcome.Scan" xml:space="preserve"><value>Start scan</value></data>
+  <data name="Readout.Title" xml:space="preserve"><value>READOUT</value></data>
+  <data name="Readout.Idle" xml:space="preserve"><value>IDLE</value></data>
+  <data name="Readout.System" xml:space="preserve"><value>System</value></data>
+  <data name="Readout.Adapters" xml:space="preserve"><value>Graphics adapters</value></data>
+  <data name="Readout.Drivers" xml:space="preserve"><value>Drivers</value></data>
+  <data name="Readout.Displays" xml:space="preserve"><value>Display paths</value></data>
+  <data name="Readout.Empty" xml:space="preserve"><value>—</value></data>
+  <data name="Readout.NotRead" xml:space="preserve"><value>Not read yet</value></data>
+  <data name="Readout.Note" xml:space="preserve"><value>The scan reads these areas from Windows, then shows what it found.</value></data>
   <data name="Scan.Reading" xml:space="preserve"><value>Reading information from Windows…</value></data>
   <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
   <data name="Scan.StoppingToClose" xml:space="preserve"><value>Stopping the scan before WinGPUDoctor closes…</value></data>

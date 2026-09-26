@@ -124,6 +124,26 @@ public class DesktopThemeTests
             Assert.False(Regex.IsMatch(File.ReadAllText(file), @"\b(Colors|Brushes|SystemColors)\.|Color\.FromRgb\("), file);
     }
 
+    // Palette brushes are swapped at run time, so they are referenced only dynamically, and no style or
+    // template key may reuse a palette key (a clash made StaticResource return a brush for a Style).
+    [Fact]
+    public void PaletteKeysAreSeparateAndReferencedOnlyDynamically()
+    {
+        var palette = Palette("Dark").Keys.ToHashSet(StringComparer.Ordinal);
+        var texts = Sources("*.xaml").Where(f => !System.IO.Path.GetFileName(f).StartsWith("Palette.", StringComparison.Ordinal))
+            .Select(File.ReadAllText).ToArray();
+        var defined = texts.SelectMany(t => Regex.Matches(t, @"x:Key=""([^""]+)""").Select(m => m.Groups[1].Value)).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("Wgd.PreviewBox", defined);
+        foreach (var key in defined) Assert.DoesNotContain(key, palette);
+        foreach (var text in texts)
+        {
+            foreach (Match m in Regex.Matches(text, @"\{StaticResource ([^}\s]+)\}"))
+                Assert.Contains(m.Groups[1].Value, defined);
+            foreach (Match m in Regex.Matches(text, @"\{DynamicResource ([^}\s]+)\}"))
+                Assert.Contains(m.Groups[1].Value, palette);
+        }
+    }
+
     [Fact]
     public void OnlyBuiltInWindowsFontsAreUsedAndNoneIsBundled()
     {

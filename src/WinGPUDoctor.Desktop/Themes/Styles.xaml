@@ -260,7 +260,7 @@
   </Style>
 
   <!-- The exact report text: read-only, monospace, scrolls inside its panel. -->
-  <Style x:Key="Wgd.Preview" TargetType="TextBox">
+  <Style x:Key="Wgd.PreviewBox" TargetType="TextBox">
     <Setter Property="Background" Value="{DynamicResource Wgd.Preview}" />
     <Setter Property="Foreground" Value="{DynamicResource Wgd.PreviewText}" />
     <Setter Property="BorderBrush" Value="Transparent" />
@@ -295,6 +295,47 @@
     <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Padding" Value="16" />
   </Style>
+  <!-- Two-column pages (Views/SplitPanel.cs): primary content left, a panel on the right or below. -->
+  <Style x:Key="Wgd.MainColumn" TargetType="StackPanel">
+    <Setter Property="Margin" Value="36,32,32,32" />
+    <Setter Property="MaxWidth" Value="600" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+  </Style>
+  <Style x:Key="Wgd.SideColumn" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Wgd.Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.Line}" />
+    <Setter Property="BorderThickness" Value="1,0,0,0" />
+    <Setter Property="Padding" Value="28,32,32,28" />
+    <Style.Triggers>
+      <DataTrigger Binding="{Binding IsStacked, RelativeSource={RelativeSource AncestorType=views:SplitPanel}}" Value="True">
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="36,24,32,28" />
+      </DataTrigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="Wgd.Readout" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style x:Key="Wgd.ReadoutHeader" TargetType="Border">
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.Line}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="12,9" />
+  </Style>
+  <Style x:Key="Wgd.ReadoutLabel" TargetType="TextBlock">
+    <Setter Property="FontSize" Value="13.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
+    <Setter Property="Margin" Value="0,5,12,5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Wgd.ReadoutValue" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Wgd.MonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
   <Style x:Key="Wgd.Warn" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Wgd.AccentTint}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Wgd.AccentEdge}" />
