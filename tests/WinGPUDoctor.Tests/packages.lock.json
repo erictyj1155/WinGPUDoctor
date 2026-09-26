@@ -116,6 +116,13 @@
       "wingpudoctor.core": {
         "type": "Project"
       },
+      "wingpudoctor.host": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[0.1.0, )",
+          "WinGPUDoctor.Supervisor": "[0.1.0, )"
+        }
+      },
       "wingpudoctor.protocol": {
         "type": "Project",
         "dependencies": {

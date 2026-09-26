@@ -5,6 +5,7 @@
     <Project Path="src/WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
     <Project Path="src/WinGPUDoctor.Supervisor/WinGPUDoctor.Supervisor.csproj" />
     <Project Path="src/WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" />
+    <Project Path="src/WinGPUDoctor.Host/WinGPUDoctor.Host.csproj" />
     <Project Path="src/WinGPUDoctor.Cli/WinGPUDoctor.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">

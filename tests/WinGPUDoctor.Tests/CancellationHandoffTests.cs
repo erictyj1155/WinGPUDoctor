@@ -1,5 +1,5 @@
-using WinGPUDoctor.Cli;
 using WinGPUDoctor.Core;
+using WinGPUDoctor.Host;
 using WinGPUDoctor.Supervisor;
 using Xunit;
 
@@ -8,12 +8,14 @@ namespace WinGPUDoctor.Tests;
 public class CancellationHandoffTests
 {
     private static TaskCompletionSource<bool> Gate() => new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private static readonly CollectionSnapshot Snapshot = new(null!, []);
+    private static readonly CollectionSnapshot Snapshot = ModelAndPrivacyTests.Sample();
+    private static readonly CollectionSnapshot InvalidSnapshot = new(null!, []);
 
     [Fact]
     public async Task CancellationWinnerVetoesOutputEvenWhileTokenCallbackIsStillExecuting()
     {
-        using var controller = new HostCancellationController();
+        using var scan = new HostScanSession();
+        var controller = scan.Cancellation;
         var entered = Gate();
         using var release = new ManualResetEventSlim();
         using var registration = controller.Token.Register(() =>
@@ -25,16 +27,11 @@ public class CancellationHandoffTests
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
-            var outputCalls = 0;
             var removed = false;
-            var notices = new List<string>();
-            var exit = await CollectionOutput.RunAsync(_ => Task.FromResult(Snapshot), controller,
-                () => removed = true, _ => { outputCalls++; return 0; }, notices.Add);
-            Assert.Equal(3, exit);
+            var outcome = await scan.RunAsync(_ => Task.FromResult(InvalidSnapshot), () => removed = true);
+            Assert.Equal(HostScanOutcomeKind.Cancelled, outcome.Kind);
             Assert.True(removed);
-            Assert.Equal(0, outputCalls); // Preparation, preview and export are all behind this boundary.
-            Assert.Single(notices);
-            Assert.Contains("cancelled", notices[0]);
+            Assert.Null(outcome.Report); // The invalid snapshot cannot reach privacy projection.
             Assert.True(controller.IsCancellationRequested);
             Assert.False(controller.TryCommitOutput());
             controller.Dispose(); // Must not wait for or dispose the source underneath the callback.
@@ -48,44 +45,46 @@ public class CancellationHandoffTests
     [InlineData(false)]
     public async Task CapturedCallbackCompetesWithHandoffAtDeterministicGates(bool callbackWins)
     {
-        using var controller = new HostCancellationController();
+        using var scan = new HostScanSession();
+        var controller = scan.Cancellation;
         var collectionComplete = Gate();
         var callbackDispatched = Gate();
         var enterCallback = Gate();
         var removed = false;
-        var outputCalls = 0;
         // Capture the delegate before removal, just as the console event dispatcher can.
-        Func<HostInterruptResult> captured = controller.Interrupt;
+        Func<HostInterruptResult> captured = scan.RequestCancellation;
         var callback = Task.Run(async () =>
         {
             callbackDispatched.SetResult(true);
             await enterCallback.Task;
             return captured();
         });
-        var cli = CollectionOutput.RunAsync(async _ =>
+        var host = scan.RunAsync(async _ =>
         {
             await collectionComplete.Task;
             return Snapshot;
-        }, controller, () => removed = true, _ => { outputCalls++; return 0; }, _ => { });
+        }, () => removed = true);
         await callbackDispatched.Task.WaitAsync(TimeSpan.FromSeconds(10));
         if (callbackWins)
         {
             enterCallback.SetResult(true);
             Assert.Equal(HostInterruptResult.Controlled, await callback.WaitAsync(TimeSpan.FromSeconds(10)));
             collectionComplete.SetResult(true);
-            Assert.Equal(3, await cli.WaitAsync(TimeSpan.FromSeconds(10)));
-            Assert.Equal(0, outputCalls);
+            var outcome = await host.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(HostScanOutcomeKind.Cancelled, outcome.Kind);
+            Assert.Null(outcome.Report);
         }
         else
         {
             collectionComplete.SetResult(true);
-            Assert.Equal(0, await cli.WaitAsync(TimeSpan.FromSeconds(10)));
+            var outcome = await host.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Equal(HostScanOutcomeKind.Completed, outcome.Kind);
+            Assert.NotNull(outcome.Report);
             Assert.True(removed);
             enterCallback.SetResult(true);
             Assert.Equal(HostInterruptResult.Forced, await callback.WaitAsync(TimeSpan.FromSeconds(10)));
             Assert.False(controller.IsCancellationRequested);
             Assert.False(controller.Token.IsCancellationRequested);
-            Assert.Equal(1, outputCalls);
         }
         Assert.True(removed);
     }
@@ -93,20 +92,15 @@ public class CancellationHandoffTests
     [Fact]
     public async Task CallbackAtRemovalAfterCommitCannotCreateHiddenCancellation()
     {
-        using var controller = new HostCancellationController();
-        var outputCalls = 0;
-        var exit = await CollectionOutput.RunAsync(_ => Task.FromResult(Snapshot), controller,
-            () => Assert.Equal(HostInterruptResult.Forced, controller.Interrupt()),
-            _ =>
-            {
-                Assert.False(controller.IsCancellationRequested);
-                Assert.Equal(HostInterruptResult.Forced, controller.Interrupt());
-                Assert.False(controller.IsCancellationRequested);
-                outputCalls++;
-                return 0;
-            }, _ => Assert.Fail("Unexpected cancellation notice."));
-        Assert.Equal(0, exit);
-        Assert.Equal(1, outputCalls);
+        using var scan = new HostScanSession();
+        var controller = scan.Cancellation;
+        var outcome = await scan.RunAsync(_ => Task.FromResult(Snapshot),
+            () => Assert.Equal(HostInterruptResult.Forced, scan.RequestCancellation()));
+        Assert.Equal(HostScanOutcomeKind.Completed, outcome.Kind);
+        Assert.NotNull(outcome.Report);
+        Assert.False(controller.IsCancellationRequested);
+        Assert.Equal(HostInterruptResult.Forced, scan.RequestCancellation());
+        Assert.False(controller.IsCancellationRequested);
     }
 
     [Fact]
@@ -131,13 +125,12 @@ public class CancellationHandoffTests
     [Fact]
     public async Task FailedCollectionClosesLifecycleWithoutOutput()
     {
-        using var controller = new HostCancellationController();
-        var outputCalls = 0;
-        var exit = await CollectionOutput.RunAsync(_ => throw new IOException("private exception"), controller,
-            () => { }, _ => { outputCalls++; return 0; }, text => Assert.DoesNotContain("private", text));
-        Assert.Equal(3, exit);
-        Assert.Equal(0, outputCalls);
-        Assert.Equal(HostInterruptResult.Forced, controller.Interrupt());
+        using var scan = new HostScanSession();
+        var controller = scan.Cancellation;
+        var outcome = await scan.RunAsync(_ => throw new IOException("private exception"));
+        Assert.Equal(HostScanOutcomeKind.CollectionFailed, outcome.Kind);
+        Assert.Null(outcome.Report);
+        Assert.Equal(HostInterruptResult.Forced, scan.RequestCancellation());
         Assert.False(controller.IsCancellationRequested);
     }
 }

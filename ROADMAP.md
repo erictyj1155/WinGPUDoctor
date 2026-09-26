@@ -88,7 +88,7 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 
 - [x] Gate 0 scope accepted: WPF host over the unchanged engine; English-first resources.
 - [x] Gate 1: independent review passed with should-fix items, all addressed; ADR 0008 frozen by the owner on 2026-09-25.
-- [ ] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior.
+- [x] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior (local checkpoint 2026-09-26; focused re-review of the review follow-up outstanding).
 - [ ] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test.
 - [ ] Step 3 explanation catalog and detail views with completeness tests.
 - [ ] Step 4 save/export on shared host rules.

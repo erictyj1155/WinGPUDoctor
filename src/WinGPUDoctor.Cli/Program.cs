@@ -1,6 +1,6 @@
-using System.Text;
 using WinGPUDoctor.Cli;
 using WinGPUDoctor.Core;
+using WinGPUDoctor.Host;
 using WinGPUDoctor.Supervisor;
 
 return await RunAsync(args);
@@ -29,33 +29,37 @@ static async Task<int> RunAsync(string[] args)
     }
     if (format is not ("json" or "markdown") || (yes && output is null) || (output is not null && string.IsNullOrWhiteSpace(output))) return Usage();
     if (!OperatingSystem.IsWindows()) { Console.Error.WriteLine("Windows is required for live collection."); return 2; }
-    string? fullPath = null;
+    ExportDestination? destination = null;
     if (output is not null)
     {
-        try
+        destination = HostExport.ResolveDestination(output);
+        switch (destination.Status)
         {
-            fullPath = Path.GetFullPath(output);
-            // Reject network/device namespace paths and alternate data streams before any file access.
-            if (fullPath.StartsWith(@"\\", StringComparison.Ordinal) || fullPath[2..].Contains(':')) return Usage();
-            if (new DriveInfo(Path.GetPathRoot(fullPath)!).DriveType != DriveType.Fixed)
-            { Console.Error.WriteLine("Export requires a local fixed drive."); return 2; }
+            case ExportDestinationStatus.RejectedNamespace: return Usage();
+            case ExportDestinationStatus.NonFixedDrive:
+                Console.Error.WriteLine("Export requires a local fixed drive."); return 2;
+            case ExportDestinationStatus.InvalidLocalDestination:
+                Console.Error.WriteLine("Invalid local export destination."); return 2;
         }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
-        { Console.Error.WriteLine("Invalid local export destination."); return 2; }
     }
-    using var consoleCancellation = new ConsoleCancellation();
+    using var scan = new HostScanSession();
+    using var consoleCancellation = new ConsoleCancellation(scan);
     consoleCancellation.Register();
     var collector = new SupervisedWindowsCollector(progress: M4CollectionProbe.FromEnvironment());
-    return await CollectionOutput.RunAsync(collector.CollectAsync,
-        consoleCancellation.Controller, consoleCancellation.Unregister,
-        snapshot => WriteReport(snapshot, format, fullPath, yes), Console.Error.WriteLine);
+    var outcome = await scan.RunAsync(collector.CollectAsync, consoleCancellation.Unregister);
+    return outcome.Kind switch
+    {
+        HostScanOutcomeKind.Cancelled => Notice("Collection cancelled. No report was exported."),
+        HostScanOutcomeKind.CollectionFailed => Notice("Collection could not complete. No report was exported."),
+        _ => WriteReport(outcome, format, destination, yes)
+    };
 }
 
-static int WriteReport(CollectionSnapshot snapshot, string format, string? fullPath, bool yes)
+static int WriteReport(HostScanOutcome outcome, string format, ExportDestination? destination, bool yes)
 {
-    var report = PrivacyPolicy.Prepare(snapshot, DateOnly.FromDateTime(DateTime.UtcNow));
+    var report = outcome.Report!;
     var content = format == "json" ? ReportWriter.Json(report) : ReportWriter.Markdown(report);
-    if (fullPath is null) Console.Write(content);
+    if (destination is null) Console.Write(content);
     else
     {
         Console.Error.Write(ReportWriter.Markdown(report));
@@ -66,27 +70,22 @@ static int WriteReport(CollectionSnapshot snapshot, string format, string? fullP
             Console.Error.Write("Review the snapshot above. Type EXPORT to save it: ");
             if (Console.ReadLine() != "EXPORT") { Console.Error.WriteLine("Export declined. No file written."); return 4; }
         }
-        try
-        {
-            using var stream = new FileStream(fullPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
-            writer.Write(content);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        if (!HostExport.TryWriteNew(destination, content))
         { Console.Error.WriteLine("Export failed. Check the local destination; existing files are not overwritten. A new partial file may remain after a write failure."); return 5; }
         Console.Error.WriteLine("Report saved locally. Nothing was uploaded.");
     }
-    return snapshot.Collection.Any(c => c.IsIncomplete()) ? 3 : 0;
+    return outcome.IsIncomplete ? 3 : 0;
 }
 
+static int Notice(string message) { Console.Error.WriteLine(message); return 3; }
 static int Usage() { Console.Error.WriteLine("Invalid arguments. Use --help."); return 2; }
 
 internal sealed class ConsoleCancellation : IDisposable
 {
-    private readonly HostCancellationController _controller = new();
+    private readonly HostScanSession _scan;
     private bool _registered;
 
-    internal HostCancellationController Controller => _controller;
+    internal ConsoleCancellation(HostScanSession scan) => _scan = scan;
 
     internal void Register()
     {
@@ -110,11 +109,10 @@ internal sealed class ConsoleCancellation : IDisposable
     }
 
     private void HandleCancel(object? sender, ConsoleCancelEventArgs args) =>
-        args.Cancel = _controller.Interrupt() == HostInterruptResult.Controlled;
+        args.Cancel = _scan.RequestCancellation() == HostInterruptResult.Controlled;
 
     public void Dispose()
     {
         Unregister();
-        _controller.Dispose();
     }
 }
