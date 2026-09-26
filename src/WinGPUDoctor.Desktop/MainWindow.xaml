@@ -5,7 +5,8 @@
         xmlns:vm="clr-namespace:WinGPUDoctor.Desktop.ViewModels"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         Title="{views:Text App.Title}" Width="960" Height="700" MinWidth="560" MinHeight="420"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource Wgd.Background}"
+        Foreground="{DynamicResource Wgd.Text}" FontFamily="{StaticResource Wgd.BodyFont}" FontSize="14">
   <Window.Resources>
     <Style x:Key="StateGlyph" TargetType="TextBlock">
       <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
@@ -53,7 +54,7 @@
 
     <DataTemplate x:Key="ExplanationTemplate" DataType="{x:Type vm:Explanation}">
       <StackPanel Margin="0,10,0,0">
-        <TextBlock Text="{Binding Context}" TextWrapping="Wrap" Opacity="0.8"
+        <TextBlock Text="{Binding Context}" TextWrapping="Wrap" Foreground="{DynamicResource Wgd.Muted}"
                    Visibility="{Binding HasContext, Converter={StaticResource Visible}}" />
         <TextBlock TextWrapping="Wrap">
           <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
@@ -68,7 +69,7 @@
 
     <Style x:Key="Provenance" TargetType="TextBlock">
       <Setter Property="TextWrapping" Value="Wrap" />
-      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
       <Setter Property="FontSize" Value="12" />
       <Style.Triggers>
         <DataTrigger Binding="{Binding Provenance}" Value="">
@@ -83,7 +84,7 @@
           <ColumnDefinition Width="*" MaxWidth="280" />
           <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Margin="0,0,12,0" Opacity="0.8" />
+        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Margin="0,0,12,0" Foreground="{DynamicResource Wgd.Muted}" />
         <StackPanel Grid.Column="1">
           <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
           <TextBlock Text="{Binding Provenance}" Style="{StaticResource Provenance}" />
@@ -92,19 +93,18 @@
     </DataTemplate>
 
     <DataTemplate x:Key="CardTemplate" DataType="{x:Type vm:CardViewModel}">
-      <Border Margin="0,0,0,12" Padding="16" CornerRadius="6" BorderThickness="1"
-              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+      <Border Margin="0,0,0,12" Style="{StaticResource Wgd.Card}">
         <StackPanel>
           <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
                      AutomationProperties.HeadingLevel="Level2" />
-          <TextBlock Text="{Binding Subtitle}" TextWrapping="Wrap" Opacity="0.8" Margin="0,2,0,0"
+          <TextBlock Text="{Binding Subtitle}" TextWrapping="Wrap" Foreground="{DynamicResource Wgd.Muted}" Margin="0,2,0,0"
                      Visibility="{Binding HasSubtitle, Converter={StaticResource Visible}}" />
           <ItemsControl ItemsSource="{Binding Facts}" ItemTemplate="{StaticResource FactTemplate}"
                         Focusable="False" Margin="0,8,0,0" />
           <ItemsControl ItemsSource="{Binding Notes}" ItemTemplate="{StaticResource NoteTemplate}" Focusable="False" />
           <ItemsControl ItemsSource="{Binding Explanations}" ItemTemplate="{StaticResource ExplanationTemplate}" Focusable="False" />
           <CheckBox x:Name="TechnicalToggle" Content="{views:Text Card.ShowTechnical}" Margin="0,10,0,4"
+                    Style="{StaticResource Wgd.Check}"
                     Visibility="{Binding HasTechnical, Converter={StaticResource Visible}}" />
           <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False"
                         Visibility="{Binding IsChecked, ElementName=TechnicalToggle, Converter={StaticResource Visible}}" />
@@ -136,7 +136,7 @@
           </ItemsControl.ItemsSource>
         </ItemsControl>
         <Button x:Name="WelcomeScan" Content="{views:Text Welcome.Scan}" Command="{Binding ScanCommand}"
-                Style="{DynamicResource AccentButtonStyle}" HorizontalAlignment="Left" Padding="20,8" IsDefault="True" />
+                Style="{StaticResource Wgd.PrimaryButton}" IsDefault="True" />
       </StackPanel>
     </ScrollViewer>
 
@@ -158,7 +158,7 @@
         </ItemsControl.ItemsSource>
       </ItemsControl>
       <Button x:Name="CancelButton" Content="{views:Text Scan.Cancel}" Command="{Binding CancelCommand}"
-              HorizontalAlignment="Left" Padding="20,8" IsCancel="True" />
+              Style="{StaticResource Wgd.GhostButton}" IsCancel="True" />
     </StackPanel>
 
     <!-- Result -->
@@ -171,8 +171,8 @@
       </StackPanel>
       <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,12,0,0">
         <Button x:Name="SaveReport" Content="{views:Text Result.SaveReport}" Command="{Binding OpenSaveCommand}"
-                Style="{DynamicResource AccentButtonStyle}" Padding="20,8" Margin="0,0,12,0" />
-        <Button x:Name="ResultScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}" Padding="20,8" />
+                Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,0" />
+        <Button x:Name="ResultScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}" Style="{StaticResource Wgd.GhostButton}" />
       </StackPanel>
       <ScrollViewer x:Name="ResultScroll" VerticalScrollBarVisibility="Auto" Focusable="True"
                     AutomationProperties.Name="{views:Text Result.CardsName}">
@@ -208,9 +208,9 @@
         </DockPanel>
         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
           <Button x:Name="SaveChoose" Content="{views:Text Save.Choose}" Click="OnSaveClick"
-                  Style="{DynamicResource AccentButtonStyle}" Padding="20,8" Margin="0,0,12,0" />
+                  Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,0" />
           <Button Content="{views:Text Save.Back}" Command="{Binding DataContext.CloseSaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                  Padding="20,8" />
+                  Style="{StaticResource Wgd.GhostButton}" />
         </StackPanel>
       </StackPanel>
       <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -221,8 +221,9 @@
           <WrapPanel Margin="0,0,0,4">
             <TextBlock Text="{views:Text Save.FormatLabel}" VerticalAlignment="Center" Margin="0,0,12,0" />
             <RadioButton x:Name="FormatMarkdown" GroupName="Format" Content="{views:Text Save.FormatMarkdown}"
-                         IsChecked="{Binding IsMarkdown}" Margin="0,0,16,0" />
-            <RadioButton GroupName="Format" Content="{views:Text Save.FormatJson}" IsChecked="{Binding IsJson}" />
+                         IsChecked="{Binding IsMarkdown}" Style="{StaticResource Wgd.Radio}" />
+            <RadioButton GroupName="Format" Content="{views:Text Save.FormatJson}" IsChecked="{Binding IsJson}"
+                         Style="{StaticResource Wgd.Radio}" />
           </WrapPanel>
           <DockPanel Margin="0,8,0,0">
             <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
@@ -238,7 +239,7 @@
           <!-- The exact text that Save writes; clipboard copy is intentionally blocked (GUI plan section 8). -->
           <TextBlock Text="{views:Text Save.PreviewLabel}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,4"
                      AutomationProperties.HeadingLevel="Level3" />
-          <TextBox x:Name="PreviewBox" Text="{Binding Preview, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas"
+          <TextBox x:Name="PreviewBox" Text="{Binding Preview, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource Wgd.Preview}"
                    Height="200" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
                    HorizontalScrollBarVisibility="Auto" ContextMenu="{x:Null}"
                    AutomationProperties.Name="{views:Text Save.PreviewName}" />
@@ -252,7 +253,7 @@
       <TextBlock Text="{views:Text Stopped.Message}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,20"
                  AutomationProperties.HeadingLevel="Level2" />
       <Button x:Name="StoppedScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}"
-              HorizontalAlignment="Left" Padding="20,8" />
+              Style="{StaticResource Wgd.PrimaryButton}" />
     </StackPanel>
 
     <!-- Restart required -->
@@ -264,7 +265,7 @@
                    AutomationProperties.HeadingLevel="Level2" />
       </DockPanel>
       <Button x:Name="RestartClose" Content="{views:Text Restart.Close}" Click="OnCloseClick"
-              HorizontalAlignment="Left" Padding="20,8" />
+              Style="{StaticResource Wgd.GhostButton}" />
     </StackPanel>
   </Grid>
 </Window>

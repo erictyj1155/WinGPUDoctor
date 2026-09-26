@@ -1,0 +1,23 @@
+<!-- Light palette: the direction B colors adapted for a light background. Amber and cyan are
+     darker than in the dark palette so text keeps WCAG AA contrast; tests check every text pair. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <SolidColorBrush x:Key="Wgd.Background" Color="#F3F5F8" />
+  <SolidColorBrush x:Key="Wgd.Panel" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Wgd.Line" Color="#D5DCE4" />
+  <SolidColorBrush x:Key="Wgd.Text" Color="#1B232B" />
+  <SolidColorBrush x:Key="Wgd.Muted" Color="#56626F" />
+  <SolidColorBrush x:Key="Wgd.Accent" Color="#8A5300" />
+  <SolidColorBrush x:Key="Wgd.AccentHover" Color="#704300" />
+  <SolidColorBrush x:Key="Wgd.OnAccent" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Wgd.Data" Color="#0B6283" />
+  <SolidColorBrush x:Key="Wgd.AccentTint" Color="#1F8A5300" />
+  <SolidColorBrush x:Key="Wgd.AccentEdge" Color="#668A5300" />
+  <SolidColorBrush x:Key="Wgd.DataTint" Color="#1A0B6283" />
+  <SolidColorBrush x:Key="Wgd.Hover" Color="#0F000000" />
+  <SolidColorBrush x:Key="Wgd.Preview" Color="#F6F8FA" />
+  <SolidColorBrush x:Key="Wgd.PreviewText" Color="#26313B" />
+  <SolidColorBrush x:Key="Wgd.Tip" Color="#1F2730" />
+  <SolidColorBrush x:Key="Wgd.TipText" Color="#F2F4F6" />
+  <SolidColorBrush x:Key="Wgd.Focus" Color="#1B232B" />
+</ResourceDictionary>

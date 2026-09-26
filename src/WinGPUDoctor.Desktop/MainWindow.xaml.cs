@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using WinGPUDoctor.Desktop.ViewModels;
+using WinGPUDoctor.Desktop.Views;
 
 namespace WinGPUDoctor.Desktop;
 
@@ -28,6 +29,12 @@ public partial class MainWindow : Window
         // No clipboard or drag copy from the preview: cloud clipboard sync is out of scope (GUI plan section 8).
         DataObject.AddCopyingHandler(PreviewBox, (_, e) => e.CancelCommand());
         Loaded += (_, _) => FocusPrimary();
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        AppTheme.Watch(this);
     }
 
     // Closing during a scan waits for controlled cancellation; the worker job remains the backstop.

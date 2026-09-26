@@ -26,6 +26,7 @@ public sealed class InfoTip : Button
     {
         Content = "\uE946";
         _tip = new ToolTip { Content = _body, Placement = PlacementMode.Bottom };
+        _tip.SetResourceReference(StyleProperty, "Wgd.ToolTip");
         ToolTip = _tip;
         // The control decides itself when keyboard focus opens the tip (see ShowsOnFocusChange).
         ToolTipService.SetShowsToolTipOnKeyboardFocus(this, false);

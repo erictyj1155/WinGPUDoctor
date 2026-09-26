@@ -108,6 +108,19 @@ Rules for the copy:
 - `Unknown`/`Failed`/`Redacted` get friendly wording. Example: "Windows didn't provide this" rather than "Unknown (MissingValue)".
 - Refresh rate is shown rounded for people (e.g. "165 Hz"), with the exact rational value in technical details.
 
+### Visual design (adopted 2026-09-26)
+
+The owner compared three directions in a local mockup (`artifacts/design/gui-mockup-v1.html`; ignored because it contains real hardware names, and never staged) and chose:
+- **Welcome, Scanning and Save: direction B, "diagnostic instrument panel".** Two columns: the primary content and actions on the left, a panel on the right (an idle or reading "Readout" on Welcome and Scanning, the exact report text on Save). Small monospace amber captions sit above the titles; values are cyan monospace.
+- **Results: direction C, "guided", in direction B's colors.** A centered heading ("Here's what Windows reported") and one summary sentence; three main cards (Your PC, Graphics adapters, and one card per active display path), each with an icon badge, one plain-language sentence, small details and (i); one driver card per adapter; the "What this scan can't tell you" note; and one "Show technical details" switch.
+
+Not adopted from the mockup: direction A; C's step bar and illustration; B's display-path diagram and large number tiles; and mockup wording that goes beyond Core, such as a Windows edition inferred from the build number or "All information was read".
+
+Visual system:
+- **Colors.** Every color is a resource in `Themes/Palette.Dark.xaml`, `Palette.Light.xaml` or `Palette.HighContrast.xaml`, which define the same keys; other XAML and code refer to the keys only, and a test rejects color literals elsewhere. Dark uses the direction B colors: background `#171C22`, panel `#1E252D`, lines `#2E3844`, text `#E4EAF0`, secondary text `#8795A3`, amber accent `#F2A541`, cyan data `#7CC4E0`. Light darkens amber to `#8A5300` and cyan to `#0B6283`. A test checks WCAG AA contrast for every text pair (4.5:1) and for focus rings and badge icons (3:1) in both palettes.
+- **Theme.** The palette follows Windows: a high-contrast theme first (mapped to the user's system colors), otherwise the Windows app mode (light or dark). The app only reads these settings and switches when Windows announces a change. The built-in Fluent theme (ADR 0008 D1) still supplies the scroll bars.
+- **Fonts and icons.** Windows built-ins only, nothing bundled: Segoe UI Variable for text, Cascadia Mono (falling back to Consolas) for values and the report text, and Segoe Fluent Icons (falling back to Segoe MDL2 Assets) for icons. No GPU vendor logos.
+
 ### Accessibility and polish
 
 - Keyboard-only operation.
