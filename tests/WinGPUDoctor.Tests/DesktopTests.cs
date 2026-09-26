@@ -162,6 +162,7 @@ public class DesktopTests
         Assert.Equal(ScanState.Scanning, model.State);
         Assert.False(model.ScanCommand.CanExecute(null));
         Assert.True(model.CancelCommand.CanExecute(null));
+        Assert.Equal(UiText.Get("Scan.Usually"), model.BusyDetail);
 
         var request = model.CancelAsync();
         Assert.False(model.CancelCommand.CanExecute(null)); // Disabled at once.
@@ -169,6 +170,7 @@ public class DesktopTests
         Assert.True(token.IsCancellationRequested);
         Assert.Equal(ScanState.Cancelling, model.State); // Controlled.
         Assert.Equal(UiText.Get("Scan.Stopping"), model.BusyText);
+        Assert.False(model.HasBusyDetail);
         await model.CancelAsync(); // The second cancel is a no-op.
         Assert.Equal(ScanState.Cancelling, model.State);
 

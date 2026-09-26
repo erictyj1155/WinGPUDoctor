@@ -56,7 +56,7 @@ public sealed class MainViewModel : ObservableObject
         {
             if (!Set(ref _state, value)) return;
             foreach (var name in new[] { nameof(CanScan), nameof(IsWelcome), nameof(IsBusy), nameof(IsCancelling),
-                nameof(IsResult), nameof(IsStopped), nameof(NeedsRestart), nameof(BusyText) })
+                nameof(IsResult), nameof(IsStopped), nameof(NeedsRestart), nameof(BusyText), nameof(BusyDetail), nameof(HasBusyDetail) })
                 OnPropertyChanged(name);
             ScanCommand.NotifyCanExecuteChanged();
             CancelCommand.NotifyCanExecuteChanged();
@@ -79,6 +79,10 @@ public sealed class MainViewModel : ObservableObject
             StopRequest.Forced => "Scan.Finishing",
             _ => "Scan.Reading"
         });
+
+    // A short line under the busy heading while the scan is reading normally.
+    public string? BusyDetail => State == ScanState.Scanning && _stopRequest == StopRequest.None ? UiText.Get("Scan.Usually") : null;
+    public bool HasBusyDetail => BusyDetail is not null;
 
     // A new scan discards the previous report before collection starts.
     public ResultViewModel? Result
@@ -176,6 +180,8 @@ public sealed class MainViewModel : ObservableObject
     {
         _stopRequest = value;
         OnPropertyChanged(nameof(BusyText));
+        OnPropertyChanged(nameof(BusyDetail));
+        OnPropertyChanged(nameof(HasBusyDetail));
         CancelCommand.NotifyCanExecuteChanged();
     }
 

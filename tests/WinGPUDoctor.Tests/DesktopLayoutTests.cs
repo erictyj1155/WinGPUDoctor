@@ -31,6 +31,15 @@ public class DesktopLayoutTests
     }
 
     [Fact]
+    public void AnimationsRunOnlyWhileVisibleAndWhenWindowsAnimationEffectsAreOn()
+    {
+        Assert.True(Motion.ShouldAnimate(isVisible: true, animationsEnabled: true));
+        Assert.False(Motion.ShouldAnimate(isVisible: true, animationsEnabled: false)); // "Animation effects" off
+        Assert.False(Motion.ShouldAnimate(isVisible: false, animationsEnabled: true));
+        Assert.Equal(SystemParameters.ClientAreaAnimation, Motion.IsEnabled);
+    }
+
+    [Fact]
     public void TwoColumnPagesStackTheSecondColumnBelowTheFirstWhenNarrow()
     {
         Assert.True(SplitPanel.Stacks(719, 720));

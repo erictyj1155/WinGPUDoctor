@@ -18,6 +18,8 @@
   <data name="Welcome.Scan" xml:space="preserve"><value>Start scan</value></data>
   <data name="Readout.Title" xml:space="preserve"><value>READOUT</value></data>
   <data name="Readout.Idle" xml:space="preserve"><value>IDLE</value></data>
+  <data name="Readout.Reading" xml:space="preserve"><value>READING</value></data>
+  <data name="Readout.Stopping" xml:space="preserve"><value>STOPPING</value></data>
   <data name="Readout.System" xml:space="preserve"><value>System</value></data>
   <data name="Readout.Adapters" xml:space="preserve"><value>Graphics adapters</value></data>
   <data name="Readout.Drivers" xml:space="preserve"><value>Drivers</value></data>
@@ -25,16 +27,13 @@
   <data name="Readout.Empty" xml:space="preserve"><value>—</value></data>
   <data name="Readout.NotRead" xml:space="preserve"><value>Not read yet</value></data>
   <data name="Readout.Note" xml:space="preserve"><value>The scan reads these areas from Windows, then shows what it found.</value></data>
-  <data name="Scan.Reading" xml:space="preserve"><value>Reading information from Windows…</value></data>
+  <data name="Scan.Reading" xml:space="preserve"><value>Reading from Windows…</value></data>
   <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
   <data name="Scan.StoppingToClose" xml:space="preserve"><value>Stopping the scan before WinGPUDoctor closes…</value></data>
   <data name="Scan.RequestingStop" xml:space="preserve"><value>Requesting stop…</value></data>
   <data name="Scan.Finishing" xml:space="preserve"><value>Finishing up…</value></data>
-  <data name="Scan.ListIntro" xml:space="preserve"><value>WinGPUDoctor is reading:</value></data>
-  <data name="Scan.ItemSystem" xml:space="preserve"><value>System details: Windows version, manufacturer and model</value></data>
-  <data name="Scan.ItemAdapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>
-  <data name="Scan.ItemDrivers" xml:space="preserve"><value>Graphics driver details</value></data>
-  <data name="Scan.ItemDisplays" xml:space="preserve"><value>Active display paths</value></data>
+  <data name="Scan.Eyebrow" xml:space="preserve"><value>SCANNING</value></data>
+  <data name="Scan.Usually" xml:space="preserve"><value>This usually takes a few seconds.</value></data>
   <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>
 
   <data name="Result.ScanAgain" xml:space="preserve"><value>Scan again</value></data>
@@ -66,7 +65,9 @@
   <data name="Save.Outcome.InvalidName" xml:space="preserve"><value>That location or file name can't be used. Choose another.</value></data>
   <data name="Save.Outcome.WriteFailed" xml:space="preserve"><value>The report was not saved. Check the folder and choose a new file name. Existing files are never replaced, and a partial new file may remain if writing stopped partway.</value></data>
   <data name="Result.CardsName" xml:space="preserve"><value>Scan results</value></data>
+  <data name="Stopped.Eyebrow" xml:space="preserve"><value>SCAN STOPPED</value></data>
   <data name="Stopped.Message" xml:space="preserve"><value>Scan stopped. No report was created.</value></data>
+  <data name="Restart.Eyebrow" xml:space="preserve"><value>RESTART NEEDED</value></data>
   <data name="Restart.Message" xml:space="preserve"><value>The scan could not complete. Restart WinGPUDoctor before scanning again.</value></data>
   <data name="Restart.Close" xml:space="preserve"><value>Close WinGPUDoctor</value></data>
 

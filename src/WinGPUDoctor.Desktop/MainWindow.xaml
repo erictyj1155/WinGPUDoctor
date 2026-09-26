@@ -3,11 +3,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:WinGPUDoctor.Desktop.Views"
         xmlns:vm="clr-namespace:WinGPUDoctor.Desktop.ViewModels"
-        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         Title="{views:Text App.Title}" Width="960" Height="700" MinWidth="560" MinHeight="420"
         WindowStartupLocation="CenterScreen" Background="{DynamicResource Wgd.Background}"
         Foreground="{DynamicResource Wgd.Text}" FontFamily="{StaticResource Wgd.BodyFont}" FontSize="14">
   <Window.Resources>
+    <!-- The readout's value cells: a dash before a scan, pulsing placeholder lines while reading. -->
+    <Style x:Key="ReadoutIdle" TargetType="TextBlock" BasedOn="{StaticResource Wgd.ReadoutValue}">
+      <Setter Property="Text" Value="{views:Text Readout.Empty}" />
+      <Setter Property="AutomationProperties.Name" Value="{views:Text Readout.NotRead}" />
+      <Setter Property="Visibility" Value="{Binding IsWelcome, Converter={StaticResource Visible}}" />
+    </Style>
+    <Style x:Key="ReadoutPulse" TargetType="views:PulseLine">
+      <Setter Property="Fill" Value="{DynamicResource Wgd.Line}" />
+      <Setter Property="Margin" Value="0,5" />
+      <Setter Property="Visibility" Value="{Binding IsBusy, Converter={StaticResource Visible}}" />
+    </Style>
     <Style x:Key="StateGlyph" TargetType="TextBlock">
       <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
       <Setter Property="Margin" Value="0,2,6,0" />
@@ -107,92 +117,117 @@
   </Window.Resources>
 
   <Grid>
-    <!-- Welcome: direction B. Promises and the action on the left; an idle readout on the right. -->
-    <ScrollViewer x:Name="WelcomeScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                  Visibility="{Binding IsWelcome, Converter={StaticResource Visible}}">
-      <views:SplitPanel MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
-        <StackPanel Style="{StaticResource Wgd.MainColumn}">
-          <TextBlock Text="{views:Text Welcome.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
-          <TextBlock Text="{views:Text Welcome.Title}" Style="{StaticResource Wgd.Title}" AutomationProperties.HeadingLevel="Level1" />
-          <TextBlock Text="{views:Text Welcome.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,24" />
-          <DockPanel Margin="0,0,0,12">
-            <TextBlock DockPanel.Dock="Left" Text="&#xE890;" Style="{StaticResource Wgd.Glyph}" />
-            <TextBlock Text="{views:Text Welcome.PromiseReadOnly}" TextWrapping="Wrap" FontSize="14.5" />
-          </DockPanel>
-          <DockPanel Margin="0,0,0,12">
-            <TextBlock DockPanel.Dock="Left" Text="&#xF384;" Style="{StaticResource Wgd.Glyph}" />
-            <TextBlock Text="{views:Text Welcome.PromiseNoUpload}" TextWrapping="Wrap" FontSize="14.5" />
-          </DockPanel>
-          <DockPanel Margin="0,0,0,26">
-            <TextBlock DockPanel.Dock="Left" Text="&#xEA18;" Style="{StaticResource Wgd.Glyph}" />
-            <TextBlock Text="{views:Text Welcome.PromiseReview}" TextWrapping="Wrap" FontSize="14.5" />
-          </DockPanel>
-          <Button x:Name="WelcomeScan" Content="{views:Text Welcome.Scan}" Command="{Binding ScanCommand}"
-                  Style="{StaticResource Wgd.PrimaryButton}" IsDefault="True" />
-        </StackPanel>
-        <Border Style="{StaticResource Wgd.SideColumn}">
-          <StackPanel>
-            <Border Style="{StaticResource Wgd.Readout}">
-              <StackPanel>
-                <Border Style="{StaticResource Wgd.ReadoutHeader}">
-                  <DockPanel>
-                    <TextBlock DockPanel.Dock="Right" Text="{views:Text Readout.Idle}" Style="{StaticResource Wgd.Caption}" />
-                    <TextBlock Text="{views:Text Readout.Title}" Style="{StaticResource Wgd.Caption}"
-                               AutomationProperties.HeadingLevel="Level2" />
-                  </DockPanel>
-                </Border>
-                <Grid Margin="12,8">
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" MinWidth="120" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
-                  <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                  </Grid.RowDefinitions>
-                  <TextBlock Text="{views:Text Readout.System}" Style="{StaticResource Wgd.ReadoutLabel}" />
-                  <TextBlock Grid.Row="1" Text="{views:Text Readout.Adapters}" Style="{StaticResource Wgd.ReadoutLabel}" />
-                  <TextBlock Grid.Row="2" Text="{views:Text Readout.Drivers}" Style="{StaticResource Wgd.ReadoutLabel}" />
-                  <TextBlock Grid.Row="3" Text="{views:Text Readout.Displays}" Style="{StaticResource Wgd.ReadoutLabel}" />
-                  <TextBlock Grid.Column="1" Text="{views:Text Readout.Empty}" Style="{StaticResource Wgd.ReadoutValue}"
-                             AutomationProperties.Name="{views:Text Readout.NotRead}" />
-                  <TextBlock Grid.Column="1" Grid.Row="1" Text="{views:Text Readout.Empty}" Style="{StaticResource Wgd.ReadoutValue}"
-                             AutomationProperties.Name="{views:Text Readout.NotRead}" />
-                  <TextBlock Grid.Column="1" Grid.Row="2" Text="{views:Text Readout.Empty}" Style="{StaticResource Wgd.ReadoutValue}"
-                             AutomationProperties.Name="{views:Text Readout.NotRead}" />
-                  <TextBlock Grid.Column="1" Grid.Row="3" Text="{views:Text Readout.Empty}" Style="{StaticResource Wgd.ReadoutValue}"
-                             AutomationProperties.Name="{views:Text Readout.NotRead}" />
-                </Grid>
-              </StackPanel>
-            </Border>
-            <TextBlock Text="{views:Text Readout.Note}" Style="{StaticResource Wgd.Small}" Margin="0,12,0,0" />
-          </StackPanel>
-        </Border>
-      </views:SplitPanel>
-    </ScrollViewer>
-
-    <!-- Scanning and stopping -->
-    <StackPanel Margin="24,16" MaxWidth="720" HorizontalAlignment="Left"
-                Visibility="{Binding IsBusy, Converter={StaticResource Visible}}">
-      <TextBlock Text="{Binding BusyText}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,12"
-                 AutomationProperties.HeadingLevel="Level2" />
-      <ProgressBar IsIndeterminate="True" Height="4" Margin="0,0,0,16" AutomationProperties.Name="{Binding BusyText}" />
-      <TextBlock Text="{views:Text Scan.ListIntro}" TextWrapping="Wrap" Margin="0,0,0,6" />
-      <ItemsControl Focusable="False" Margin="0,0,0,20" ItemTemplate="{StaticResource NoteTemplate}">
-        <ItemsControl.ItemsSource>
-          <x:Array Type="{x:Type sys:String}">
-            <views:Text Key="Scan.ItemSystem" />
-            <views:Text Key="Scan.ItemAdapters" />
-            <views:Text Key="Scan.ItemDrivers" />
-            <views:Text Key="Scan.ItemDisplays" />
-          </x:Array>
-        </ItemsControl.ItemsSource>
-      </ItemsControl>
-      <Button x:Name="CancelButton" Content="{views:Text Scan.Cancel}" Command="{Binding CancelCommand}"
-              Style="{StaticResource Wgd.GhostButton}" IsCancel="True" />
-    </StackPanel>
+    <!-- Welcome and scanning: direction B. Content and actions on the left; on the right a readout that
+         is idle before a scan and shows placeholder lines while Windows is read. -->
+    <Grid>
+      <Grid.Style>
+        <Style TargetType="Grid">
+          <Setter Property="Visibility" Value="Collapsed" />
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding IsWelcome}" Value="True">
+              <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+              <Setter Property="Visibility" Value="Visible" />
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Grid.Style>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <views:SplitPanel MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+          <Grid>
+            <StackPanel Style="{StaticResource Wgd.MainColumn}" Visibility="{Binding IsWelcome, Converter={StaticResource Visible}}">
+              <TextBlock Text="{views:Text Welcome.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
+              <TextBlock Text="{views:Text Welcome.Title}" Style="{StaticResource Wgd.Title}" AutomationProperties.HeadingLevel="Level1" />
+              <TextBlock Text="{views:Text Welcome.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,24" />
+              <DockPanel Margin="0,0,0,12">
+                <TextBlock DockPanel.Dock="Left" Text="&#xE890;" Style="{StaticResource Wgd.Glyph}" />
+                <TextBlock Text="{views:Text Welcome.PromiseReadOnly}" TextWrapping="Wrap" FontSize="14.5" />
+              </DockPanel>
+              <DockPanel Margin="0,0,0,12">
+                <TextBlock DockPanel.Dock="Left" Text="&#xF384;" Style="{StaticResource Wgd.Glyph}" />
+                <TextBlock Text="{views:Text Welcome.PromiseNoUpload}" TextWrapping="Wrap" FontSize="14.5" />
+              </DockPanel>
+              <DockPanel Margin="0,0,0,26">
+                <TextBlock DockPanel.Dock="Left" Text="&#xEA18;" Style="{StaticResource Wgd.Glyph}" />
+                <TextBlock Text="{views:Text Welcome.PromiseReview}" TextWrapping="Wrap" FontSize="14.5" />
+              </DockPanel>
+              <Button x:Name="WelcomeScan" Content="{views:Text Welcome.Scan}" Command="{Binding ScanCommand}"
+                      Style="{StaticResource Wgd.PrimaryButton}" IsDefault="True" />
+            </StackPanel>
+            <StackPanel Style="{StaticResource Wgd.MainColumn}" Visibility="{Binding IsBusy, Converter={StaticResource Visible}}">
+              <TextBlock Text="{views:Text Scan.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
+              <TextBlock Text="{Binding BusyText}" Style="{StaticResource Wgd.Title}" AutomationProperties.HeadingLevel="Level1" />
+              <Grid Margin="0,4,0,16">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" MaxWidth="440" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar Style="{StaticResource Wgd.ScanProgress}" AutomationProperties.Name="{Binding BusyText}" />
+              </Grid>
+              <TextBlock Text="{Binding BusyDetail}" Style="{StaticResource Wgd.Lead}"
+                         Visibility="{Binding HasBusyDetail, Converter={StaticResource Visible}}" />
+              <Button x:Name="CancelButton" Content="{views:Text Scan.Cancel}" Command="{Binding CancelCommand}"
+                      Style="{StaticResource Wgd.GhostButton}" IsCancel="True" Margin="0,24,0,0" />
+            </StackPanel>
+          </Grid>
+          <Border Style="{StaticResource Wgd.SideColumn}">
+            <StackPanel>
+              <Border Style="{StaticResource Wgd.Readout}">
+                <StackPanel>
+                  <Border Style="{StaticResource Wgd.ReadoutHeader}">
+                    <DockPanel>
+                      <TextBlock DockPanel.Dock="Right">
+                        <TextBlock.Style>
+                          <Style TargetType="TextBlock" BasedOn="{StaticResource Wgd.Caption}">
+                            <Setter Property="Text" Value="{views:Text Readout.Idle}" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="Text" Value="{views:Text Readout.Reading}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Wgd.Accent}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding IsCancelling}" Value="True">
+                                <Setter Property="Text" Value="{views:Text Readout.Stopping}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                      </TextBlock>
+                      <TextBlock Text="{views:Text Readout.Title}" Style="{StaticResource Wgd.Caption}"
+                                 AutomationProperties.HeadingLevel="Level2" />
+                    </DockPanel>
+                  </Border>
+                  <Grid Margin="12,8">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" MinWidth="120" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition />
+                      <RowDefinition />
+                      <RowDefinition />
+                      <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{views:Text Readout.System}" Style="{StaticResource Wgd.ReadoutLabel}" />
+                    <TextBlock Grid.Row="1" Text="{views:Text Readout.Adapters}" Style="{StaticResource Wgd.ReadoutLabel}" />
+                    <TextBlock Grid.Row="2" Text="{views:Text Readout.Drivers}" Style="{StaticResource Wgd.ReadoutLabel}" />
+                    <TextBlock Grid.Row="3" Text="{views:Text Readout.Displays}" Style="{StaticResource Wgd.ReadoutLabel}" />
+                    <TextBlock Grid.Column="1" Style="{StaticResource ReadoutIdle}" />
+                    <TextBlock Grid.Column="1" Grid.Row="1" Style="{StaticResource ReadoutIdle}" />
+                    <TextBlock Grid.Column="1" Grid.Row="2" Style="{StaticResource ReadoutIdle}" />
+                    <TextBlock Grid.Column="1" Grid.Row="3" Style="{StaticResource ReadoutIdle}" />
+                    <views:PulseLine Grid.Column="1" Fraction="0.7" Style="{StaticResource ReadoutPulse}" />
+                    <views:PulseLine Grid.Column="1" Grid.Row="1" Fraction="0.55" Delay="0.15" Style="{StaticResource ReadoutPulse}" />
+                    <views:PulseLine Grid.Column="1" Grid.Row="2" Fraction="0.62" Delay="0.3" Style="{StaticResource ReadoutPulse}" />
+                    <views:PulseLine Grid.Column="1" Grid.Row="3" Fraction="0.4" Delay="0.45" Style="{StaticResource ReadoutPulse}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+              <TextBlock Text="{views:Text Readout.Note}" Style="{StaticResource Wgd.Small}" Margin="0,12,0,0" />
+            </StackPanel>
+          </Border>
+        </views:SplitPanel>
+      </ScrollViewer>
+    </Grid>
 
     <!-- Result -->
     <DockPanel Margin="24,16" Visibility="{Binding IsViewingResult, Converter={StaticResource Visible}}">
@@ -281,24 +316,30 @@
     </DockPanel>
 
     <!-- Stopped -->
-    <StackPanel Margin="24,16" MaxWidth="720" HorizontalAlignment="Left"
-                Visibility="{Binding IsStopped, Converter={StaticResource Visible}}">
-      <TextBlock Text="{views:Text Stopped.Message}" FontSize="16" TextWrapping="Wrap" Margin="0,0,0,20"
-                 AutomationProperties.HeadingLevel="Level2" />
-      <Button x:Name="StoppedScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}"
-              Style="{StaticResource Wgd.PrimaryButton}" />
-    </StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding IsStopped, Converter={StaticResource Visible}}">
+      <StackPanel Style="{StaticResource Wgd.MainColumn}">
+        <TextBlock Text="{views:Text Stopped.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
+        <TextBlock Text="{views:Text Stopped.Message}" Style="{StaticResource Wgd.Title}" FontSize="26"
+                   AutomationProperties.HeadingLevel="Level1" />
+        <Button x:Name="StoppedScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}"
+                Style="{StaticResource Wgd.PrimaryButton}" Margin="0,12,0,0" />
+      </StackPanel>
+    </ScrollViewer>
 
     <!-- Restart required -->
-    <StackPanel Margin="24,16" MaxWidth="720" HorizontalAlignment="Left"
-                Visibility="{Binding NeedsRestart, Converter={StaticResource Visible}}">
-      <DockPanel Margin="0,0,0,20">
-        <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="16" Margin="0,3,8,0" />
-        <TextBlock Text="{views:Text Restart.Message}" FontSize="16" TextWrapping="Wrap"
-                   AutomationProperties.HeadingLevel="Level2" />
-      </DockPanel>
-      <Button x:Name="RestartClose" Content="{views:Text Restart.Close}" Click="OnCloseClick"
-              Style="{StaticResource Wgd.GhostButton}" />
-    </StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding NeedsRestart, Converter={StaticResource Visible}}">
+      <StackPanel Style="{StaticResource Wgd.MainColumn}">
+        <TextBlock Text="{views:Text Restart.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" Style="{StaticResource Wgd.Glyph}" FontSize="24" Margin="0,4,12,0" />
+          <TextBlock Text="{views:Text Restart.Message}" Style="{StaticResource Wgd.Title}" FontSize="26"
+                     AutomationProperties.HeadingLevel="Level1" />
+        </DockPanel>
+        <Button x:Name="RestartClose" Content="{views:Text Restart.Close}" Click="OnCloseClick"
+                Style="{StaticResource Wgd.PrimaryButton}" Margin="0,12,0,0" />
+      </StackPanel>
+    </ScrollViewer>
   </Grid>
 </Window>

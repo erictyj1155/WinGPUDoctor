@@ -40,15 +40,19 @@ public static class AppTheme
         _applied = kind;
     }
 
-    // Windows announces theme, contrast and animation changes with these messages. The palette is
-    // re-evaluated afterwards, once WPF has refreshed its own cached system values.
+    // Windows announces theme, contrast and animation changes with these messages. The palette and the
+    // animation setting are re-evaluated afterwards, once WPF has refreshed its own cached system values.
     public static void Watch(Window window)
     {
         if (PresentationSource.FromVisual(window) is not HwndSource source) return;
         _hook = (IntPtr _, int message, IntPtr _, IntPtr _, ref bool _) =>
         {
             if (message is WM_SETTINGCHANGE or WM_SYSCOLORCHANGE or WM_THEMECHANGED)
-                window.Dispatcher.BeginInvoke(DispatcherPriority.Background, () => Apply(Application.Current));
+                window.Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+                {
+                    Apply(Application.Current);
+                    Motion.Refresh();
+                });
             return IntPtr.Zero;
         };
         source.AddHook(_hook);

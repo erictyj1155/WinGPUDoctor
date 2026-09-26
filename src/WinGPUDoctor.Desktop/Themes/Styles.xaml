@@ -36,6 +36,8 @@
     <Setter Property="FontSize" Value="30" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="MaxWidth" Value="620" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
     <Setter Property="Margin" Value="0,0,0,12" />
   </Style>
   <Style x:Key="Wgd.Lead" TargetType="TextBlock">
@@ -43,6 +45,8 @@
     <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
     <Setter Property="TextWrapping" Value="Wrap" />
     <Setter Property="LineHeight" Value="22" />
+    <Setter Property="MaxWidth" Value="560" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
   </Style>
   <Style x:Key="Wgd.Heading" TargetType="TextBlock">
     <Setter Property="FontSize" Value="15" />
@@ -298,8 +302,6 @@
   <!-- Two-column pages (Views/SplitPanel.cs): primary content left, a panel on the right or below. -->
   <Style x:Key="Wgd.MainColumn" TargetType="StackPanel">
     <Setter Property="Margin" Value="36,32,32,32" />
-    <Setter Property="MaxWidth" Value="600" />
-    <Setter Property="HorizontalAlignment" Value="Left" />
   </Style>
   <Style x:Key="Wgd.SideColumn" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Wgd.Panel}" />
@@ -334,6 +336,19 @@
     <Setter Property="FontSize" Value="12.5" />
     <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
     <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Indeterminate scan progress (Views/Motion.cs); steady when Windows animations are off. -->
+  <Style x:Key="Wgd.ScanProgress" TargetType="ProgressBar">
+    <Setter Property="IsIndeterminate" Value="True" />
+    <Setter Property="Height" Value="3" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ProgressBar">
+          <views:SweepBar Track="{DynamicResource Wgd.Line}" Glow="{DynamicResource Wgd.Accent}" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style x:Key="Wgd.Warn" TargetType="Border">
