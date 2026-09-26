@@ -90,7 +90,7 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 - [x] Gate 1: independent review passed with should-fix items, all addressed; ADR 0008 frozen by the owner on 2026-09-25.
 - [x] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior (local checkpoint 2026-09-26; focused re-review of the review follow-up outstanding).
 - [x] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test (local checkpoint 2026-09-26).
-- [ ] Step 3 explanation catalog and detail views with completeness tests.
+- [x] Step 3 explanation catalog and detail views with completeness tests (local checkpoint 2026-09-26).
 - [ ] Step 4 save/export on shared host rules.
 - [ ] Step 5 packaging with distinct GUI executable name, allowlist and path guard.
 - [ ] Step 6 deterministic, separately authorized live and usability validation; copy review.

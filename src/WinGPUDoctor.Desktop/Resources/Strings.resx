@@ -7,7 +7,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 
   <data name="App.Title" xml:space="preserve"><value>WinGPUDoctor</value></data>
-  <data name="Error.Unexpected" xml:space="preserve"><value>Something went wrong. Close WinGPUDoctor and start it again.</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>WinGPUDoctor ran into an unexpected error and will close. Start it again to scan.</value></data>
 
   <data name="Welcome.Intro" xml:space="preserve"><value>WinGPUDoctor reads the graphics adapter, driver and active display information that Windows reports, and explains it in plain language.</value></data>
   <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Reads only. It changes nothing on this PC.</value></data>
@@ -100,4 +100,172 @@
   <data name="OutputTechnology.displayPortUsbTunnel" xml:space="preserve"><value>DisplayPort over USB</value></data>
   <data name="OutputTechnology.internal" xml:space="preserve"><value>Internal</value></data>
   <data name="OutputTechnology.other" xml:space="preserve"><value>Other</value></data>
+
+  <data name="Field.PciDeviceId" xml:space="preserve"><value>PCI device ID</value></data>
+  <data name="Field.Classification" xml:space="preserve"><value>Classification</value></data>
+  <data name="Field.SourceTarget" xml:space="preserve"><value>Source / target labels</value></data>
+  <data name="Field.SourceGdiName" xml:space="preserve"><value>Source GDI name (not an internal-panel label)</value></data>
+  <data name="Field.SignalRate" xml:space="preserve"><value>Signal vertical-sync rate</value></data>
+  <data name="Field.ScanLineOrdering" xml:space="preserve"><value>Scan-line ordering</value></data>
+  <data name="Field.Rotation" xml:space="preserve"><value>Rotation</value></data>
+  <data name="Field.PathActive" xml:space="preserve"><value>Path active</value></data>
+  <data name="Field.TargetAvailable" xml:space="preserve"><value>Target available</value></data>
+  <data name="Field.RefreshBoost" xml:space="preserve"><value>Refresh boost flag</value></data>
+  <data name="Field.CloneGroup" xml:space="preserve"><value>Reported clone group</value></data>
+  <data name="Field.QueryMode" xml:space="preserve"><value>Query mode</value></data>
+
+  <data name="Value.Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Value.No" xml:space="preserve"><value>No</value></data>
+  <data name="Unit.ExactRate" xml:space="preserve"><value>{0}/{1} ({2})</value></data>
+  <data name="Technical.NoValue" xml:space="preserve"><value>No value</value></data>
+  <data name="Technical.Provenance" xml:space="preserve"><value>{0} · source: {1}</value></data>
+  <data name="Technical.ProvenanceReason" xml:space="preserve"><value>{0} · source: {1} · reason: {2}. {3}</value></data>
+  <data name="Technical.SourceTarget" xml:space="preserve"><value>{0} / {1}</value></data>
+  <data name="Technical.Match" xml:space="preserve"><value>{0} matched to {1} · evidence: {2} · confidence: {3}</value></data>
+  <data name="Technical.Run" xml:space="preserve"><value>status: {0} · reason: {1} · attempts: {2} · query mode: {3}</value></data>
+  <data name="Technical.NoIssues" xml:space="preserve"><value>No issues recorded</value></data>
+  <data name="Technical.Issue" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Technical.IssueCode" xml:space="preserve"><value>{0}: {1} (Windows error code {2})</value></data>
+
+  <data name="Card.Details" xml:space="preserve"><value>More about this card</value></data>
+  <data name="Card.ShowTechnical" xml:space="preserve"><value>Show technical details</value></data>
+  <data name="Explanation.NotMeaningLabel" xml:space="preserve"><value>What this does not mean:</value></data>
+  <data name="Explanation.NextStepLabel" xml:space="preserve"><value>Optional next step:</value></data>
+  <data name="Card.Findings.Title" xml:space="preserve"><value>What WinGPUDoctor noticed</value></data>
+  <data name="Card.Findings.Intro" xml:space="preserve"><value>Plain-language notes about the facts above. They are information, not a verdict.</value></data>
+  <data name="Card.Findings.None" xml:space="preserve"><value>No rule produced a note for this scan. This does not mean everything is fine; it is not a health verdict.</value></data>
+  <data name="Card.Warnings.Title" xml:space="preserve"><value>Notes about this report</value></data>
+  <data name="Card.Collection.Title" xml:space="preserve"><value>How the scan went</value></data>
+  <data name="Card.Collection.Intro" xml:space="preserve"><value>Each reading step and whether it completed.</value></data>
+
+  <data name="Finding.inventory.multiple-adapters" xml:space="preserve"><value>More than one graphics adapter reported</value></data>
+  <data name="Finding.inventory.multiple-adapters.Meaning" xml:space="preserve"><value>Windows reports more than one graphics adapter on this PC.</value></data>
+  <data name="Finding.inventory.multiple-adapters.NotMeaning" xml:space="preserve"><value>This alone does not show hybrid graphics, which adapter a display path uses, power state, or which adapter an app uses.</value></data>
+  <data name="Finding.inventory.empty" xml:space="preserve"><value>No graphics adapters reported</value></data>
+  <data name="Finding.inventory.empty.Meaning" xml:space="preserve"><value>Windows returned an empty list of graphics adapters.</value></data>
+  <data name="Finding.inventory.empty.NotMeaning" xml:space="preserve"><value>This does not prove that the PC has no graphics adapter.</value></data>
+  <data name="Finding.inventory.empty.NextStep" xml:space="preserve"><value>If someone is helping you, save a report and send it to them.</value></data>
+  <data name="Finding.topology.no-active-paths" xml:space="preserve"><value>No active display paths reported</value></data>
+  <data name="Finding.topology.no-active-paths.Meaning" xml:space="preserve"><value>The display information Windows returned in this scan contains no active display paths.</value></data>
+  <data name="Finding.topology.no-active-paths.NotMeaning" xml:space="preserve"><value>This does not mean that no display or graphics hardware is present.</value></data>
+  <data name="Finding.topology.endpoint-adapter-association" xml:space="preserve"><value>Display path linked to listed graphics adapters</value></data>
+  <data name="Finding.topology.endpoint-adapter-association.Meaning" xml:space="preserve"><value>Windows' device identity records link both the source side and the target side of this display path to graphics adapters listed in this report. The two sides can link to different adapters; the display path card shows both.</value></data>
+  <data name="Finding.topology.endpoint-adapter-association.NotMeaning" xml:space="preserve"><value>This does not show which adapter renders games or apps, which physical port or cable is used, the power state or graphics mode, or that anything is working correctly.</value></data>
+  <data name="Finding.topology.correlation-unresolved" xml:space="preserve"><value>Display path not fully linked to a listed graphics adapter</value></data>
+  <data name="Finding.topology.correlation-unresolved.Meaning" xml:space="preserve"><value>WinGPUDoctor could not match at least one side of this display path to exactly one graphics adapter in this report. The technical details show the reason.</value></data>
+  <data name="Finding.topology.correlation-unresolved.NotMeaning" xml:space="preserve"><value>This does not mean that a device is missing, faulty or disconnected.</value></data>
+  <data name="Finding.topology.correlation-unresolved.NextStep" xml:space="preserve"><value>If someone is helping you, save a report and send it to them.</value></data>
+  <data name="Finding.topology.active-path-target-unavailable" xml:space="preserve"><value>Active display path with an unavailable target</value></data>
+  <data name="Finding.topology.active-path-target-unavailable.Meaning" xml:space="preserve"><value>Windows lists this display path as active, but marks its target, the display side of the path, as unavailable.</value></data>
+  <data name="Finding.topology.active-path-target-unavailable.NotMeaning" xml:space="preserve"><value>This does not show a cause, and it does not mean the display is broken.</value></data>
+
+  <data name="Warning.InventoryOnly" xml:space="preserve"><value>The adapter list is an inventory</value></data>
+  <data name="Warning.InventoryOnly.Meaning" xml:space="preserve"><value>The graphics adapters are the ones Windows reports as present.</value></data>
+  <data name="Warning.InventoryOnly.NotMeaning" xml:space="preserve"><value>The list does not measure which adapter apps use, how busy an adapter is, its power state, or whether hybrid graphics is on.</value></data>
+  <data name="Warning.ProviderReportedValues" xml:space="preserve"><value>Values come from Windows and device providers</value></data>
+  <data name="Warning.ProviderReportedValues.Meaning" xml:space="preserve"><value>Firmware, Windows and driver providers supply these values. They can be missing, stale, virtual or inaccurate.</value></data>
+  <data name="Warning.ProviderReportedValues.NotMeaning" xml:space="preserve"><value>A driver date does not show whether a driver is up to date.</value></data>
+  <data name="Warning.TopologyNotCollected" xml:space="preserve"><value>Display information not available</value></data>
+  <data name="Warning.TopologyNotCollected.Meaning" xml:space="preserve"><value>Active display path information was not available in this scan. The technical details show the reason.</value></data>
+  <data name="Warning.TopologyNotCollected.NotMeaning" xml:space="preserve"><value>This does not mean that no display is attached.</value></data>
+  <data name="Warning.TopologyIsNotRendering" xml:space="preserve"><value>Display paths are not app rendering</value></data>
+  <data name="Warning.TopologyIsNotRendering.Meaning" xml:space="preserve"><value>Display paths describe how Windows has set up each active display: resolution, refresh rate and the linked adapters. Monitor names are read separately and can change during a scan.</value></data>
+  <data name="Warning.TopologyIsNotRendering.NotMeaning" xml:space="preserve"><value>They do not show which adapter an app uses, how busy it is, its power state or a confirmed graphics mode.</value></data>
+  <data name="Warning.ReviewBeforeSharing" xml:space="preserve"><value>Review before sharing</value></data>
+  <data name="Warning.ReviewBeforeSharing.Meaning" xml:space="preserve"><value>Model names and device descriptions can be distinctive or customized.</value></data>
+  <data name="Warning.ReviewBeforeSharing.NotMeaning" xml:space="preserve"><value>Automatic filtering cannot guarantee that a report is anonymous.</value></data>
+  <data name="Warning.ReviewBeforeSharing.NextStep" xml:space="preserve"><value>Read the preview before you save or send a report.</value></data>
+  <data name="Warning.CollectionIncomplete" xml:space="preserve"><value>Some information could not be read</value></data>
+  <data name="Warning.CollectionIncomplete.Meaning" xml:space="preserve"><value>At least one reading step did not fully complete. The fields and "How the scan went" show which parts.</value></data>
+  <data name="Warning.CollectionIncomplete.NotMeaning" xml:space="preserve"><value>This does not mean that something is wrong with the PC.</value></data>
+  <data name="Warning.ValuesRedacted" xml:space="preserve"><value>Some values were hidden</value></data>
+  <data name="Warning.ValuesRedacted.Meaning" xml:space="preserve"><value>The privacy filter removed text that looked like it could identify you or this PC.</value></data>
+  <data name="Warning.ValuesRedacted.NotMeaning" xml:space="preserve"><value>Hidden values are not errors, and the filter cannot guarantee anonymity.</value></data>
+
+  <data name="State.Available.Meaning" xml:space="preserve"><value>Windows provided this value.</value></data>
+  <data name="State.Available.NotMeaning" xml:space="preserve"><value>An available value is not checked for accuracy.</value></data>
+  <data name="State.Unknown.Meaning" xml:space="preserve"><value>Windows did not provide a usable value.</value></data>
+  <data name="State.Unknown.NotMeaning" xml:space="preserve"><value>This does not mean that the device is missing or faulty.</value></data>
+  <data name="State.Unsupported.Meaning" xml:space="preserve"><value>This item is not collected by this version, or Windows does not support it here.</value></data>
+  <data name="State.Unsupported.NotMeaning" xml:space="preserve"><value>This does not indicate a problem with the PC.</value></data>
+  <data name="State.Failed.Meaning" xml:space="preserve"><value>Reading this value did not succeed.</value></data>
+  <data name="State.Failed.NotMeaning" xml:space="preserve"><value>A failed read does not by itself indicate a hardware or driver problem.</value></data>
+  <data name="State.Redacted.Meaning" xml:space="preserve"><value>The privacy filter removed this value because it looked like it could identify you or this PC.</value></data>
+  <data name="State.Redacted.NotMeaning" xml:space="preserve"><value>Windows did provide a value; it is only left out of the report.</value></data>
+
+  <data name="Reason.None" xml:space="preserve"><value>No reason</value></data>
+  <data name="Reason.None.Meaning" xml:space="preserve"><value>The value is available.</value></data>
+  <data name="Reason.MissingValue" xml:space="preserve"><value>Value not provided</value></data>
+  <data name="Reason.MissingValue.Meaning" xml:space="preserve"><value>Windows returned no value for this item.</value></data>
+  <data name="Reason.NotImplemented" xml:space="preserve"><value>Not collected</value></data>
+  <data name="Reason.NotImplemented.Meaning" xml:space="preserve"><value>This version of WinGPUDoctor does not collect this item.</value></data>
+  <data name="Reason.NonPciDevice" xml:space="preserve"><value>No PCI identity</value></data>
+  <data name="Reason.NonPciDevice.Meaning" xml:space="preserve"><value>The device did not report PCI identity values.</value></data>
+  <data name="Reason.InvalidValue" xml:space="preserve"><value>Value not usable</value></data>
+  <data name="Reason.InvalidValue.Meaning" xml:space="preserve"><value>Windows returned a value in an unexpected form, so it was left out.</value></data>
+  <data name="Reason.NoMatchingDriver" xml:space="preserve"><value>No matching driver record</value></data>
+  <data name="Reason.NoMatchingDriver.Meaning" xml:space="preserve"><value>No signed-driver record matched this adapter exactly.</value></data>
+  <data name="Reason.AmbiguousDriver" xml:space="preserve"><value>More than one driver record</value></data>
+  <data name="Reason.AmbiguousDriver.Meaning" xml:space="preserve"><value>More than one signed-driver record matched this adapter, so none was chosen.</value></data>
+  <data name="Reason.AccessDenied" xml:space="preserve"><value>Access denied</value></data>
+  <data name="Reason.AccessDenied.Meaning" xml:space="preserve"><value>Windows did not allow this information to be read with the current permissions.</value></data>
+  <data name="Reason.ProviderUnavailable" xml:space="preserve"><value>Provider unavailable</value></data>
+  <data name="Reason.ProviderUnavailable.Meaning" xml:space="preserve"><value>The Windows component that supplies this information was not available.</value></data>
+  <data name="Reason.Timeout" xml:space="preserve"><value>Timed out</value></data>
+  <data name="Reason.Timeout.Meaning" xml:space="preserve"><value>Reading this information took too long and was stopped.</value></data>
+  <data name="Reason.QueryFailed" xml:space="preserve"><value>Query did not succeed</value></data>
+  <data name="Reason.QueryFailed.Meaning" xml:space="preserve"><value>Windows reported an error while this information was being read.</value></data>
+  <data name="Reason.SensitiveValue" xml:space="preserve"><value>Hidden for privacy</value></data>
+  <data name="Reason.SensitiveValue.Meaning" xml:space="preserve"><value>The value looked like it could identify you or this PC.</value></data>
+  <data name="Reason.ApiUnavailable" xml:space="preserve"><value>Windows function unavailable</value></data>
+  <data name="Reason.ApiUnavailable.Meaning" xml:space="preserve"><value>A Windows function needed for this was not available.</value></data>
+  <data name="Reason.NotSupported" xml:space="preserve"><value>Not supported</value></data>
+  <data name="Reason.NotSupported.Meaning" xml:space="preserve"><value>Windows does not support this request here.</value></data>
+  <data name="Reason.SessionAccessDenied" xml:space="preserve"><value>Not available in this session</value></data>
+  <data name="Reason.SessionAccessDenied.Meaning" xml:space="preserve"><value>The current Windows session is not allowed to read this, for example in some remote sessions.</value></data>
+  <data name="Reason.TopologyChanged" xml:space="preserve"><value>Display setup changed during the scan</value></data>
+  <data name="Reason.TopologyChanged.Meaning" xml:space="preserve"><value>The display configuration changed while it was being read.</value></data>
+  <data name="Reason.NativeError" xml:space="preserve"><value>Windows error</value></data>
+  <data name="Reason.NativeError.Meaning" xml:space="preserve"><value>A Windows function returned an error code.</value></data>
+  <data name="Reason.UnmatchedAdapter" xml:space="preserve"><value>No matching adapter</value></data>
+  <data name="Reason.UnmatchedAdapter.Meaning" xml:space="preserve"><value>No graphics adapter in this report had the same Windows device identity.</value></data>
+  <data name="Reason.AmbiguousAdapter" xml:space="preserve"><value>More than one matching adapter</value></data>
+  <data name="Reason.AmbiguousAdapter.Meaning" xml:space="preserve"><value>More than one graphics adapter matched, so none was chosen.</value></data>
+  <data name="Reason.InvalidModeIndex" xml:space="preserve"><value>Display mode not readable</value></data>
+  <data name="Reason.InvalidModeIndex.Meaning" xml:space="preserve"><value>Windows referred to display mode information that could not be used.</value></data>
+  <data name="Reason.TargetUnavailable" xml:space="preserve"><value>Target unavailable</value></data>
+  <data name="Reason.TargetUnavailable.Meaning" xml:space="preserve"><value>Windows marked the display target as unavailable.</value></data>
+  <data name="Reason.InactivePathSkipped" xml:space="preserve"><value>Inactive path skipped</value></data>
+  <data name="Reason.InactivePathSkipped.Meaning" xml:space="preserve"><value>WinGPUDoctor reads active display paths only.</value></data>
+  <data name="Reason.ResourceLimit" xml:space="preserve"><value>Size limit reached</value></data>
+  <data name="Reason.ResourceLimit.Meaning" xml:space="preserve"><value>The information exceeded a size limit that WinGPUDoctor applies, so it was not used.</value></data>
+  <data name="Reason.InteropLayoutUnsupported" xml:space="preserve"><value>Windows data layout not supported</value></data>
+  <data name="Reason.InteropLayoutUnsupported.Meaning" xml:space="preserve"><value>A Windows data structure had an unexpected layout, so it was not read.</value></data>
+
+  <data name="Collector.Succeeded" xml:space="preserve"><value>Completed</value></data>
+  <data name="Collector.Succeeded.Meaning" xml:space="preserve"><value>This reading step completed. Individual values can still be missing.</value></data>
+  <data name="Collector.Partial" xml:space="preserve"><value>Partly completed</value></data>
+  <data name="Collector.Partial.Meaning" xml:space="preserve"><value>This reading step returned some information, but not all of it.</value></data>
+  <data name="Collector.Failed" xml:space="preserve"><value>Did not complete</value></data>
+  <data name="Collector.Failed.Meaning" xml:space="preserve"><value>This reading step did not return its information.</value></data>
+  <data name="Collector.Unsupported" xml:space="preserve"><value>Not supported</value></data>
+  <data name="Collector.Unsupported.Meaning" xml:space="preserve"><value>This reading step is not collected by this version or not supported here.</value></data>
+
+  <data name="Source.WmiOperatingSystem" xml:space="preserve"><value>Windows operating system information (WMI)</value></data>
+  <data name="Source.WmiComputerSystem" xml:space="preserve"><value>Computer system information (WMI)</value></data>
+  <data name="Source.WmiVideoController" xml:space="preserve"><value>Video controller information (WMI)</value></data>
+  <data name="Source.WmiSignedDriver" xml:space="preserve"><value>Signed driver information (WMI)</value></data>
+  <data name="Source.DisplayConfig" xml:space="preserve"><value>Windows display configuration (DisplayConfig)</value></data>
+  <data name="Source.NotCollected" xml:space="preserve"><value>Not collected</value></data>
+  <data name="Source.SetupApiInstanceJoin" xml:space="preserve"><value>Windows device identity match (SetupAPI)</value></data>
+
+  <data name="Glossary.PciVendorId" xml:space="preserve"><value>A four-digit hexadecimal number from the device's PCI identity, as reported by Windows. WinGPUDoctor shows it as reported and does not translate it into a company name.</value></data>
+  <data name="Glossary.DriverVersion" xml:space="preserve"><value>The version number of the installed graphics driver, as reported by Windows.</value></data>
+  <data name="Glossary.DriverDate" xml:space="preserve"><value>The date recorded by the driver provider. It is not the installation date and does not show whether the driver is up to date.</value></data>
+  <data name="Glossary.MonitorName" xml:space="preserve"><value>The name the display reports to Windows. It can be missing or generic.</value></data>
+  <data name="Glossary.Resolution" xml:space="preserve"><value>The size of the desktop image for this display path, in pixels.</value></data>
+  <data name="Glossary.RefreshRate" xml:space="preserve"><value>How many times per second Windows sets up a new image for this display path. The technical details show the exact value.</value></data>
+  <data name="Glossary.OutputTechnology" xml:space="preserve"><value>The kind of display output Windows reports for this path, such as HDMI or DisplayPort. It does not show which physical port is used.</value></data>
+  <data name="Glossary.SourceAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the source side of this display path. It can differ from the target adapter, and it does not show which adapter renders apps.</value></data>
+  <data name="Glossary.TargetAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the target side of this display path, the side toward the display. It does not show which physical port is used.</value></data>
 </root>

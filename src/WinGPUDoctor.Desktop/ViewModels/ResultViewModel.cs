@@ -1,12 +1,15 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using WinGPUDoctor.Core;
 
 namespace WinGPUDoctor.Desktop.ViewModels;
 
-// Summary cards over the round-tripped report. Copy states reported facts and limits only:
+// Cards over the round-tripped report. Copy states reported facts and limits only:
 // no health verdict, driver freshness, rendering GPU, physical connection or inferred vendor.
 public sealed class ResultViewModel
 {
+    private static readonly Regex DisplayEvidence = new(@"\Afacts\.displays\.value\[(\d+)\]", RegexOptions.CultureInvariant);
+
     public ResultViewModel(ReportDocument document)
     {
         Document = document;
@@ -15,7 +18,8 @@ public sealed class ResultViewModel
         Headline = UiText.Get(IsIncomplete ? "Summary.Incomplete" : "Summary.Complete");
         Summary = BuildSummary(report);
         Cards = [SystemCard(report.Facts.System), .. AdapterCards(report.Facts.Gpus),
-            .. DisplayCards(report.Facts.Displays, report.Facts.Gpus), LimitsCard()];
+            .. DisplayCards(report.Facts.Displays, report.Facts.Gpus), FindingsCard(report.Findings),
+            WarningsCard(report.Warnings), CollectionCard(report.Collection), LimitsCard()];
     }
 
     public ReportDocument Document { get; }
@@ -24,21 +28,21 @@ public sealed class ResultViewModel
     public IReadOnlyList<FactLine> Summary { get; }
     public IReadOnlyList<CardViewModel> Cards { get; }
 
-    private static string Count<T>(IReadOnlyList<T> items) => items.Count.ToString(CultureInfo.CurrentCulture);
+    private static string Number(int value) => value.ToString(CultureInfo.CurrentCulture);
 
     private static IReadOnlyList<FactLine> BuildSummary(DiagnosticReport report)
     {
         var lines = new List<FactLine>
         {
             report.Facts.Gpus.State == DataState.Available
-                ? FactLine.Text("Summary.Adapters", Count(report.Facts.Gpus.Value!))
+                ? FactLine.Text("Summary.Adapters", Number(report.Facts.Gpus.Value!.Count))
                 : FactLine.Unavailable("Summary.Adapters", report.Facts.Gpus.State),
             report.Facts.Displays.State == DataState.Available
-                ? FactLine.Text("Summary.DisplayPaths", Count(report.Facts.Displays.Value!))
+                ? FactLine.Text("Summary.DisplayPaths", Number(report.Facts.Displays.Value!.Count))
                 : FactLine.Unavailable("Summary.DisplayPaths", report.Facts.Displays.State)
         };
         if (report.Privacy.RedactedFields > 0)
-            lines.Add(FactLine.Text("Summary.Redacted", report.Privacy.RedactedFields.ToString(CultureInfo.CurrentCulture)));
+            lines.Add(FactLine.Text("Summary.Redacted", Number(report.Privacy.RedactedFields)));
         return lines;
     }
 
@@ -46,13 +50,18 @@ public sealed class ResultViewModel
     [
         FactLine.Of("Field.WindowsVersion", system.WindowsVersion), FactLine.Of("Field.WindowsBuild", system.WindowsBuild),
         FactLine.Of("Field.Manufacturer", system.Manufacturer), FactLine.Of("Field.Model", system.Model)
-    ], []);
+    ], [], technical:
+    [
+        TechnicalLine.Of("Field.WindowsVersion", system.WindowsVersion), TechnicalLine.Of("Field.WindowsBuild", system.WindowsBuild),
+        TechnicalLine.Of("Field.Manufacturer", system.Manufacturer), TechnicalLine.Of("Field.Model", system.Model)
+    ]);
 
     private static IEnumerable<CardViewModel> AdapterCards(Observation<IReadOnlyList<GpuFacts>> gpus)
     {
         if (gpus.State != DataState.Available)
         {
-            yield return new(UiText.Get("Card.Adapters.Title"), null, [FactLine.Unavailable("Summary.Adapters", gpus.State)], []);
+            yield return new(UiText.Get("Card.Adapters.Title"), null, [FactLine.Unavailable("Summary.Adapters", gpus.State)], [],
+                technical: [TechnicalLine.Of("Summary.Adapters", gpus, list => Number(list.Count))]);
             yield break;
         }
         if (gpus.Value!.Count == 0)
@@ -65,7 +74,17 @@ public sealed class ResultViewModel
                 FactLine.Of("Field.AdapterName", gpu.Name), FactLine.Of("Field.PciVendorId", gpu.PciVendorId),
                 FactLine.Of("Field.DriverProvider", gpu.Driver.Provider), FactLine.Of("Field.DriverVersion", gpu.Driver.Version),
                 FactLine.Of("Field.DriverDate", gpu.Driver.Date)
-            ], []);
+            ], [], help:
+            [
+                HelpLine.Glossary("Field.PciVendorId", "PciVendorId"), HelpLine.Glossary("Field.DriverVersion", "DriverVersion"),
+                HelpLine.Glossary("Field.DriverDate", "DriverDate")
+            ], technical:
+            [
+                TechnicalLine.Of("Field.AdapterName", gpu.Name), TechnicalLine.Of("Field.PciVendorId", gpu.PciVendorId),
+                TechnicalLine.Of("Field.PciDeviceId", gpu.PciDeviceId), TechnicalLine.Of("Field.Classification", gpu.Classification),
+                TechnicalLine.Of("Field.DriverProvider", gpu.Driver.Provider), TechnicalLine.Of("Field.DriverVersion", gpu.Driver.Version),
+                TechnicalLine.Of("Field.DriverDate", gpu.Driver.Date)
+            ]);
         }
     }
 
@@ -74,7 +93,8 @@ public sealed class ResultViewModel
     {
         if (displays.State != DataState.Available)
         {
-            yield return new(UiText.Get("Card.Displays.Title"), null, [FactLine.Unavailable("Summary.DisplayPaths", displays.State)], []);
+            yield return new(UiText.Get("Card.Displays.Title"), null, [FactLine.Unavailable("Summary.DisplayPaths", displays.State)], [],
+                technical: [TechnicalLine.Of("Summary.DisplayPaths", displays, list => Number(list.Count))]);
             yield break;
         }
         if (displays.Value!.Count == 0)
@@ -82,8 +102,7 @@ public sealed class ResultViewModel
         for (var i = 0; i < displays.Value.Count; i++)
         {
             var d = displays.Value[i];
-            yield return new(UiText.Format("Card.Display.Title", (i + 1).ToString(CultureInfo.CurrentCulture)),
-                UiText.Format("Card.ReportLabel", d.Id),
+            yield return new(DisplayTitle(i), UiText.Format("Card.ReportLabel", d.Id),
             [
                 FactLine.Of("Field.MonitorName", d.Name),
                 d.SourceResolution.State == DataState.Available
@@ -97,9 +116,36 @@ public sealed class ResultViewModel
                     : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State),
                 Association("Field.SourceAdapter", d.SourceAdapter, gpus),
                 Association("Field.TargetAdapter", d.TargetAdapter, gpus)
-            ], []);
+            ], [], help:
+            [
+                HelpLine.Glossary("Field.MonitorName", "MonitorName"), HelpLine.Glossary("Field.Resolution", "Resolution"),
+                HelpLine.Glossary("Field.RefreshRate", "RefreshRate"), HelpLine.Glossary("Field.OutputTechnology", "OutputTechnology"),
+                HelpLine.Glossary("Field.SourceAdapter", "SourceAdapter"), HelpLine.Glossary("Field.TargetAdapter", "TargetAdapter")
+            ], technical: DisplayTechnical(d));
         }
     }
+
+    private static string DisplayTitle(int index) => UiText.Format("Card.Display.Title", Number(index + 1));
+
+    private static IReadOnlyList<TechnicalLine> DisplayTechnical(DisplayFacts d) =>
+    [
+        TechnicalLine.Of("Field.MonitorName", d.Name),
+        TechnicalLine.Plain("Field.SourceTarget", UiText.Format("Technical.SourceTarget", d.SourceId, d.TargetId)),
+        TechnicalLine.Of("Field.SourceGdiName", d.SourceGdiName),
+        TechnicalLine.Of("Field.SourceAdapter", d.SourceAdapter, m => UiText.Format("Technical.Match", d.SourceAdapterId, m.GpuId, m.Evidence, m.Confidence)),
+        TechnicalLine.Of("Field.TargetAdapter", d.TargetAdapter, m => UiText.Format("Technical.Match", d.TargetAdapterId, m.GpuId, m.Evidence, m.Confidence)),
+        TechnicalLine.Of("Field.OutputTechnology", d.OutputTechnology),
+        TechnicalLine.Of("Field.Resolution", d.SourceResolution, DisplayFormat.Resolution),
+        TechnicalLine.Of("Field.RefreshRate", d.PathRefreshRate, DisplayFormat.ExactRate),
+        TechnicalLine.Of("Field.SignalRate", d.SignalRefreshRate, DisplayFormat.ExactRate),
+        TechnicalLine.Of("Field.ScanLineOrdering", d.ScanLineOrdering),
+        TechnicalLine.Of("Field.Rotation", d.Rotation),
+        TechnicalLine.Plain("Field.PathActive", DisplayFormat.YesNo(d.PathActive)),
+        TechnicalLine.Plain("Field.TargetAvailable", DisplayFormat.YesNo(d.TargetAvailable)),
+        TechnicalLine.Of("Field.RefreshBoost", d.RefreshRateBoost, flag => DisplayFormat.YesNo(flag.Enabled)),
+        TechnicalLine.Of("Field.CloneGroup", d.CloneGroupId),
+        TechnicalLine.Plain("Field.QueryMode", d.QueryMode.ToString())
+    ];
 
     // Names an association only when the report has an exact match; otherwise says it is unresolved.
     private static FactLine Association(string labelKey, Observation<AdapterMatch> match, Observation<IReadOnlyList<GpuFacts>> gpus)
@@ -112,6 +158,45 @@ public sealed class ResultViewModel
             ? UiText.Format("Display.Association.Named", id, gpu.Name.Value!)
             : id);
     }
+
+    // Findings in report order. Unknown IDs fall back to Core's own message, never to invented copy.
+    private static CardViewModel FindingsCard(IReadOnlyList<DiagnosticFinding> findings)
+    {
+        var explanations = findings.Select(f =>
+        {
+            var match = f.Evidence.Select(e => DisplayEvidence.Match(e)).FirstOrDefault(m => m.Success);
+            var context = match is null ? null : DisplayTitle(int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture));
+            return ExplanationCatalog.Finding(f.Id) is { } entry
+                ? Explanation.From(entry, context)
+                : new Explanation(context, f.Id, f.Message, null, null);
+        }).ToArray();
+        return new(UiText.Get("Card.Findings.Title"), UiText.Get("Card.Findings.Intro"), [],
+            findings.Count == 0 ? [UiText.Get("Card.Findings.None")] : [], explanations,
+            technical: findings.Select(f => new TechnicalLine(f.Id, f.Message, string.Join(", ", f.Evidence))).ToArray());
+    }
+
+    private static CardViewModel WarningsCard(IReadOnlyList<WarningCode> warnings) =>
+        new(UiText.Get("Card.Warnings.Title"), null, [], [],
+            warnings.Select(w => Explanation.From(ExplanationCatalog.Warning(w))).ToArray(),
+            technical: warnings.Select(w => new TechnicalLine(w.ToString(), ReportWriter.WarningText(w), "")).ToArray());
+
+    private static CardViewModel CollectionCard(IReadOnlyList<CollectorRun> runs) =>
+        new(UiText.Get("Card.Collection.Title"), UiText.Get("Card.Collection.Intro"),
+            runs.Select(r => new FactLine(ExplanationCatalog.Source(r.Source), ExplanationCatalog.Collector(r.Status).Title,
+                r.Status == CollectorStatus.Succeeded, r.Status switch
+                {
+                    CollectorStatus.Succeeded => "",
+                    CollectorStatus.Unsupported => "",
+                    _ => ""
+                })).ToArray(), [],
+            help: runs.Select(r => r.Status).Distinct()
+                .Select(s => new HelpLine(ExplanationCatalog.Collector(s).Title, ExplanationCatalog.Collector(s).Meaning)).ToArray(),
+            technical: runs.Select(r => new TechnicalLine(ExplanationCatalog.Source(r.Source),
+                UiText.Format("Technical.Run", r.Status, r.Reason, Number(r.Attempts), r.QueryMode),
+                r.Issues.Count == 0 ? UiText.Get("Technical.NoIssues")
+                    : string.Join("; ", r.Issues.Select(i => i.NativeErrorCode is { } code
+                        ? UiText.Format("Technical.IssueCode", i.Operation, i.Reason, code.ToString(CultureInfo.InvariantCulture))
+                        : UiText.Format("Technical.Issue", i.Operation, i.Reason))))).ToArray());
 
     private static CardViewModel LimitsCard() => new(UiText.Get("Card.Limits.Title"), UiText.Get("Card.Limits.Intro"), [],
         new[] { "Card.Limits.RenderingGpu", "Card.Limits.Utilization", "Card.Limits.HybridMode", "Card.Limits.DriverFreshness",

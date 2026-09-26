@@ -45,6 +45,55 @@
       </DockPanel>
     </DataTemplate>
 
+    <DataTemplate x:Key="ExplanationTemplate" DataType="{x:Type vm:Explanation}">
+      <StackPanel Margin="0,10,0,0">
+        <TextBlock Text="{Binding Context}" TextWrapping="Wrap" Opacity="0.8"
+                   Visibility="{Binding HasContext, Converter={StaticResource Visible}}" />
+        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNotMeaning, Converter={StaticResource Visible}}">
+          <Run Text="{views:Text Explanation.NotMeaningLabel}" FontWeight="SemiBold" />
+          <Run Text="{Binding NotMeaning, Mode=OneWay}" />
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNextStep, Converter={StaticResource Visible}}">
+          <Run Text="{views:Text Explanation.NextStepLabel}" FontWeight="SemiBold" />
+          <Run Text="{Binding NextStep, Mode=OneWay}" />
+        </TextBlock>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="HelpTemplate" DataType="{x:Type vm:HelpLine}">
+      <StackPanel Margin="0,4">
+        <TextBlock Text="{Binding Term}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" />
+      </StackPanel>
+    </DataTemplate>
+
+    <Style x:Key="Provenance" TargetType="TextBlock">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Opacity" Value="0.75" />
+      <Setter Property="FontSize" Value="12" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Provenance}" Value="">
+          <Setter Property="Visibility" Value="Collapsed" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
+    <DataTemplate x:Key="TechnicalTemplate" DataType="{x:Type vm:TechnicalLine}">
+      <Grid Margin="0,3">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" MaxWidth="280" />
+          <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Margin="0,0,12,0" Opacity="0.8" />
+        <StackPanel Grid.Column="1">
+          <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding Provenance}" Style="{StaticResource Provenance}" />
+        </StackPanel>
+      </Grid>
+    </DataTemplate>
+
     <DataTemplate x:Key="CardTemplate" DataType="{x:Type vm:CardViewModel}">
       <Border Margin="0,0,0,12" Padding="16" CornerRadius="6" BorderThickness="1"
               BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
@@ -57,6 +106,17 @@
           <ItemsControl ItemsSource="{Binding Facts}" ItemTemplate="{StaticResource FactTemplate}"
                         Focusable="False" Margin="0,8,0,0" />
           <ItemsControl ItemsSource="{Binding Notes}" ItemTemplate="{StaticResource NoteTemplate}" Focusable="False" />
+          <ItemsControl ItemsSource="{Binding Explanations}" ItemTemplate="{StaticResource ExplanationTemplate}" Focusable="False" />
+          <Expander Header="{views:Text Card.Details}" Margin="0,10,0,0"
+                    Visibility="{Binding HasDetails, Converter={StaticResource Visible}}">
+            <StackPanel Margin="0,6,0,0">
+              <ItemsControl ItemsSource="{Binding Help}" ItemTemplate="{StaticResource HelpTemplate}" Focusable="False" />
+              <CheckBox x:Name="TechnicalToggle" Content="{views:Text Card.ShowTechnical}" Margin="0,8,0,4"
+                        Visibility="{Binding HasTechnical, Converter={StaticResource Visible}}" />
+              <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False"
+                            Visibility="{Binding IsChecked, ElementName=TechnicalToggle, Converter={StaticResource Visible}}" />
+            </StackPanel>
+          </Expander>
         </StackPanel>
       </Border>
     </DataTemplate>

@@ -85,8 +85,8 @@ public class DesktopTests
         Assert.False(result.IsIncomplete);
         Assert.Equal(UiText.Get("Summary.Complete"), result.Headline);
         Assert.Equal(new[] { "2", "1" }, result.Summary.Select(l => l.Value));
-        // This PC, two adapters, one display path and the limits card.
-        Assert.Equal(5, result.Cards.Count);
+        // This PC, two adapters, one display path, then findings, report notes, collection and limits.
+        Assert.Equal(8, result.Cards.Count);
         Assert.Equal("Example GPU", result.Cards[1].Title);
         Assert.Contains(result.Cards[1].Facts, f => f.Label == UiText.Get("Field.PciVendorId") && f.Value == "10DE");
         var display = result.Cards[3].Facts.ToDictionary(f => f.Label, f => f.Value);
@@ -95,7 +95,7 @@ public class DesktopTests
         Assert.Equal("DisplayPort (embedded)", display[UiText.Get("Field.OutputTechnology")]);
         Assert.Equal("gpu-2 (Example GPU)", display[UiText.Get("Field.SourceAdapter")]);
         Assert.Equal("gpu-2 (Example GPU)", display[UiText.Get("Field.TargetAdapter")]);
-        Assert.Equal(UiText.Get("Card.Limits.Title"), result.Cards[4].Title);
+        Assert.Equal(UiText.Get("Card.Limits.Title"), result.Cards[7].Title);
     }
 
     [Fact]
