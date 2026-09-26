@@ -43,8 +43,16 @@ public class DesktopSaveTests
         Assert.Equal(ReportFormat.Json, save.Format);
         Assert.Equal(ReportWriter.Json(shareable), save.Preview);
         Assert.Equal(".json", save.FileExtension);
-        Assert.Equal(UiText.Format("Save.Redacted", 1), save.RedactedSummary);
-        Assert.Equal(ExplanationCatalog.Warning(WarningCode.ReviewBeforeSharing).Title, save.ReviewWarning.Title);
+        Assert.Equal(ExplanationCatalog.Warning(WarningCode.ReviewBeforeSharing).Title, save.ReviewTitle);
+        Assert.Equal(UiText.Get("Save.ReviewShort"), save.ReviewText);
+        // The summary of what the exact text contains comes from the same retained report.
+        var contents = save.Contents.ToDictionary(l => l.Label);
+        Assert.Equal(UiText.Format("Save.Contains.Adapters", "1"), contents[UiText.Get("Card.Adapters.Title")].Value);
+        Assert.Equal(UiText.Get("State.Unsupported"), contents[UiText.Get("Card.Displays.Title")].Value);
+        Assert.Equal(UiText.Format("Save.Contains.Steps", "4"), contents[UiText.Get("Card.Collection.Title")].Value);
+        var hidden = contents[UiText.Get("Summary.Redacted")];
+        Assert.Equal("1", hidden.Value);
+        Assert.Equal(UiText.Get("Save.RedactedHint"), hidden.Help); // The format hint is behind the (i) tip.
 
         model.CloseSaveCommand.Execute(null);
         Assert.Null(model.Save);

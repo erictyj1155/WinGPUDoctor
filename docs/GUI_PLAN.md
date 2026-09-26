@@ -81,11 +81,12 @@ The decisions D1–D7 are recorded in [ADR 0008](decisions/0008-beginner-desktop
 4. **Save report.** A format choice (Markdown/JSON), then a read-only preview of the **exact text** that will be written.
    - Host keeps **one** privacy-projected `ShareableReport` per completed scan. The result cards (via the JSON round-trip) and every preview come from that same report.
    - The preview is the selected writer's exact output, and Save writes exactly the string being previewed. Changing the format shows a new preview. A new scan discards the old report and preview, so the user can never save content they have not seen.
+   - A short "What this report contains" summary sits above the exact text; the exact text stays visible because seeing it before saving is the core promise.
    - Redacted fields are highlighted ("Hidden by the privacy filter: 1 field").
    - Shows the `ReviewBeforeSharing` warning.
    - Save uses a Save dialog, but writing always uses `CreateNew`: an existing file is never overwritten, even if the dialog offers it.
    - Only local fixed drives are accepted; there are no network locations.
-   - Next to the destination, a hint: "If the report must stay on this PC, choose a folder that is not synced by OneDrive, Dropbox or similar apps." Validation cannot detect cloud-synchronized folders (see `PRIVACY.md`).
+   - Next to the destination, a short hint that stays visible: "Keep it local: choose a folder that OneDrive, Dropbox or similar apps don't sync." Validation cannot detect cloud-synchronized folders (see `PRIVACY.md`).
    - Success message: "Report saved. WinGPUDoctor did not upload anything."
 
 ### Explanation catalog (the part that makes the GUI useful rather than shallow)
@@ -103,6 +104,7 @@ A table keyed by stable identifiers: the 6 finding IDs, 7 `WarningCode`s, 5 `Dat
 Rules for the copy:
 - It must not add claims that Core does not make. Examples: no "driver is outdated" (the warnings already state that driver dates do not establish freshness); no "your display is running at the wrong rate"; no inference of which GPU renders applications.
 - States are shown with an icon plus text, never color alone.
+- Secondary copy ("What this does not mean", the optional next step, field glossary text, unavailable-state meanings, how hidden values appear) sits behind an (i) tip. Each tip is a Tab stop, shows its text on hover, keyboard focus or Enter, closes with Escape, and exposes `AutomationProperties.Name` and `HelpText`. The "Review before sharing" warning and the cloud-sync hint stay on screen in short form.
 - `Unknown`/`Failed`/`Redacted` get friendly wording. Example: "Windows didn't provide this" rather than "Unknown (MissingValue)".
 - Refresh rate is shown rounded for people (e.g. "165 Hz"), with the exact rational value in technical details.
 

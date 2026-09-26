@@ -29,14 +29,20 @@
   <data name="Result.SaveReport" xml:space="preserve"><value>Save report…</value></data>
 
   <data name="Save.Title" xml:space="preserve"><value>Review and save the report</value></data>
-  <data name="Save.Intro" xml:space="preserve"><value>The preview below is exactly what will be saved. WinGPUDoctor does not upload anything; the file is written only where you choose.</value></data>
+  <data name="Save.Intro" xml:space="preserve"><value>The text below is exactly what will be saved. WinGPUDoctor does not upload anything.</value></data>
   <data name="Save.FormatLabel" xml:space="preserve"><value>Format:</value></data>
   <data name="Save.FormatMarkdown" xml:space="preserve"><value>Markdown (easy to read)</value></data>
   <data name="Save.FormatJson" xml:space="preserve"><value>JSON (for tools)</value></data>
-  <data name="Save.Redacted" xml:space="preserve"><value>Fields hidden by the privacy filter: {0}</value></data>
+  <data name="Save.ReviewShort" xml:space="preserve"><value>Model and device names can be distinctive, and automatic filtering can't guarantee anonymity.</value></data>
+  <data name="Save.ContainsTitle" xml:space="preserve"><value>What this report contains</value></data>
+  <data name="Save.Contains.System" xml:space="preserve"><value>Windows version and build, manufacturer and model</value></data>
+  <data name="Save.Contains.Adapters" xml:space="preserve"><value>{0}, each with name, PCI IDs and driver details</value></data>
+  <data name="Save.Contains.Displays" xml:space="preserve"><value>{0}, each with resolution, refresh rate, output technology and adapter links</value></data>
+  <data name="Save.Contains.Steps" xml:space="preserve"><value>{0} reading steps and their results</value></data>
+  <data name="Save.PreviewLabel" xml:space="preserve"><value>Exact report text</value></data>
   <data name="Save.RedactedHint" xml:space="preserve"><value>Hidden values appear in the preview as "Redacted (SensitiveValue)" in Markdown, or with the state "redacted" in JSON.</value></data>
   <data name="Save.PreviewName" xml:space="preserve"><value>Report preview</value></data>
-  <data name="Save.SyncHint" xml:space="preserve"><value>If the report must stay on this PC, choose a folder that is not synced by OneDrive, Dropbox or similar apps.</value></data>
+  <data name="Save.SyncHint" xml:space="preserve"><value>Keep it local: choose a folder that OneDrive, Dropbox or similar apps don't sync.</value></data>
   <data name="Save.Choose" xml:space="preserve"><value>Choose location and save…</value></data>
   <data name="Save.Back" xml:space="preserve"><value>Back to results</value></data>
   <data name="Save.FilterMarkdown" xml:space="preserve"><value>Markdown report (*.md)|*.md</value></data>
@@ -148,10 +154,11 @@
   <data name="Technical.Issue" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="Technical.IssueCode" xml:space="preserve"><value>{0}: {1} (Windows error code {2})</value></data>
 
-  <data name="Card.Details" xml:space="preserve"><value>More about this card</value></data>
+  <data name="Info.About" xml:space="preserve"><value>About {0}</value></data>
+  <data name="Info.More" xml:space="preserve"><value>More about {0}</value></data>
   <data name="Card.ShowTechnical" xml:space="preserve"><value>Show technical details</value></data>
-  <data name="Explanation.NotMeaningLabel" xml:space="preserve"><value>What this does not mean:</value></data>
-  <data name="Explanation.NextStepLabel" xml:space="preserve"><value>Optional next step:</value></data>
+  <data name="Explanation.NotMeaning" xml:space="preserve"><value>What this does not mean: {0}</value></data>
+  <data name="Explanation.NextStep" xml:space="preserve"><value>Optional next step: {0}</value></data>
   <data name="Card.Findings.Title" xml:space="preserve"><value>What WinGPUDoctor noticed</value></data>
   <data name="Card.Findings.Intro" xml:space="preserve"><value>Plain-language notes about the facts above. They are information, not a verdict.</value></data>
   <data name="Card.Findings.None" xml:space="preserve"><value>No rule produced a note for this scan. This does not mean everything is fine; it is not a health verdict.</value></data>

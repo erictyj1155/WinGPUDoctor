@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using WinGPUDoctor.Core;
 using WinGPUDoctor.Host;
@@ -22,7 +23,31 @@ public sealed class SaveViewModel : ObservableObject
     public SaveViewModel(ReportDocument document)
     {
         _document = document ?? throw new ArgumentNullException(nameof(document));
+        Contents = Summarize(document.Report);
         Refresh();
+    }
+
+    // A short overview of what the exact text below contains, from the same retained report.
+    public IReadOnlyList<FactLine> Contents { get; }
+
+    private static IReadOnlyList<FactLine> Summarize(DiagnosticReport report)
+    {
+        static string Count(int value) => value.ToString(CultureInfo.CurrentCulture);
+        var facts = report.Facts;
+        return
+        [
+            FactLine.Text("Card.System.Title", UiText.Get("Save.Contains.System")),
+            facts.Gpus.State == DataState.Available
+                ? FactLine.Text("Card.Adapters.Title", UiText.Format("Save.Contains.Adapters", Count(facts.Gpus.Value!.Count)))
+                : FactLine.Unavailable("Card.Adapters.Title", facts.Gpus.State),
+            facts.Displays.State == DataState.Available
+                ? FactLine.Text("Card.Displays.Title", UiText.Format("Save.Contains.Displays", Count(facts.Displays.Value!.Count)))
+                : FactLine.Unavailable("Card.Displays.Title", facts.Displays.State),
+            FactLine.Text("Card.Findings.Title", Count(report.Findings.Count)),
+            FactLine.Text("Card.Warnings.Title", Count(report.Warnings.Count)),
+            FactLine.Text("Card.Collection.Title", UiText.Format("Save.Contains.Steps", Count(report.Collection.Count))),
+            FactLine.Text("Summary.Redacted", Count(report.Privacy.RedactedFields)) with { Help = UiText.Get("Save.RedactedHint") }
+        ];
     }
 
     public ReportFormat Format
@@ -48,8 +73,8 @@ public sealed class SaveViewModel : ObservableObject
     public string FileExtension => Format == ReportFormat.Json ? ".json" : ".md";
     public string DefaultFileName => "wingpudoctor-report" + FileExtension;
     public string FileFilter => UiText.Get(Format == ReportFormat.Json ? "Save.FilterJson" : "Save.FilterMarkdown");
-    public string RedactedSummary => UiText.Format("Save.Redacted", _document.Report.Privacy.RedactedFields);
-    public Explanation ReviewWarning { get; } = Explanation.From(ExplanationCatalog.Warning(WarningCode.ReviewBeforeSharing));
+    public string ReviewTitle { get; } = ExplanationCatalog.Warning(WarningCode.ReviewBeforeSharing).Title;
+    public string ReviewText { get; } = UiText.Get("Save.ReviewShort");
 
     public string? StatusMessage { get => _status; private set { if (Set(ref _status, value)) OnPropertyChanged(nameof(HasStatus)); } }
     public bool HasStatus => StatusMessage is not null;

@@ -71,14 +71,11 @@ public sealed class ResultViewModel
             var title = gpu.Name.State == DataState.Available ? gpu.Name.Value! : UiText.Get("Card.Adapter.Title");
             yield return new(title, UiText.Format("Card.ReportLabel", gpu.Id),
             [
-                FactLine.Of("Field.AdapterName", gpu.Name), FactLine.Of("Field.PciVendorId", gpu.PciVendorId),
-                FactLine.Of("Field.DriverProvider", gpu.Driver.Provider), FactLine.Of("Field.DriverVersion", gpu.Driver.Version),
-                FactLine.Of("Field.DriverDate", gpu.Driver.Date)
-            ], [], help:
-            [
-                HelpLine.Glossary("Field.PciVendorId", "PciVendorId"), HelpLine.Glossary("Field.DriverVersion", "DriverVersion"),
-                HelpLine.Glossary("Field.DriverDate", "DriverDate")
-            ], technical:
+                FactLine.Of("Field.AdapterName", gpu.Name), FactLine.Of("Field.PciVendorId", gpu.PciVendorId).WithGlossary("PciVendorId"),
+                FactLine.Of("Field.DriverProvider", gpu.Driver.Provider),
+                FactLine.Of("Field.DriverVersion", gpu.Driver.Version).WithGlossary("DriverVersion"),
+                FactLine.Of("Field.DriverDate", gpu.Driver.Date).WithGlossary("DriverDate")
+            ], [], technical:
             [
                 TechnicalLine.Of("Field.AdapterName", gpu.Name), TechnicalLine.Of("Field.PciVendorId", gpu.PciVendorId),
                 TechnicalLine.Of("Field.PciDeviceId", gpu.PciDeviceId), TechnicalLine.Of("Field.Classification", gpu.Classification),
@@ -104,24 +101,19 @@ public sealed class ResultViewModel
             var d = displays.Value[i];
             yield return new(DisplayTitle(i), UiText.Format("Card.ReportLabel", d.Id),
             [
-                FactLine.Of("Field.MonitorName", d.Name),
-                d.SourceResolution.State == DataState.Available
+                FactLine.Of("Field.MonitorName", d.Name).WithGlossary("MonitorName"),
+                (d.SourceResolution.State == DataState.Available
                     ? FactLine.Text("Field.Resolution", DisplayFormat.Resolution(d.SourceResolution.Value!))
-                    : FactLine.Unavailable("Field.Resolution", d.SourceResolution.State),
-                d.PathRefreshRate.State == DataState.Available
+                    : FactLine.Unavailable("Field.Resolution", d.SourceResolution.State)).WithGlossary("Resolution"),
+                (d.PathRefreshRate.State == DataState.Available
                     ? FactLine.Text("Field.RefreshRate", DisplayFormat.Rate(d.PathRefreshRate.Value!))
-                    : FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State),
-                d.OutputTechnology.State == DataState.Available
+                    : FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State)).WithGlossary("RefreshRate"),
+                (d.OutputTechnology.State == DataState.Available
                     ? FactLine.Text("Field.OutputTechnology", DisplayFormat.OutputTechnology(d.OutputTechnology.Value!))
-                    : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State),
-                Association("Field.SourceAdapter", d.SourceAdapter, gpus),
-                Association("Field.TargetAdapter", d.TargetAdapter, gpus)
-            ], [], help:
-            [
-                HelpLine.Glossary("Field.MonitorName", "MonitorName"), HelpLine.Glossary("Field.Resolution", "Resolution"),
-                HelpLine.Glossary("Field.RefreshRate", "RefreshRate"), HelpLine.Glossary("Field.OutputTechnology", "OutputTechnology"),
-                HelpLine.Glossary("Field.SourceAdapter", "SourceAdapter"), HelpLine.Glossary("Field.TargetAdapter", "TargetAdapter")
-            ], technical: DisplayTechnical(d));
+                    : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State)).WithGlossary("OutputTechnology"),
+                Association("Field.SourceAdapter", d.SourceAdapter, gpus).WithGlossary("SourceAdapter"),
+                Association("Field.TargetAdapter", d.TargetAdapter, gpus).WithGlossary("TargetAdapter")
+            ], [], technical: DisplayTechnical(d));
         }
     }
 
@@ -186,11 +178,9 @@ public sealed class ResultViewModel
                 r.Status == CollectorStatus.Succeeded, r.Status switch
                 {
                     CollectorStatus.Succeeded => "",
-                    CollectorStatus.Unsupported => "",
-                    _ => ""
-                })).ToArray(), [],
-            help: runs.Select(r => r.Status).Distinct()
-                .Select(s => new HelpLine(ExplanationCatalog.Collector(s).Title, ExplanationCatalog.Collector(s).Meaning)).ToArray(),
+                    CollectorStatus.Unsupported => "\uE946",
+                    _ => "\uE7BA"
+                }) { Help = ExplanationCatalog.Collector(r.Status).Meaning }).ToArray(), [],
             technical: runs.Select(r => new TechnicalLine(ExplanationCatalog.Source(r.Source),
                 UiText.Format("Technical.Run", r.Status, r.Reason, Number(r.Attempts), r.QueryMode),
                 r.Issues.Count == 0 ? UiText.Get("Technical.NoIssues")

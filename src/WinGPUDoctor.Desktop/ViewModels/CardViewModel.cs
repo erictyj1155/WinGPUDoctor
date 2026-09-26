@@ -4,41 +4,57 @@ using WinGPUDoctor.Core;
 namespace WinGPUDoctor.Desktop.ViewModels;
 
 // One labelled fact. Unavailable states always carry an icon and text, never color alone.
+// Help is secondary text (field glossary, state meaning) shown behind an (i) tip.
 public sealed record FactLine(string Label, string Value, bool IsAvailable, string StateGlyph)
 {
+    public string? Help { get; init; }
+    public bool HasHelp => Help is not null;
+    public string HelpName => UiText.Format("Info.About", Label);
+
     internal static FactLine Of(string labelKey, Observation<string> field) => field.State == DataState.Available
         ? Text(labelKey, field.Value!)
         : Unavailable(labelKey, field.State);
 
     internal static FactLine Text(string labelKey, string value) => new(UiText.Get(labelKey), value, true, "");
 
-    internal static FactLine Unavailable(string labelKey, DataState state) =>
-        new(UiText.Get(labelKey), UiText.Get("State." + state), false, Glyph(state));
+    internal static FactLine Unavailable(string labelKey, DataState state)
+    {
+        var entry = ExplanationCatalog.State(state);
+        return new(UiText.Get(labelKey), entry.Title, false, Glyph(state))
+        {
+            Help = entry.NotMeaning is null ? entry.Meaning : entry.Meaning + " " + entry.NotMeaning
+        };
+    }
+
+    // The glossary text for the field comes first, then any state explanation.
+    internal FactLine WithGlossary(string term) => this with
+    {
+        Help = Help is null ? ExplanationCatalog.Glossary(term) : ExplanationCatalog.Glossary(term) + "\n\n" + Help
+    };
 
     // Segoe Fluent Icons / MDL2 Assets: Lock, Warning, Info.
     internal static string Glyph(DataState state) => state switch
     {
         DataState.Available => "",
-        DataState.Redacted => "",
-        DataState.Failed => "",
-        _ => ""
+        DataState.Redacted => "\uE72E",
+        DataState.Failed => "\uE7BA",
+        _ => "\uE946"
     };
 }
 
 // Catalog copy for a finding or warning; Context names the display path a finding is about.
+// Title and meaning stay on screen; "does not mean" and the next step are behind an (i) tip.
 public sealed record Explanation(string? Context, string Title, string Meaning, string? NotMeaning, string? NextStep)
 {
     public bool HasContext => Context is not null;
-    public bool HasNotMeaning => NotMeaning is not null;
-    public bool HasNextStep => NextStep is not null;
+    public string? Tip => NotMeaning is null && NextStep is null ? null : string.Join("\n\n",
+        new[] { NotMeaning is null ? null : UiText.Format("Explanation.NotMeaning", NotMeaning),
+            NextStep is null ? null : UiText.Format("Explanation.NextStep", NextStep) }.OfType<string>());
+    public bool HasTip => Tip is not null;
+    public string TipName => UiText.Format("Info.More", Title);
 
     internal static Explanation From(CatalogEntry entry, string? context = null) =>
         new(context, entry.Title, entry.Meaning, entry.NotMeaning, entry.NextStep);
-}
-
-public sealed record HelpLine(string Term, string Meaning)
-{
-    internal static HelpLine Glossary(string fieldKey, string term) => new(UiText.Get(fieldKey), ExplanationCatalog.Glossary(term));
 }
 
 // Exact report value plus state, source and reason, shown behind "Show technical details".
@@ -62,17 +78,15 @@ public sealed record TechnicalLine(string Label, string Value, string Provenance
 }
 
 public sealed class CardViewModel(string title, string? subtitle, IReadOnlyList<FactLine> facts, IReadOnlyList<string> notes,
-    IReadOnlyList<Explanation>? explanations = null, IReadOnlyList<HelpLine>? help = null, IReadOnlyList<TechnicalLine>? technical = null)
+    IReadOnlyList<Explanation>? explanations = null, IReadOnlyList<TechnicalLine>? technical = null)
 {
     public string Title { get; } = title;
     public string? Subtitle { get; } = subtitle;
     public IReadOnlyList<FactLine> Facts { get; } = facts;
     public IReadOnlyList<string> Notes { get; } = notes;
     public IReadOnlyList<Explanation> Explanations { get; } = explanations ?? [];
-    public IReadOnlyList<HelpLine> Help { get; } = help ?? [];
     public IReadOnlyList<TechnicalLine> Technical { get; } = technical ?? [];
     public bool HasSubtitle => Subtitle is not null;
-    public bool HasDetails => Help.Count > 0 || Technical.Count > 0;
     public bool HasTechnical => Technical.Count > 0;
 }
 

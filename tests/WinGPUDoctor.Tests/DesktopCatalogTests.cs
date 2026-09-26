@@ -151,13 +151,17 @@ public class DesktopCatalogTests
             findings.Explanations.Select(e => e.Title));
         Assert.Null(findings.Explanations[0].Context);
         Assert.Equal(UiText.Format("Card.Display.Title", "1"), findings.Explanations[1].Context);
-        Assert.NotNull(findings.Explanations[1].NextStep);
+        // "What this does not mean" and the next step move into the (i) tip, both labelled.
+        var unresolved = ExplanationCatalog.Finding("topology.correlation-unresolved")!;
+        Assert.Equal(UiText.Format("Explanation.NotMeaning", unresolved.NotMeaning!) + "\n\n" +
+            UiText.Format("Explanation.NextStep", unresolved.NextStep!), findings.Explanations[1].Tip);
+        Assert.Equal(UiText.Format("Info.More", findings.Explanations[1].Title), findings.Explanations[1].TipName);
         // Core's own message stays available as a technical detail.
         Assert.StartsWith("For display-1: source endpoint association was not established", findings.Technical[1].Value);
 
         var warnings = result.Cards.Single(c => c.Title == UiText.Get("Card.Warnings.Title"));
         Assert.Equal(ExplanationCatalog.Warning(WarningCode.ReviewBeforeSharing).Title, warnings.Explanations[3].Title);
-        Assert.All(warnings.Explanations, e => Assert.True(e.HasNotMeaning));
+        Assert.All(warnings.Explanations, e => Assert.True(e.HasTip));
 
         var incomplete = Result(DesktopTests.Fixture("incomplete"));
         var collection = incomplete.Cards.Single(c => c.Title == UiText.Get("Card.Collection.Title"));
@@ -165,6 +169,7 @@ public class DesktopCatalogTests
         Assert.False(run.IsAvailable);
         Assert.Equal(ExplanationCatalog.Collector(CollectorStatus.Failed).Title, run.Value);
         Assert.NotEmpty(run.StateGlyph);
+        Assert.Equal(ExplanationCatalog.Collector(CollectorStatus.Failed).Meaning, run.Help);
 
         var none = Result(DesktopTests.Fixture("single")).Cards.Single(c => c.Title == UiText.Get("Card.Findings.Title"));
         Assert.Empty(none.Explanations);
@@ -175,16 +180,47 @@ public class DesktopCatalogTests
     public void DetailsExplainFieldsAndShowExactValuesWithProvenance()
     {
         var display = Result(DesktopTests.Fixture("topology")).Cards[3];
-        Assert.Equal(6, display.Help.Count);
-        Assert.Contains(display.Help, h => h.Term == UiText.Get("Field.RefreshRate") && h.Meaning == ExplanationCatalog.Glossary("RefreshRate"));
+        Assert.All(display.Facts, f => Assert.True(f.HasHelp)); // Every display field has a glossary tip.
+        var refresh = display.Facts.Single(f => f.Label == UiText.Get("Field.RefreshRate"));
+        Assert.Equal(ExplanationCatalog.Glossary("RefreshRate"), refresh.Help);
+        Assert.Equal(UiText.Format("Info.About", refresh.Label), refresh.HelpName);
         var technical = display.Technical.ToDictionary(t => t.Label);
         Assert.Equal("165/1 (165 Hz)", technical[UiText.Get("Field.RefreshRate")].Value);
         Assert.Equal("165000/1000 (165 Hz)", technical[UiText.Get("Field.SignalRate")].Value);
         Assert.Contains(ExplanationCatalog.Source(DataSource.DisplayConfig), technical[UiText.Get("Field.RefreshRate")].Provenance);
 
-        var redacted = Result(DesktopTests.Fixture("redacted")).Cards[1].Technical[0];
+        var adapter = Result(DesktopTests.Fixture("redacted")).Cards[1];
+        var redacted = adapter.Technical[0];
         Assert.Equal(UiText.Get("Technical.NoValue"), redacted.Value);
         Assert.Contains(ExplanationCatalog.Reason(ReasonCode.SensitiveValue).Title, redacted.Provenance);
         Assert.Contains(ExplanationCatalog.Reason(ReasonCode.SensitiveValue).Meaning, redacted.Provenance);
+        // An unavailable value explains its state in the tip.
+        var state = ExplanationCatalog.State(DataState.Redacted);
+        Assert.Equal(state.Meaning + " " + state.NotMeaning, adapter.Facts[0].Help);
+    }
+
+    [Fact]
+    public void InfoTipIsAKeyboardStopWithScreenReaderText()
+    {
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var tip = new WinGPUDoctor.Desktop.Views.InfoTip { Text = "Explanation", Label = "About Resolution" };
+                Assert.True(tip.Focusable);
+                Assert.True(tip.IsTabStop);
+                Assert.Equal("About Resolution", System.Windows.Automation.AutomationProperties.GetName(tip));
+                Assert.Equal("Explanation", System.Windows.Automation.AutomationProperties.GetHelpText(tip));
+                Assert.True(System.Windows.Controls.ToolTipService.GetShowsToolTipOnKeyboardFocus(tip));
+                var toolTip = Assert.IsType<System.Windows.Controls.ToolTip>(tip.ToolTip);
+                Assert.Equal("Explanation", Assert.IsType<System.Windows.Controls.TextBlock>(toolTip.Content).Text);
+            }
+            catch (Exception ex) { failure = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex); }
+        });
+        thread.SetApartmentState(ApartmentState.STA); // WPF controls need an STA thread.
+        thread.Start();
+        thread.Join();
+        failure?.Throw();
     }
 }

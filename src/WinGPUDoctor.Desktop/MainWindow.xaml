@@ -23,7 +23,13 @@
           <ColumnDefinition Width="*" MaxWidth="280" />
           <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Margin="0,0,12,0" Opacity="0.8" />
+        <TextBlock TextWrapping="Wrap" Margin="0,0,12,0">
+          <Run Text="{Binding Label, Mode=OneWay}" />
+          <InlineUIContainer BaselineAlignment="Center">
+            <views:InfoTip Text="{Binding Help}" Label="{Binding HelpName}"
+                           Visibility="{Binding HasHelp, Converter={StaticResource Visible}}" />
+          </InlineUIContainer>
+        </TextBlock>
         <DockPanel Grid.Column="1">
           <TextBlock DockPanel.Dock="Left" Text="{Binding StateGlyph}" Style="{StaticResource StateGlyph}" />
           <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
@@ -49,23 +55,14 @@
       <StackPanel Margin="0,10,0,0">
         <TextBlock Text="{Binding Context}" TextWrapping="Wrap" Opacity="0.8"
                    Visibility="{Binding HasContext, Converter={StaticResource Visible}}" />
-        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+        <TextBlock TextWrapping="Wrap">
+          <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
+          <InlineUIContainer BaselineAlignment="Center">
+            <views:InfoTip Text="{Binding Tip}" Label="{Binding TipName}"
+                           Visibility="{Binding HasTip, Converter={StaticResource Visible}}" />
+          </InlineUIContainer>
+        </TextBlock>
         <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" Margin="0,2,0,0" />
-        <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNotMeaning, Converter={StaticResource Visible}}">
-          <Run Text="{views:Text Explanation.NotMeaningLabel}" FontWeight="SemiBold" />
-          <Run Text="{Binding NotMeaning, Mode=OneWay}" />
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding HasNextStep, Converter={StaticResource Visible}}">
-          <Run Text="{views:Text Explanation.NextStepLabel}" FontWeight="SemiBold" />
-          <Run Text="{Binding NextStep, Mode=OneWay}" />
-        </TextBlock>
-      </StackPanel>
-    </DataTemplate>
-
-    <DataTemplate x:Key="HelpTemplate" DataType="{x:Type vm:HelpLine}">
-      <StackPanel Margin="0,4">
-        <TextBlock Text="{Binding Term}" FontWeight="SemiBold" TextWrapping="Wrap" />
-        <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" />
       </StackPanel>
     </DataTemplate>
 
@@ -107,16 +104,10 @@
                         Focusable="False" Margin="0,8,0,0" />
           <ItemsControl ItemsSource="{Binding Notes}" ItemTemplate="{StaticResource NoteTemplate}" Focusable="False" />
           <ItemsControl ItemsSource="{Binding Explanations}" ItemTemplate="{StaticResource ExplanationTemplate}" Focusable="False" />
-          <Expander Header="{views:Text Card.Details}" Margin="0,10,0,0"
-                    Visibility="{Binding HasDetails, Converter={StaticResource Visible}}">
-            <StackPanel Margin="0,6,0,0">
-              <ItemsControl ItemsSource="{Binding Help}" ItemTemplate="{StaticResource HelpTemplate}" Focusable="False" />
-              <CheckBox x:Name="TechnicalToggle" Content="{views:Text Card.ShowTechnical}" Margin="0,8,0,4"
-                        Visibility="{Binding HasTechnical, Converter={StaticResource Visible}}" />
-              <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False"
-                            Visibility="{Binding IsChecked, ElementName=TechnicalToggle, Converter={StaticResource Visible}}" />
-            </StackPanel>
-          </Expander>
+          <CheckBox x:Name="TechnicalToggle" Content="{views:Text Card.ShowTechnical}" Margin="0,10,0,4"
+                    Visibility="{Binding HasTechnical, Converter={StaticResource Visible}}" />
+          <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False"
+                        Visibility="{Binding IsChecked, ElementName=TechnicalToggle, Converter={StaticResource Visible}}" />
         </StackPanel>
       </Border>
     </DataTemplate>
@@ -233,20 +224,21 @@
                          IsChecked="{Binding IsMarkdown}" Margin="0,0,16,0" />
             <RadioButton GroupName="Format" Content="{views:Text Save.FormatJson}" IsChecked="{Binding IsJson}" />
           </WrapPanel>
-          <DockPanel>
-            <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" Margin="0,12,8,0" />
-            <ContentControl Content="{Binding ReviewWarning}" ContentTemplate="{StaticResource ExplanationTemplate}" Focusable="False" />
-          </DockPanel>
           <DockPanel Margin="0,8,0,0">
-            <TextBlock DockPanel.Dock="Left" Text="&#xE72E;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
+            <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
             <StackPanel>
-              <TextBlock Text="{Binding RedactedSummary}" FontWeight="SemiBold" TextWrapping="Wrap" />
-              <TextBlock Text="{views:Text Save.RedactedHint}" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding ReviewTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding ReviewText}" TextWrapping="Wrap" />
             </StackPanel>
           </DockPanel>
+          <TextBlock Text="{views:Text Save.ContainsTitle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,2"
+                     AutomationProperties.HeadingLevel="Level3" />
+          <ItemsControl ItemsSource="{Binding Contents}" ItemTemplate="{StaticResource FactTemplate}" Focusable="False" />
           <!-- The exact text that Save writes; clipboard copy is intentionally blocked (GUI plan section 8). -->
+          <TextBlock Text="{views:Text Save.PreviewLabel}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,4"
+                     AutomationProperties.HeadingLevel="Level3" />
           <TextBox x:Name="PreviewBox" Text="{Binding Preview, Mode=OneWay}" IsReadOnly="True" FontFamily="Consolas"
-                   Height="300" Margin="0,12,0,0" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
+                   Height="200" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
                    HorizontalScrollBarVisibility="Auto" ContextMenu="{x:Null}"
                    AutomationProperties.Name="{views:Text Save.PreviewName}" />
         </StackPanel>
