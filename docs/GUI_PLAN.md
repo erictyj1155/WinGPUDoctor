@@ -156,7 +156,7 @@ Each step needs the owner's explicit authorization; none of them includes commit
 - **Step 2 — vertical slice.** Welcome → Scan → summary cards → Cancel. Includes the D3 round-trip test. No export yet.
 - **Step 3 — explanation catalog and detail views.** Unit tests: every finding ID/`WarningCode`/`DataState`/`ReasonCode` has an entry (a new enum value without copy fails the build), and no entry contains prohibited claims from a reviewed list.
 - **Step 4 — save/export flow** on the shared host export code.
-- **Step 5 — packaging.** GUI exe (distinct name) in the same package root. Extend the file allowlist and path guard, keep deterministic Release builds, confirm the missing-runtime experience.
+- **Step 5 — packaging.** GUI exe (distinct name) in the same package root. Extend the file allowlist and path guard, keep deterministic Release builds, confirm the missing-runtime experience. On 2026-09-26 a local test package (`package-v0.1.ps1 -DevGui`, `-dev` ZIP, not a release asset) and its live check were done; the missing-runtime experience and a release package with the GUI remain open.
 - **Step 6 — validation and review.** Validation per §7, a privacy/semantics review of all UI copy, and a usability check.
 
 ## 7. Validation additions (for `docs/VALIDATION.md`)
