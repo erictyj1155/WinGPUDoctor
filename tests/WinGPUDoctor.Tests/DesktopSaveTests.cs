@@ -50,9 +50,11 @@ public class DesktopSaveTests
         Assert.Equal(UiText.Format("Save.Contains.Adapters", "1"), contents[UiText.Get("Card.Adapters.Title")].Value);
         Assert.Equal(UiText.Get("State.Unsupported"), contents[UiText.Get("Card.Displays.Title")].Value);
         Assert.Equal(UiText.Format("Save.Contains.Steps", "4"), contents[UiText.Get("Card.Collection.Title")].Value);
-        var hidden = contents[UiText.Get("Summary.Redacted")];
-        Assert.Equal("1", hidden.Value);
-        Assert.Equal(UiText.Get("Save.RedactedHint"), hidden.Help); // The format hint is behind the (i) tip.
+        Assert.False(contents[UiText.Get("Card.Adapters.Title")].IsData); // A description of fields, not a reported value.
+        // The preview header counts hidden values; how they appear is behind its (i) tip.
+        Assert.Equal(UiText.Format("Save.Hidden", "1"), save.HiddenLabel);
+        Assert.Equal(UiText.Get("Save.RedactedHint"), save.HiddenHint);
+        Assert.Equal(UiText.Get("Save.HiddenName"), save.HiddenHintName);
 
         model.CloseSaveCommand.Execute(null);
         Assert.Null(model.Save);

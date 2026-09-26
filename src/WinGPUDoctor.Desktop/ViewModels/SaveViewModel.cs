@@ -24,31 +24,37 @@ public sealed class SaveViewModel : ObservableObject
     {
         _document = document ?? throw new ArgumentNullException(nameof(document));
         Contents = Summarize(document.Report);
+        HiddenLabel = UiText.Format("Save.Hidden", document.Report.Privacy.RedactedFields.ToString(CultureInfo.CurrentCulture));
         Refresh();
     }
 
-    // A short overview of the fields the exact text below contains, from the same retained report.
+    // A short overview of the fields the exact text contains, from the same retained report.
     // It names fields, never values: any value may be unavailable, redacted or unresolved.
     public IReadOnlyList<FactLine> Contents { get; }
     public string ContentsNote { get; } = UiText.Get("Save.ContainsNote");
+
+    // The preview header counts the values the privacy filter hid; the (i) says how they appear.
+    public string HiddenLabel { get; }
+    public string HiddenHint { get; } = UiText.Get("Save.RedactedHint");
+    public string HiddenHintName { get; } = UiText.Get("Save.HiddenName");
 
     private static IReadOnlyList<FactLine> Summarize(DiagnosticReport report)
     {
         static string Count(int value) => value.ToString(CultureInfo.CurrentCulture);
         var facts = report.Facts;
+        static FactLine Described(string labelKey, string text) => FactLine.Text(labelKey, text) with { IsData = false };
         return
         [
-            FactLine.Text("Card.System.Title", UiText.Get("Save.Contains.System")),
+            Described("Card.System.Title", UiText.Get("Save.Contains.System")),
             facts.Gpus.State == DataState.Available
-                ? FactLine.Text("Card.Adapters.Title", UiText.Format("Save.Contains.Adapters", Count(facts.Gpus.Value!.Count)))
+                ? Described("Card.Adapters.Title", UiText.Format("Save.Contains.Adapters", Count(facts.Gpus.Value!.Count)))
                 : FactLine.Unavailable("Card.Adapters.Title", facts.Gpus.State),
             facts.Displays.State == DataState.Available
-                ? FactLine.Text("Card.Displays.Title", UiText.Format("Save.Contains.Displays", Count(facts.Displays.Value!.Count)))
+                ? Described("Card.Displays.Title", UiText.Format("Save.Contains.Displays", Count(facts.Displays.Value!.Count)))
                 : FactLine.Unavailable("Card.Displays.Title", facts.Displays.State),
             FactLine.Text("Card.Findings.Title", Count(report.Findings.Count)),
             FactLine.Text("Card.Warnings.Title", Count(report.Warnings.Count)),
-            FactLine.Text("Card.Collection.Title", UiText.Format("Save.Contains.Steps", Count(report.Collection.Count))),
-            FactLine.Text("Summary.Redacted", Count(report.Privacy.RedactedFields)) with { Help = UiText.Get("Save.RedactedHint") }
+            Described("Card.Collection.Title", UiText.Format("Save.Contains.Steps", Count(report.Collection.Count)))
         ];
     }
 

@@ -372,71 +372,94 @@
       </ScrollViewer>
     </DockPanel>
 
-    <!-- Review and save: preview and save both come from the retained report -->
-    <DockPanel Margin="24,16" DataContext="{Binding Save}"
-               Visibility="{Binding DataContext.IsSaving, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource Visible}}">
-      <!-- The hint, outcome and actions stay visible; the review content and preview scroll above them. -->
-      <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-        <DockPanel>
-          <TextBlock DockPanel.Dock="Left" Text="&#xE946;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
-          <TextBlock Text="{views:Text Save.SyncHint}" TextWrapping="Wrap" />
-        </DockPanel>
-        <DockPanel Margin="0,8,0,0" Visibility="{Binding HasStatus, Converter={StaticResource Visible}}">
-          <TextBlock DockPanel.Dock="Left" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0">
-            <TextBlock.Style>
-              <Style TargetType="TextBlock">
-                <Setter Property="Text" Value="&#xE73E;" />
-                <Style.Triggers>
-                  <DataTrigger Binding="{Binding StatusIsError}" Value="True">
-                    <Setter Property="Text" Value="&#xE7BA;" />
-                  </DataTrigger>
-                </Style.Triggers>
-              </Style>
-            </TextBlock.Style>
-          </TextBlock>
-          <TextBlock x:Name="SaveStatus" Text="{Binding StatusMessage}" FontWeight="SemiBold" TextWrapping="Wrap"
-                     AutomationProperties.LiveSetting="Polite" />
-        </DockPanel>
-        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-          <Button x:Name="SaveChoose" Content="{views:Text Save.Choose}" Click="OnSaveClick"
-                  Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,0" />
-          <Button Content="{views:Text Save.Back}" Command="{Binding DataContext.CloseSaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                  Style="{StaticResource Wgd.GhostButton}" />
-        </StackPanel>
-      </StackPanel>
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="0,0,8,0">
-          <TextBlock Text="{views:Text Save.Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
-                     AutomationProperties.HeadingLevel="Level2" />
-          <TextBlock Text="{views:Text Save.Intro}" TextWrapping="Wrap" Margin="0,4,0,8" />
-          <WrapPanel Margin="0,0,0,4">
-            <TextBlock Text="{views:Text Save.FormatLabel}" VerticalAlignment="Center" Margin="0,0,12,0" />
+    <!-- Review and save: direction B. The choices, the review warning, the cloud-sync hint (both stay on
+         screen), a summary of the report's fields and the actions on the left; the exact text on the right.
+         Preview and Save both come from the one retained report. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" DataContext="{Binding Save}"
+                  Visibility="{Binding DataContext.IsSaving, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource Visible}}">
+      <views:SplitPanel MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                        StackedSecondHeight="420" FirstShare="0.48">
+        <StackPanel Style="{StaticResource Wgd.MainColumn}">
+          <TextBlock Text="{views:Text Save.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
+          <TextBlock Text="{views:Text Save.Title}" Style="{StaticResource Wgd.Title}" FontSize="26"
+                     AutomationProperties.HeadingLevel="Level1" />
+          <TextBlock Text="{views:Text Save.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,18" />
+
+          <TextBlock x:Name="FormatLabel" Text="{views:Text Save.FormatLabel}" Style="{StaticResource Wgd.Heading}" Margin="0,0,0,8" />
+          <WrapPanel Margin="0,0,0,14">
             <RadioButton x:Name="FormatMarkdown" GroupName="Format" Content="{views:Text Save.FormatMarkdown}"
-                         IsChecked="{Binding IsMarkdown}" Style="{StaticResource Wgd.Radio}" />
+                         IsChecked="{Binding IsMarkdown}" Style="{StaticResource Wgd.Radio}"
+                         AutomationProperties.LabeledBy="{Binding ElementName=FormatLabel}" />
             <RadioButton GroupName="Format" Content="{views:Text Save.FormatJson}" IsChecked="{Binding IsJson}"
-                         Style="{StaticResource Wgd.Radio}" />
+                         Style="{StaticResource Wgd.Radio}" AutomationProperties.LabeledBy="{Binding ElementName=FormatLabel}" />
           </WrapPanel>
-          <DockPanel Margin="0,8,0,0">
-            <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
-            <StackPanel>
-              <TextBlock Text="{Binding ReviewTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
-              <TextBlock Text="{Binding ReviewText}" TextWrapping="Wrap" />
-            </StackPanel>
+
+          <Border Style="{StaticResource Wgd.Warn}" Margin="0,0,0,12">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" Text="&#xE7BA;" Style="{StaticResource Wgd.Glyph}" />
+              <TextBlock TextWrapping="Wrap" FontSize="13.5">
+                <Run Text="{Binding ReviewTitle, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=". " /><Run Text="{Binding ReviewText, Mode=OneWay}" />
+              </TextBlock>
+            </DockPanel>
+          </Border>
+          <DockPanel Margin="0,0,0,20">
+            <TextBlock DockPanel.Dock="Left" Text="&#xE753;" Style="{StaticResource Wgd.Glyph}" Foreground="{DynamicResource Wgd.Data}" />
+            <TextBlock Text="{views:Text Save.SyncHint}" TextWrapping="Wrap" FontSize="13.5" />
           </DockPanel>
-          <TextBlock Text="{views:Text Save.ContainsTitle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,2"
-                     AutomationProperties.HeadingLevel="Level3" />
-          <TextBlock Text="{Binding ContentsNote}" TextWrapping="Wrap" Margin="0,0,0,4" />
-          <ItemsControl ItemsSource="{Binding Contents}" ItemTemplate="{StaticResource FactTemplate}" Focusable="False" />
-          <!-- The exact text that Save writes; clipboard copy is intentionally blocked (GUI plan section 8). -->
-          <TextBlock Text="{views:Text Save.PreviewLabel}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,4"
-                     AutomationProperties.HeadingLevel="Level3" />
-          <TextBox x:Name="PreviewBox" Text="{Binding Preview, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource Wgd.PreviewBox}"
-                   Height="200" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
-                   HorizontalScrollBarVisibility="Auto" ContextMenu="{x:Null}"
-                   AutomationProperties.Name="{views:Text Save.PreviewName}" />
+
+          <TextBlock Text="{views:Text Save.ContainsTitle}" Style="{StaticResource Wgd.Heading}" AutomationProperties.HeadingLevel="Level2" />
+          <TextBlock Text="{Binding ContentsNote}" Style="{StaticResource Wgd.Small}" Margin="0,4,0,2" />
+          <ItemsControl ItemsSource="{Binding Contents}" ItemTemplate="{StaticResource FactTemplate}" Focusable="False"
+                        Grid.IsSharedSizeScope="True" />
+
+          <DockPanel Margin="0,18,0,0" Visibility="{Binding HasStatus, Converter={StaticResource Visible}}">
+            <TextBlock DockPanel.Dock="Left">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource Wgd.Glyph}">
+                  <Setter Property="Text" Value="&#xE73E;" />
+                  <Setter Property="Foreground" Value="{DynamicResource Wgd.Data}" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding StatusIsError}" Value="True">
+                      <Setter Property="Text" Value="&#xE7BA;" />
+                      <Setter Property="Foreground" Value="{DynamicResource Wgd.Accent}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+            <TextBlock x:Name="SaveStatus" Text="{Binding StatusMessage}" FontWeight="SemiBold" TextWrapping="Wrap"
+                       AutomationProperties.LiveSetting="Polite" />
+          </DockPanel>
+          <WrapPanel Margin="0,18,0,0">
+            <Button x:Name="SaveChoose" Content="{views:Text Save.Choose}" Click="OnSaveClick"
+                    Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,8" />
+            <Button Content="{views:Text Save.Back}" Style="{StaticResource Wgd.GhostButton}" Margin="0,0,0,8"
+                    Command="{Binding DataContext.CloseSaveCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+          </WrapPanel>
         </StackPanel>
-      </ScrollViewer>
-    </DockPanel>
+
+        <Border Style="{StaticResource Wgd.SideColumn}">
+          <Border Style="{StaticResource Wgd.Readout}">
+            <DockPanel>
+              <Border DockPanel.Dock="Top" Style="{StaticResource Wgd.ReadoutHeader}">
+                <DockPanel>
+                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <TextBlock Text="{Binding HiddenLabel}" Style="{StaticResource Wgd.Caption}" />
+                    <views:InfoTip Text="{Binding HiddenHint}" Label="{Binding HiddenHintName}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                  </StackPanel>
+                  <TextBlock Text="{views:Text Save.PreviewLabel}" Style="{StaticResource Wgd.Caption}"
+                             AutomationProperties.HeadingLevel="Level2" />
+                </DockPanel>
+              </Border>
+              <!-- The exact text that Save writes; clipboard copy is intentionally blocked (GUI plan section 8). -->
+              <TextBox x:Name="PreviewBox" Text="{Binding Preview, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource Wgd.PreviewBox}"
+                       TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                       ContextMenu="{x:Null}" AutomationProperties.Name="{views:Text Save.PreviewName}" />
+            </DockPanel>
+          </Border>
+        </Border>
+      </views:SplitPanel>
+    </ScrollViewer>
 
     <!-- Stopped -->
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
