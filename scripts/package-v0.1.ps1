@@ -2,7 +2,8 @@
 # This does not run a live collection or publish anything.
 # -DevGui builds a local test package instead (M7 Step 5): the CLI, wingpudoctor-gui.exe and worker/ in one
 # folder, named WinGPUDoctor-<version>-dev-win-x64 under ignored artifacts/. It is not a release asset.
-param([switch]$DevGui)
+# -OutputDirectory writes to another folder inside artifacts/, for example to build again without replacing a package.
+param([switch]$DevGui, [string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $settings = @{
@@ -30,6 +31,14 @@ $version = $versions[0]
 . (Join-Path $PSScriptRoot 'package-layout.ps1')
 $name = Get-PackageName $version -Dev:$DevGui
 $artifactRoot = Join-Path $projectRoot 'artifacts'
+if ($OutputDirectory) {
+    $requested = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($OutputDirectory, $projectRoot))
+    if (!$requested.StartsWith($artifactRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'The output directory must be inside the ignored artifacts folder.'
+    }
+    $artifactRoot = $requested
+    [void][IO.Directory]::CreateDirectory($artifactRoot)
+}
 $zipPath = Join-Path $artifactRoot "$name.zip"
 $checksumPath = "$zipPath.sha256"
 if ((Test-Path -LiteralPath $zipPath) -or (Test-Path -LiteralPath $checksumPath)) {
