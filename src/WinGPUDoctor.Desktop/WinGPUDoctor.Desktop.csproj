@@ -15,6 +15,11 @@
     <ProjectReference Include="../WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
     <ProjectReference Include="../WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Draw TextBox selection as SelectionBrush behind SelectionTextBrush text. The default adorner overlay ignores
+         SelectionTextBrush, so the preview's selected text could not use a color paired with its background. -->
+    <RuntimeHostConfigurationOption Include="Switch.System.Windows.Controls.Text.UseAdornerForTextboxSelectionRendering" Value="false" />
+  </ItemGroup>
   <Target Name="CopyWorkerDeployment" AfterTargets="Build">
     <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\copy-worker-deployment.ps1&quot; -WorkerOutput &quot;$(WorkerOutputDirectory)&quot; -Destination &quot;$(OutDir)worker&quot;" />
   </Target>

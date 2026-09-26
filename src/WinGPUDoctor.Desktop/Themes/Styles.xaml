@@ -272,7 +272,11 @@
     <Setter Property="FontFamily" Value="{StaticResource Wgd.MonoFont}" />
     <Setter Property="FontSize" Value="12.5" />
     <Setter Property="Padding" Value="12,10" />
+    <!-- Selected text is OnAccent on an opaque AccentFill: the pair tested for contrast, and in high contrast
+         highlight text on highlight. The csproj turns off the adorner selection that would ignore this brush. -->
     <Setter Property="SelectionBrush" Value="{DynamicResource Wgd.AccentFill}" />
+    <Setter Property="SelectionTextBrush" Value="{DynamicResource Wgd.OnAccent}" />
+    <Setter Property="SelectionOpacity" Value="1" />
     <Setter Property="CaretBrush" Value="{DynamicResource Wgd.Text}" />
     <Setter Property="Template">
       <Setter.Value>

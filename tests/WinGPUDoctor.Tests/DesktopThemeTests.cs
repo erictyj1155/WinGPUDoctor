@@ -1,5 +1,11 @@
 using System.Globalization;
+using System.Reflection;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 using System.Xml.Linq;
 using WinGPUDoctor.Desktop.Views;
 using Xunit;
@@ -154,7 +160,56 @@ public class DesktopThemeTests
         Assert.Contains(uses, u => u.Key == "Wgd.AccentFill");
         Assert.All(uses.Where(u => u.Key is "Wgd.AccentFill" or "Wgd.AccentHover"), u => Assert.Contains(u.Property, fills));
         Assert.All(uses.Where(u => u.Key == "Wgd.Accent"), u => Assert.DoesNotContain(u.Property, new[] { "Background", "SelectionBrush", "Glow" }));
-        Assert.All(uses.Where(u => u.Key == "Wgd.OnAccent"), u => Assert.Equal("Foreground", u.Property));
+        Assert.All(uses.Where(u => u.Key == "Wgd.OnAccent"), u => Assert.Contains(u.Property, new[] { "Foreground", "SelectionTextBrush" }));
+    }
+
+    // The preview's selected text, read back from a TextBox with the real styles and each palette: highlight text
+    // on an opaque highlight in high contrast, and an AA pair in dark and light.
+    [Theory]
+    [InlineData("Dark")]
+    [InlineData("Light")]
+    [InlineData("HighContrast")]
+    public void PreviewSelectionUsesAPairedTextAndBackground(string kind)
+    {
+        DesktopLayoutTests.OnSta(() =>
+        {
+            var styles = (ResourceDictionary)Application.LoadComponent(new Uri("/wingpudoctor-gui;component/Themes/Styles.xaml", UriKind.Relative));
+            var palette = (ResourceDictionary)Application.LoadComponent(new Uri($"/wingpudoctor-gui;component/Themes/Palette.{kind}.xaml", UriKind.Relative));
+            var box = new TextBox();
+            box.Resources.MergedDictionaries.Add(styles);
+            box.Resources.MergedDictionaries.Add(palette);
+            box.Style = (Style)box.FindResource("Wgd.PreviewBox");
+            var background = Assert.IsType<SolidColorBrush>(box.SelectionBrush).Color;
+            var text = Assert.IsType<SolidColorBrush>(box.SelectionTextBrush).Color;
+            Assert.Equal(((SolidColorBrush)palette["Wgd.AccentFill"]).Color, background);
+            Assert.Equal(((SolidColorBrush)palette["Wgd.OnAccent"]).Color, text);
+            Assert.Equal(1.0, box.SelectionOpacity);
+            // Set by the preview style itself, not left at WPF's defaults (which match some palettes by chance).
+            foreach (var property in new[] { TextBoxBase.SelectionBrushProperty, TextBoxBase.SelectionTextBrushProperty, TextBoxBase.SelectionOpacityProperty })
+                Assert.Equal(BaseValueSource.Style, DependencyPropertyHelper.GetValueSource(box, property).BaseValueSource);
+            if (kind == "HighContrast")
+            {
+                Assert.Equal(SystemColors.HighlightColor, background);
+                Assert.Equal(SystemColors.HighlightTextColor, text);
+            }
+            else Assert.True(Contrast((text.R / 255.0, text.G / 255.0, text.B / 255.0), (background.R / 255.0, background.G / 255.0, background.B / 255.0)) >= 4.5);
+        });
+    }
+
+    // WPF's default adorner selection draws a translucent overlay and ignores SelectionTextBrush; the GUI turns it off.
+    [Fact]
+    public void PreviewSelectionIsDrawnWithItsSelectionTextBrush()
+    {
+        var name = (string)typeof(FrameworkElement).Assembly.GetType("MS.Internal.FrameworkAppContextSwitches", throwOnError: true)!
+            .GetField("UseAdornerForTextboxSelectionRenderingSwitchName", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetRawConstantValue()!;
+        var option = XDocument.Load(System.IO.Path.Combine(Desktop, "WinGPUDoctor.Desktop.csproj")).Descendants("RuntimeHostConfigurationOption")
+            .Single(e => (string?)e.Attribute("Include") == name);
+        Assert.Equal("false", (string?)option.Attribute("Value"));
+        var configuration = Regex.Match(AppContext.BaseDirectory, @"[\\/]bin[\\/]([^\\/]+)[\\/]").Groups[1].Value;
+        using var runtimeConfig = JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(Desktop, "bin", configuration, "net10.0-windows",
+            "wingpudoctor-gui.runtimeconfig.json")));
+        Assert.False(runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("configProperties").GetProperty(name).GetBoolean());
     }
 
     [Fact]
