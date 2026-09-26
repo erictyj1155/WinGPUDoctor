@@ -19,7 +19,7 @@
   <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
   <data name="Scan.StoppingToClose" xml:space="preserve"><value>Stopping the scan before WinGPUDoctor closes…</value></data>
   <data name="Scan.RequestingStop" xml:space="preserve"><value>Requesting stop…</value></data>
-  <data name="Scan.Finishing" xml:space="preserve"><value>The scan had already finished reading. Showing the results…</value></data>
+  <data name="Scan.Finishing" xml:space="preserve"><value>Finishing up…</value></data>
   <data name="Scan.ListIntro" xml:space="preserve"><value>WinGPUDoctor is reading:</value></data>
   <data name="Scan.ItemSystem" xml:space="preserve"><value>System details: Windows version, manufacturer and model</value></data>
   <data name="Scan.ItemAdapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>

@@ -104,7 +104,7 @@ A table keyed by stable identifiers: the 6 finding IDs, 7 `WarningCode`s, 5 `Dat
 Rules for the copy:
 - It must not add claims that Core does not make. Examples: no "driver is outdated" (the warnings already state that driver dates do not establish freshness); no "your display is running at the wrong rate"; no inference of which GPU renders applications.
 - States are shown with an icon plus text, never color alone.
-- Secondary copy ("What this does not mean", the optional next step, field glossary text, unavailable-state meanings, how hidden values appear) sits behind an (i) tip. Each tip is a Tab stop, shows its text on hover, keyboard focus or Enter, closes with Escape, and exposes `AutomationProperties.Name` and `HelpText`. The "Review before sharing" warning and the cloud-sync hint stay on screen in short form.
+- Secondary copy ("What this does not mean", the optional next step, field glossary text, unavailable-state meanings, how hidden values appear) sits behind an (i) tip. Each tip is a Tab stop. It shows its text on hover, on Enter/Space or click, and on a focus change caused by keyboard input from another element in the window (Tab, Shift+Tab or other keyboard navigation; the key itself is not identified), but not when focus returns on window reactivation such as Alt+Tab. It closes with Escape and exposes `AutomationProperties.Name` and `HelpText`. The "Review before sharing" warning and the cloud-sync hint stay on screen in short form.
 - `Unknown`/`Failed`/`Redacted` get friendly wording. Example: "Windows didn't provide this" rather than "Unknown (MissingValue)".
 - Refresh rate is shown rounded for people (e.g. "165 Hz"), with the exact rational value in technical details.
 

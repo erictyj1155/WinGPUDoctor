@@ -6,10 +6,11 @@ using System.Windows.Input;
 
 namespace WinGPUDoctor.Desktop.Views;
 
-// An (i) button for secondary text. It is a Tab stop; the text appears on mouse hover, when the user
-// Tabs to it, and on Enter/Space or click, and closes with Escape or when focus leaves. Focus that
-// returns when the window is reactivated (for example after Alt+Tab) does not open it. Screen
-// readers get the button name from Label and the text itself as HelpText.
+// An (i) button for secondary text. It is a Tab stop; the text appears on mouse hover, on a focus
+// change caused by keyboard input from another element in the window (Tab, Shift+Tab or other
+// keyboard navigation; the rule does not identify the key), and on Enter/Space or click. It closes
+// with Escape or when focus leaves. Focus that returns when the window is reactivated (for example
+// after Alt+Tab) does not open it. Screen readers get the name from Label and the text as HelpText.
 public sealed class InfoTip : Button
 {
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), typeof(string),
@@ -47,15 +48,16 @@ public sealed class InfoTip : Button
         Open();
     }
 
-    // Keyboard users see the text as soon as Tab lands here, without waiting for hover timing.
+    // Keyboard users see the text as soon as keyboard navigation lands here, without hover timing.
     protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
     {
         base.OnGotKeyboardFocus(e);
         if (ShowsOnFocusChange(InputManager.Current.MostRecentInputDevice is KeyboardDevice, e.OldFocus is not null)) Open();
     }
 
-    // Tab navigation moves keyboard focus from another element. Focus restored on window reactivation
-    // arrives from no element, and mouse focus is handled by hover and click.
+    // True for a focus change caused by keyboard input that moves focus from another element, as Tab,
+    // Shift+Tab and other keyboard navigation do. Focus restored on window reactivation arrives from no
+    // element, and mouse focus is handled by hover and click.
     public static bool ShowsOnFocusChange(bool keyboardInput, bool fromAnotherElement) =>
         keyboardInput && fromAnotherElement;
 

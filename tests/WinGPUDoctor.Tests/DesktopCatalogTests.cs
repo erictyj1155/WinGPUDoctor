@@ -226,9 +226,10 @@ public class DesktopCatalogTests
     }
 
     [Fact]
-    public void InfoTipOpensOnFocusOnlyWhenTabbedTo()
+    public void InfoTipOpensOnKeyboardFocusChangeFromAnotherElement()
     {
-        Assert.True(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: true, fromAnotherElement: true)); // Tab
+        // Keyboard navigation such as Tab or Shift+Tab; the rule does not identify the key.
+        Assert.True(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: true, fromAnotherElement: true));
         // Window reactivation (for example Alt+Tab back) restores focus from no element.
         Assert.False(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: true, fromAnotherElement: false));
         Assert.False(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: false, fromAnotherElement: true)); // Mouse

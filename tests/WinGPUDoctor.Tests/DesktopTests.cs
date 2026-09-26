@@ -57,9 +57,9 @@ public class DesktopTests
             throw new SupervisedCollectionException("host-cancelled");
         };
 
-    // Blocks report preparation, which runs only after output commitment has won.
-    private sealed class GatedRuns(IReadOnlyList<CollectorRun> runs, TaskCompletionSource<bool> preparing, Task release)
-        : IReadOnlyList<CollectorRun>
+    // Blocks report preparation, which runs only after output commitment has won; optionally fails it.
+    private sealed class GatedRuns(IReadOnlyList<CollectorRun> runs, TaskCompletionSource<bool> preparing, Task release,
+        bool failAfterRelease = false) : IReadOnlyList<CollectorRun>
     {
         public CollectorRun this[int index] => runs[index];
         public int Count => runs.Count;
@@ -67,6 +67,7 @@ public class DesktopTests
         {
             preparing.TrySetResult(true);
             Assert.True(release.Wait(Wait));
+            if (failAfterRelease) throw new InvalidOperationException("Synthetic failure after output commitment.");
             return runs.GetEnumerator();
         }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
@@ -248,6 +249,29 @@ public class DesktopTests
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.Result, model.State);
         Assert.NotNull(model.Result);
+    }
+
+    [Fact]
+    public async Task ForcedCancelThenFailureShowsNeutralTextAndNeedsRestart()
+    {
+        var preparing = Gate();
+        var release = Gate();
+        var single = Fixture("single");
+        var model = new MainViewModel(_ => Task.FromResult(single with
+        {
+            Collection = new GatedRuns(single.Collection, preparing, release.Task, failAfterRelease: true)
+        }));
+        var scan = model.ScanAsync();
+        await preparing.Task.WaitAsync(Wait); // Forced from here on; no report exists yet.
+
+        await model.CancelAsync().WaitAsync(Wait);
+        Assert.Equal(ScanState.Scanning, model.State);
+        Assert.Equal(UiText.Get("Scan.Finishing"), model.BusyText); // Neutral: promises no result.
+        Assert.DoesNotContain("result", model.BusyText, StringComparison.OrdinalIgnoreCase);
+        release.SetResult(true);
+        await scan.WaitAsync(Wait);
+        Assert.Equal(ScanState.NeedsRestart, model.State);
+        Assert.Null(model.Result);
     }
 
     [Fact]

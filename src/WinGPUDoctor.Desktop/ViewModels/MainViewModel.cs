@@ -155,8 +155,9 @@ public sealed class MainViewModel : ObservableObject
 
     // CancellationTokenSource.Cancel() runs token callbacks synchronously, so the request is sent on
     // the thread pool and can never hold the UI thread. Until its result is known the screen shows a
-    // neutral "Requesting stop"; Controlled then shows "Stopping", while Forced means output commitment
-    // already won and the scan finishes with its result. Single-use; never escalates.
+    // neutral "Requesting stop"; Controlled then shows "Stopping". Forced means output commitment already
+    // won or collection already closed after a failure, so the screen shows a neutral "Finishing up" and
+    // the scan's own outcome (a result or restart-required) follows. Single-use; never escalates.
     public async Task CancelAsync()
     {
         if (State != ScanState.Scanning || _stopRequest != StopRequest.None || _session is not { } session) return;
