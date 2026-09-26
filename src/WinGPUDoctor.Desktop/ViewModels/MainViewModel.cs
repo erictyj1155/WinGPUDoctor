@@ -81,8 +81,14 @@ public sealed class MainViewModel : ObservableObject
             _ => "Scan.Reading"
         });
 
-    // A short line under the busy heading while the scan is reading normally.
-    public string? BusyDetail => State == ScanState.Scanning && _stopRequest == StopRequest.None ? UiText.Get("Scan.Usually") : null;
+    // A short line under the busy heading: how long reading usually takes, or, after a Forced result,
+    // why Cancel had no effect. Like the heading, it promises neither a result nor a stop.
+    public string? BusyDetail => State != ScanState.Scanning ? null : _stopRequest switch
+    {
+        StopRequest.None => UiText.Get("Scan.Usually"),
+        StopRequest.Forced => UiText.Get("Scan.FinishingDetail"),
+        _ => null
+    };
     public bool HasBusyDetail => BusyDetail is not null;
 
     // A new scan discards the previous report before collection starts.

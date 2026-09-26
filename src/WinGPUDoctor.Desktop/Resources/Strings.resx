@@ -31,7 +31,8 @@
   <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
   <data name="Scan.StoppingToClose" xml:space="preserve"><value>Stopping the scan before WinGPUDoctor closes…</value></data>
   <data name="Scan.RequestingStop" xml:space="preserve"><value>Requesting stop…</value></data>
-  <data name="Scan.Finishing" xml:space="preserve"><value>Finishing up…</value></data>
+  <data name="Scan.Finishing" xml:space="preserve"><value>Almost done…</value></data>
+  <data name="Scan.FinishingDetail" xml:space="preserve"><value>It's too late to stop this scan. Please wait while it finishes.</value></data>
   <data name="Scan.Eyebrow" xml:space="preserve"><value>SCANNING</value></data>
   <data name="Scan.Usually" xml:space="preserve"><value>This usually takes a few seconds.</value></data>
   <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>

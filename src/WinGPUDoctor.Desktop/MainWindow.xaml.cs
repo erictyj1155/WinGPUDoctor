@@ -15,6 +15,9 @@ public partial class MainWindow : Window
     public MainWindow(MainViewModel model)
     {
         InitializeComponent();
+        // Start no larger than the primary work area (for example 1366 × 768 at 150% scaling).
+        var size = FitToWorkArea(new Size(Width, Height), new Size(MinWidth, MinHeight), SystemParameters.WorkArea.Size);
+        (Width, Height) = (size.Width, size.Height);
         _model = model;
         DataContext = model;
         model.PropertyChanged += (_, e) =>
@@ -76,4 +79,9 @@ public partial class MainWindow : Window
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    // The preferred size, reduced to fit the work area but never below the minimum size.
+    public static Size FitToWorkArea(Size preferred, Size minimum, Size workArea) => new(
+        Math.Max(minimum.Width, Math.Min(preferred.Width, workArea.Width)),
+        Math.Max(minimum.Height, Math.Min(preferred.Height, workArea.Height)));
 }

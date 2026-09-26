@@ -303,6 +303,7 @@ public class DesktopTests
         await model.CancelAsync().WaitAsync(Wait);
         Assert.Equal(ScanState.Scanning, model.State); // Forced: not shown as stopping.
         Assert.Equal(UiText.Get("Scan.Finishing"), model.BusyText);
+        Assert.Equal(UiText.Get("Scan.FinishingDetail"), model.BusyDetail); // Says plainly why Cancel had no effect.
         Assert.False(model.CancelCommand.CanExecute(null)); // Still single-use.
         release.SetResult(true);
         await scan.WaitAsync(Wait);
@@ -327,6 +328,8 @@ public class DesktopTests
         Assert.Equal(ScanState.Scanning, model.State);
         Assert.Equal(UiText.Get("Scan.Finishing"), model.BusyText); // Neutral: promises no result.
         Assert.DoesNotContain("result", model.BusyText, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("result", model.BusyDetail!, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("report", model.BusyDetail!, StringComparison.OrdinalIgnoreCase);
         release.SetResult(true);
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.NeedsRestart, model.State);
@@ -423,6 +426,7 @@ public class DesktopTests
         await callbackEntered.Task.WaitAsync(Wait);
         Assert.Equal(ScanState.Scanning, model.State);
         Assert.Equal(UiText.Get("Scan.RequestingStop"), model.BusyText);
+        Assert.Null(model.BusyDetail);
         Assert.False(model.CancelCommand.CanExecute(null));
 
         // The deadline started before the request, so it fires although the request never returned.

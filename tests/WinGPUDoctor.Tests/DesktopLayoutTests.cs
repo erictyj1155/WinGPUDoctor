@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -28,6 +30,30 @@ public class DesktopLayoutTests
         panel.Measure(new Size(width, double.PositiveInfinity));
         panel.Arrange(new Rect(new Point(), panel.DesiredSize));
         return LayoutInformation.GetLayoutSlot((FrameworkElement)panel.Children[1]);
+    }
+
+    [Fact]
+    public void WindowStartsInsideTheWorkAreaAndItsMinimumSizeStacksTwoColumnPages()
+    {
+        var xaml = File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../..", "src", "WinGPUDoctor.Desktop", "MainWindow.xaml"));
+        var window = Regex.Match(xaml, @"<Window\b[^>]*>").Value;
+        double Attribute(string name) =>
+            double.Parse(Regex.Match(window, $@"\s{name}=""(\d+)""").Groups[1].Value, CultureInfo.InvariantCulture);
+        var (preferred, minimum) = (new Size(Attribute("Width"), Attribute("Height")), new Size(Attribute("MinWidth"), Attribute("MinHeight")));
+        // 1366 × 768 at 150% scaling leaves about 910 × 480 device-independent pixels above the taskbar.
+        var small = new Size(910, 480);
+        Assert.True(minimum.Width <= small.Width && minimum.Height <= small.Height);
+        Assert.True(minimum.Width >= 480 && minimum.Height >= 400); // Still room for a column of content and its actions.
+        OnSta(() =>
+        {
+            Assert.Equal(small, WinGPUDoctor.Desktop.MainWindow.FitToWorkArea(preferred, minimum, small));
+            Assert.Equal(preferred, WinGPUDoctor.Desktop.MainWindow.FitToWorkArea(preferred, minimum, new Size(1920, 1040)));
+            Assert.Equal(minimum, WinGPUDoctor.Desktop.MainWindow.FitToWorkArea(preferred, minimum, new Size(400, 300)));
+            // At the minimum width the two columns are stacked; at the preferred width they sit side by side.
+            var stackWidth = (double)SplitPanel.StackWidthProperty.DefaultMetadata.DefaultValue;
+            Assert.True(SplitPanel.Stacks(minimum.Width, stackWidth));
+            Assert.False(SplitPanel.Stacks(preferred.Width, stackWidth));
+        });
     }
 
     [Fact]

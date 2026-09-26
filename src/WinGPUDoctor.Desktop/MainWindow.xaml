@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:WinGPUDoctor.Desktop.Views"
         xmlns:vm="clr-namespace:WinGPUDoctor.Desktop.ViewModels"
-        Title="{views:Text App.Title}" Width="960" Height="700" MinWidth="560" MinHeight="420"
+        Title="{views:Text App.Title}" Width="1040" Height="720" MinWidth="520" MinHeight="460"
         WindowStartupLocation="CenterScreen" Background="{DynamicResource Wgd.Background}"
         Foreground="{DynamicResource Wgd.Text}" FontFamily="{StaticResource Wgd.BodyFont}" FontSize="14">
   <Window.Resources>
