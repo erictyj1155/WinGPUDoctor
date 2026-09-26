@@ -120,7 +120,7 @@ public class DesktopCatalogTests
     private static readonly string[] LimitOnly =
     [
         @"\bhealth(y)?\b", @"\bfaulty\b", @"\bbroken\b", @"\bdefective\b", @"\boutdated\b", @"\bup to date\b",
-        @"\bworking correctly\b", @"\bproblem\b", @"\bwrong\b", @"\bcause\b", @"\brender(s|ing)?\b", @"\bhybrid\b",
+        @"\bworking correctly\b", @"\bproblem\b", @"\bwrong\b", @"\bcause\b", @"\brender\w*", @"\bhybrid\b",
         @"\bmux\b", @"\bpower state\b", @"\bbusy\b", @"\bphysical\b", @"\bport\b", @"\bcable\b", @"\bplugged\b", @"\bdisconnected\b"
     ];
 

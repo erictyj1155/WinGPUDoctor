@@ -30,16 +30,36 @@ public class DesktopTests
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 
-    // Like the supervised collector, a cancelled token ends collection as host-cancelled.
-    private static Func<CancellationToken, Task<CollectionSnapshot>> WaitForCancellation(TaskCompletionSource<bool> collecting) =>
+    private static TaskCompletionSource<CancellationToken> Collecting() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // Like the supervised collector, a cancelled token ends collection as host-cancelled; an optional
+    // gate holds the controlled stop so intermediate states can be observed without racing it.
+    private static Func<CancellationToken, Task<CollectionSnapshot>> WaitForCancellation(TaskCompletionSource<CancellationToken> collecting,
+        Task? stop = null) =>
         async token =>
         {
             var signal = Gate();
             using var registration = token.Register(() => signal.TrySetResult(true));
-            collecting.SetResult(true);
+            collecting.SetResult(token);
             await signal.Task.WaitAsync(Wait);
+            if (stop is not null) await stop.WaitAsync(Wait);
             throw new SupervisedCollectionException("host-cancelled");
         };
+
+    // Blocks report preparation, which runs only after output commitment has won.
+    private sealed class GatedRuns(IReadOnlyList<CollectorRun> runs, TaskCompletionSource<bool> preparing, Task release)
+        : IReadOnlyList<CollectorRun>
+    {
+        public CollectorRun this[int index] => runs[index];
+        public int Count => runs.Count;
+        public IEnumerator<CollectorRun> GetEnumerator()
+        {
+            preparing.TrySetResult(true);
+            Assert.True(release.Wait(Wait));
+            return runs.GetEnumerator();
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 
     private static async Task<ResultViewModel> ScanResult(string fixture)
     {
@@ -122,20 +142,23 @@ public class DesktopTests
     [Fact]
     public async Task CancelIsSingleUseAndStopsWithoutAReport()
     {
-        var collecting = Gate();
-        var model = new MainViewModel(WaitForCancellation(collecting));
+        var collecting = Collecting();
+        var stop = Gate();
+        var model = new MainViewModel(WaitForCancellation(collecting, stop.Task));
         var scan = model.ScanAsync();
-        await collecting.Task.WaitAsync(Wait);
+        var token = await collecting.Task.WaitAsync(Wait);
         Assert.Equal(ScanState.Scanning, model.State);
         Assert.False(model.ScanCommand.CanExecute(null));
         Assert.True(model.CancelCommand.CanExecute(null));
 
         model.CancelCommand.Execute(null);
+        Assert.True(token.IsCancellationRequested); // Sent before Cancel returned.
         Assert.Equal(ScanState.Cancelling, model.State);
         Assert.False(model.CancelCommand.CanExecute(null));
         model.Cancel(); // The second cancel is a no-op.
         Assert.Equal(ScanState.Cancelling, model.State);
 
+        stop.SetResult(true);
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.Stopped, model.State);
         Assert.Null(model.Result);
@@ -195,23 +218,89 @@ public class DesktopTests
     }
 
     [Fact]
-    public async Task ClosingDuringAScanRequestsControlledCancellationFirst()
+    public async Task CancelAfterOutputCommitmentKeepsTheResult()
+    {
+        var preparing = Gate();
+        var release = Gate();
+        var single = Fixture("single");
+        var model = new MainViewModel(_ => Task.FromResult(single with { Collection = new GatedRuns(single.Collection, preparing, release.Task) }));
+        var scan = model.ScanAsync();
+        await preparing.Task.WaitAsync(Wait); // Output commitment has won; the report is being prepared.
+
+        model.CancelCommand.Execute(null);
+        Assert.Equal(ScanState.Scanning, model.State); // Forced: not shown as stopping.
+        Assert.False(model.CancelCommand.CanExecute(null)); // Still single-use.
+        release.SetResult(true);
+        await scan.WaitAsync(Wait);
+        Assert.Equal(ScanState.Result, model.State);
+        Assert.NotNull(model.Result);
+    }
+
+    [Fact]
+    public async Task ClosingDuringAScanSendsCancellationFirstAndClosesOnceStopped()
     {
         Assert.True(new MainViewModel(_ => Task.FromResult(Fixture("single"))).RequestClose());
-        var collecting = Gate();
-        var model = new MainViewModel(WaitForCancellation(collecting));
+        var clock = new DeadlineTests.ManualClock();
+        var collecting = Collecting();
+        var stop = Gate();
+        var model = new MainViewModel(WaitForCancellation(collecting, stop.Task), clock);
         var closeReady = 0;
-        model.CloseReady += (_, _) => closeReady++;
+        model.CloseReady += (_, _) => Interlocked.Increment(ref closeReady);
         var scan = model.ScanAsync();
-        await collecting.Task.WaitAsync(Wait);
+        var token = await collecting.Task.WaitAsync(Wait);
 
         Assert.False(model.RequestClose());
+        Assert.True(token.IsCancellationRequested); // Sent before RequestClose returned.
         Assert.Equal(ScanState.Cancelling, model.State);
+        Assert.Equal(UiText.Get("Scan.StoppingToClose"), model.BusyText);
         Assert.False(model.RequestClose()); // Still waiting for the controlled stop.
+        Assert.Equal(0, Volatile.Read(ref closeReady));
 
+        stop.SetResult(true);
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.Stopped, model.State);
         Assert.Equal(1, closeReady);
+        clock.Advance((long)MainViewModel.DefaultCloseWait.TotalMilliseconds); // The bound no longer applies.
+        Assert.Equal(1, closeReady);
         Assert.True(model.RequestClose());
+    }
+
+    [Fact]
+    public async Task ClosingAllowsExitAfterTheBoundWhenTheScanIgnoresCancellation()
+    {
+        var clock = new DeadlineTests.ManualClock();
+        var collecting = Collecting();
+        var never = Gate();
+        var model = new MainViewModel(async token =>
+        {
+            collecting.SetResult(token);
+            await never.Task; // A collector that does not respond to cancellation.
+            return Fixture("single");
+        }, clock);
+        var closed = Gate();
+        var closeReady = 0;
+        model.CloseReady += (_, _) => { Interlocked.Increment(ref closeReady); closed.TrySetResult(true); };
+        var scan = model.ScanAsync();
+        var token = await collecting.Task.WaitAsync(Wait);
+
+        Assert.False(model.RequestClose());
+        Assert.True(token.IsCancellationRequested);
+        clock.Advance((long)MainViewModel.DefaultCloseWait.TotalMilliseconds - 1);
+        Assert.False(closed.Task.IsCompleted);
+        clock.Advance(1);
+        await closed.Task.WaitAsync(Wait);
+        Assert.Equal(ScanState.Cancelling, model.State); // The window may close; the Job is the backstop.
+
+        never.SetResult(true);
+        await scan.WaitAsync(Wait);
+        Assert.Equal(ScanState.Stopped, model.State); // Cancellation won, so the late snapshot is discarded.
+        Assert.Equal(1, Volatile.Read(ref closeReady));
+    }
+
+    [Fact]
+    public void CloseWaitCoversTheSupervisorsOverallBudget()
+    {
+        Assert.True(MainViewModel.DefaultCloseWait >=
+            CollectionTimingPolicy.CalibratedProduction.OverallBudget + TimeSpan.FromSeconds(10));
     }
 }

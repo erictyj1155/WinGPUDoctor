@@ -10,13 +10,14 @@
   <data name="Error.Unexpected" xml:space="preserve"><value>WinGPUDoctor ran into an unexpected error and will close. Start it again to scan.</value></data>
 
   <data name="Welcome.Intro" xml:space="preserve"><value>WinGPUDoctor reads the graphics adapter, driver and active display information that Windows reports, and explains it in plain language.</value></data>
-  <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Reads only. It changes nothing on this PC.</value></data>
+  <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Scanning only reads information. It does not change settings, drivers or hardware.</value></data>
   <data name="Welcome.PromiseNoUpload" xml:space="preserve"><value>WinGPUDoctor never uploads anything.</value></data>
   <data name="Welcome.PromiseReview" xml:space="preserve"><value>You review exactly what a report contains before you save it.</value></data>
   <data name="Welcome.Scan" xml:space="preserve"><value>Scan this PC</value></data>
 
   <data name="Scan.Reading" xml:space="preserve"><value>Reading information from Windows…</value></data>
   <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
+  <data name="Scan.StoppingToClose" xml:space="preserve"><value>Stopping the scan before WinGPUDoctor closes…</value></data>
   <data name="Scan.ListIntro" xml:space="preserve"><value>WinGPUDoctor is reading:</value></data>
   <data name="Scan.ItemSystem" xml:space="preserve"><value>System details: Windows version, manufacturer and model</value></data>
   <data name="Scan.ItemAdapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>
@@ -89,7 +90,7 @@
   <data name="Field.SourceAdapter" xml:space="preserve"><value>Display source adapter</value></data>
   <data name="Field.TargetAdapter" xml:space="preserve"><value>Display target adapter</value></data>
 
-  <data name="Display.Association.Unresolved" xml:space="preserve"><value>Not linked to a graphics adapter listed in this report</value></data>
+  <data name="Display.Association.Unresolved" xml:space="preserve"><value>A link to a graphics adapter could not be established in this report</value></data>
   <data name="Display.Association.Named" xml:space="preserve"><value>{0} ({1})</value></data>
   <data name="Unit.Hertz" xml:space="preserve"><value>{0} Hz</value></data>
   <data name="Unit.Resolution" xml:space="preserve"><value>{0} × {1} pixels</value></data>
@@ -234,7 +235,7 @@
   <data name="Reason.Timeout" xml:space="preserve"><value>Timed out</value></data>
   <data name="Reason.Timeout.Meaning" xml:space="preserve"><value>Reading this information took too long and was stopped.</value></data>
   <data name="Reason.QueryFailed" xml:space="preserve"><value>Query did not succeed</value></data>
-  <data name="Reason.QueryFailed.Meaning" xml:space="preserve"><value>Windows reported an error while this information was being read.</value></data>
+  <data name="Reason.QueryFailed.Meaning" xml:space="preserve"><value>This information could not be read during the scan.</value></data>
   <data name="Reason.SensitiveValue" xml:space="preserve"><value>Hidden for privacy</value></data>
   <data name="Reason.SensitiveValue.Meaning" xml:space="preserve"><value>The value looked like it could identify you or this PC.</value></data>
   <data name="Reason.ApiUnavailable" xml:space="preserve"><value>Windows function unavailable</value></data>
@@ -284,7 +285,7 @@
   <data name="Glossary.DriverDate" xml:space="preserve"><value>The date recorded by the driver provider. It is not the installation date and does not show whether the driver is up to date.</value></data>
   <data name="Glossary.MonitorName" xml:space="preserve"><value>The name the display reports to Windows. It can be missing or generic.</value></data>
   <data name="Glossary.Resolution" xml:space="preserve"><value>The size of the desktop image for this display path, in pixels.</value></data>
-  <data name="Glossary.RefreshRate" xml:space="preserve"><value>How many times per second Windows sets up a new image for this display path. The technical details show the exact value.</value></data>
+  <data name="Glossary.RefreshRate" xml:space="preserve"><value>The refresh rate Windows reports as configured for this display path. It does not measure frames shown or rendered.</value></data>
   <data name="Glossary.OutputTechnology" xml:space="preserve"><value>The kind of display output Windows reports for this path, such as HDMI or DisplayPort. It does not show which physical port is used.</value></data>
   <data name="Glossary.SourceAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the source side of this display path. It can differ from the target adapter, and it does not show which adapter renders apps.</value></data>
   <data name="Glossary.TargetAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the target side of this display path, the side toward the display. It does not show which physical port is used.</value></data>
