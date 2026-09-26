@@ -247,17 +247,12 @@
                 <StackPanel>
                   <Border Style="{StaticResource Wgd.ReadoutHeader}">
                     <DockPanel>
-                      <TextBlock DockPanel.Dock="Right">
+                      <TextBlock DockPanel.Dock="Right" Text="{Binding ReadoutStatus}">
                         <TextBlock.Style>
                           <Style TargetType="TextBlock" BasedOn="{StaticResource Wgd.Caption}">
-                            <Setter Property="Text" Value="{views:Text Readout.Idle}" />
                             <Style.Triggers>
                               <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                <Setter Property="Text" Value="{views:Text Readout.Reading}" />
                                 <Setter Property="Foreground" Value="{DynamicResource Wgd.Accent}" />
-                              </DataTrigger>
-                              <DataTrigger Binding="{Binding IsCancelling}" Value="True">
-                                <Setter Property="Text" Value="{views:Text Readout.Stopping}" />
                               </DataTrigger>
                             </Style.Triggers>
                           </Style>

@@ -106,6 +106,7 @@ public class DesktopTests
     {
         var model = new MainViewModel(_ => Task.FromResult(Fixture("topology")));
         Assert.Equal(ScanState.Welcome, model.State);
+        Assert.Equal(UiText.Get("Readout.Idle"), model.ReadoutStatus);
         Assert.True(model.ScanCommand.CanExecute(null));
         Assert.False(model.CancelCommand.CanExecute(null));
 
@@ -220,6 +221,7 @@ public class DesktopTests
         Assert.False(model.ScanCommand.CanExecute(null));
         Assert.True(model.CancelCommand.CanExecute(null));
         Assert.Equal(UiText.Get("Scan.Usually"), model.BusyDetail);
+        Assert.Equal(UiText.Get("Readout.Reading"), model.ReadoutStatus);
 
         var request = model.CancelAsync();
         Assert.False(model.CancelCommand.CanExecute(null)); // Disabled at once.
@@ -228,6 +230,7 @@ public class DesktopTests
         Assert.Equal(ScanState.Cancelling, model.State); // Controlled.
         Assert.Equal(UiText.Get("Scan.Stopping"), model.BusyText);
         Assert.False(model.HasBusyDetail);
+        Assert.Equal(UiText.Get("Readout.Stopping"), model.ReadoutStatus);
         await model.CancelAsync(); // The second cancel is a no-op.
         Assert.Equal(ScanState.Cancelling, model.State);
 
@@ -304,6 +307,7 @@ public class DesktopTests
         Assert.Equal(ScanState.Scanning, model.State); // Forced: not shown as stopping.
         Assert.Equal(UiText.Get("Scan.Finishing"), model.BusyText);
         Assert.Equal(UiText.Get("Scan.FinishingDetail"), model.BusyDetail); // Says plainly why Cancel had no effect.
+        Assert.Equal(UiText.Get("Readout.Finishing"), model.ReadoutStatus); // The readout agrees: no longer "reading".
         Assert.False(model.CancelCommand.CanExecute(null)); // Still single-use.
         release.SetResult(true);
         await scan.WaitAsync(Wait);
@@ -330,6 +334,10 @@ public class DesktopTests
         Assert.DoesNotContain("result", model.BusyText, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("result", model.BusyDetail!, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("report", model.BusyDetail!, StringComparison.OrdinalIgnoreCase);
+        // Collection may already have closed after a failure: the readout neither reads nor promises a stop.
+        Assert.Equal(UiText.Get("Readout.Finishing"), model.ReadoutStatus);
+        Assert.NotEqual(UiText.Get("Readout.Reading"), model.ReadoutStatus);
+        Assert.NotEqual(UiText.Get("Readout.Stopping"), model.ReadoutStatus);
         release.SetResult(true);
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.NeedsRestart, model.State);
@@ -427,6 +435,7 @@ public class DesktopTests
         Assert.Equal(ScanState.Scanning, model.State);
         Assert.Equal(UiText.Get("Scan.RequestingStop"), model.BusyText);
         Assert.Null(model.BusyDetail);
+        Assert.Equal(UiText.Get("Readout.Reading"), model.ReadoutStatus); // The request has not been delivered yet.
         Assert.False(model.CancelCommand.CanExecute(null));
 
         // The deadline started before the request, so it fires although the request never returned.

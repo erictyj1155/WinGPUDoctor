@@ -57,7 +57,8 @@ public sealed class MainViewModel : ObservableObject
         {
             if (!Set(ref _state, value)) return;
             foreach (var name in new[] { nameof(CanScan), nameof(IsWelcome), nameof(IsBusy), nameof(IsCancelling),
-                nameof(IsResult), nameof(IsStopped), nameof(NeedsRestart), nameof(BusyText), nameof(BusyDetail), nameof(HasBusyDetail) })
+                nameof(IsResult), nameof(IsStopped), nameof(NeedsRestart), nameof(BusyText), nameof(BusyDetail), nameof(HasBusyDetail),
+                nameof(ReadoutStatus) })
                 OnPropertyChanged(name);
             ScanCommand.NotifyCanExecuteChanged();
             CancelCommand.NotifyCanExecuteChanged();
@@ -91,6 +92,14 @@ public sealed class MainViewModel : ObservableObject
     };
     public bool HasBusyDetail => BusyDetail is not null;
 
+    // The readout panel's status caption agrees with the busy heading: after Forced, output commitment
+    // has won or collection has already closed, so it says neither reading nor stopping.
+    public string ReadoutStatus => UiText.Get(State switch
+    {
+        ScanState.Scanning => _stopRequest == StopRequest.Forced ? "Readout.Finishing" : "Readout.Reading",
+        ScanState.Cancelling => "Readout.Stopping",
+        _ => "Readout.Idle"
+    });
     // A new scan discards the previous report before collection starts.
     public ResultViewModel? Result
     {
@@ -192,6 +201,7 @@ public sealed class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(BusyText));
         OnPropertyChanged(nameof(BusyDetail));
         OnPropertyChanged(nameof(HasBusyDetail));
+        OnPropertyChanged(nameof(ReadoutStatus));
         CancelCommand.NotifyCanExecuteChanged();
     }
 

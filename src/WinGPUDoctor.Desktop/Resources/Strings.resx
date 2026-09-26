@@ -20,6 +20,7 @@
   <data name="Readout.Idle" xml:space="preserve"><value>IDLE</value></data>
   <data name="Readout.Reading" xml:space="preserve"><value>READING</value></data>
   <data name="Readout.Stopping" xml:space="preserve"><value>STOPPING</value></data>
+  <data name="Readout.Finishing" xml:space="preserve"><value>FINISHING</value></data>
   <data name="Readout.System" xml:space="preserve"><value>System</value></data>
   <data name="Readout.Adapters" xml:space="preserve"><value>Graphics adapters</value></data>
   <data name="Readout.Drivers" xml:space="preserve"><value>Drivers</value></data>
