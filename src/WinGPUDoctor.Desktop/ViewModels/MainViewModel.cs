@@ -14,6 +14,7 @@ public sealed class MainViewModel : ObservableObject
     private HostScanSession? _session;
     private ScanState _state;
     private ResultViewModel? _result;
+    private SaveViewModel? _save;
     private bool _closeRequested;
 
     public MainViewModel(Func<CancellationToken, Task<CollectionSnapshot>> collect)
@@ -21,10 +22,14 @@ public sealed class MainViewModel : ObservableObject
         _collect = collect ?? throw new ArgumentNullException(nameof(collect));
         ScanCommand = new RelayCommand(() => _ = ScanAsync(), () => CanScan);
         CancelCommand = new RelayCommand(Cancel, () => State == ScanState.Scanning);
+        OpenSaveCommand = new RelayCommand(OpenSave, () => IsViewingResult);
+        CloseSaveCommand = new RelayCommand(() => Save = null, () => IsSaving);
     }
 
     public RelayCommand ScanCommand { get; }
     public RelayCommand CancelCommand { get; }
+    public RelayCommand OpenSaveCommand { get; }
+    public RelayCommand CloseSaveCommand { get; }
 
     // Raised after a close requested during a scan can proceed.
     public event EventHandler? CloseReady;
@@ -40,6 +45,7 @@ public sealed class MainViewModel : ObservableObject
                 OnPropertyChanged(name);
             ScanCommand.NotifyCanExecuteChanged();
             CancelCommand.NotifyCanExecuteChanged();
+            SaveViewChanged();
         }
     }
 
@@ -56,12 +62,42 @@ public sealed class MainViewModel : ObservableObject
     public ResultViewModel? Result
     {
         get => _result;
-        private set => Set(ref _result, value);
+        private set
+        {
+            if (Set(ref _result, value)) SaveViewChanged();
+        }
+    }
+
+    // The review-and-save panel for the current result; it never outlives its report.
+    public SaveViewModel? Save
+    {
+        get => _save;
+        private set
+        {
+            if (Set(ref _save, value)) SaveViewChanged();
+        }
+    }
+
+    public bool IsViewingResult => State == ScanState.Result && Result is not null && Save is null;
+    public bool IsSaving => State == ScanState.Result && Save is not null;
+
+    private void OpenSave()
+    {
+        if (IsViewingResult) Save = new SaveViewModel(Result!.Document);
+    }
+
+    private void SaveViewChanged()
+    {
+        OnPropertyChanged(nameof(IsViewingResult));
+        OnPropertyChanged(nameof(IsSaving));
+        OpenSaveCommand.NotifyCanExecuteChanged();
+        CloseSaveCommand.NotifyCanExecuteChanged();
     }
 
     public async Task ScanAsync()
     {
         if (!CanScan) return;
+        Save = null;
         Result = null;
         var session = new HostScanSession(); // Controllers are terminal, so every scan gets a fresh one.
         _session = session;
