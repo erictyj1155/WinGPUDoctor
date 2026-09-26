@@ -103,7 +103,7 @@ public class DesktopThemeTests
         foreach (var surface in new[] { "Wgd.Background", "Wgd.Panel" })
             Assert.True(Contrast(Over(p["Wgd.Text"], p[surface]), Over(p["Wgd.Hover"], p[surface])) >= 4.5, $"{kind}: text on hover");
         (string Text, string Surface)[] pairs =
-            [("Wgd.OnAccent", "Wgd.Accent"), ("Wgd.OnAccent", "Wgd.AccentHover"), ("Wgd.PreviewText", "Wgd.Preview"), ("Wgd.TipText", "Wgd.Tip")];
+            [("Wgd.OnAccent", "Wgd.AccentFill"), ("Wgd.OnAccent", "Wgd.AccentHover"), ("Wgd.PreviewText", "Wgd.Preview"), ("Wgd.TipText", "Wgd.Tip")];
         foreach (var (text, surface) in pairs)
             Assert.True(Contrast(Over(p[text], p[surface]), Over(p[surface], p[surface])) >= 4.5, $"{kind}: {text} on {surface}");
         // Focus rings and badge icons: AA non-text contrast (3:1).
@@ -111,6 +111,50 @@ public class DesktopThemeTests
         Assert.True(Contrast(Over(p["Wgd.Focus"], p["Wgd.Panel"]), surfaces["panel"]) >= 3, $"{kind}: focus on panel");
         Assert.True(Contrast(Over(p["Wgd.Data"], p["Wgd.Panel"]), Over(p["Wgd.DataTint"], p["Wgd.Panel"])) >= 3, $"{kind}: data badge");
         Assert.True(Contrast(Over(p["Wgd.Accent"], p["Wgd.Panel"]), Over(p["Wgd.AccentTint"], p["Wgd.Panel"])) >= 3, $"{kind}: accent badge");
+    }
+
+    // Every text, icon and border color the UI draws, with the surface it is drawn on.
+    private static readonly (string Foreground, string Surface)[] UsedPairs =
+    [
+        .. new[] { "Wgd.Text", "Wgd.Muted", "Wgd.Accent", "Wgd.Data", "Wgd.Focus", "Wgd.Line" }
+            .SelectMany(fg => new[] { "Wgd.Background", "Wgd.Panel", "Wgd.AccentTint" }.Select(surface => (fg, surface))),
+        ("Wgd.Text", "Wgd.Hover"), ("Wgd.Data", "Wgd.DataTint"), ("Wgd.Accent", "Wgd.DataTint"), ("Wgd.AccentEdge", "Wgd.AccentTint"),
+        ("Wgd.OnAccent", "Wgd.AccentFill"), ("Wgd.OnAccent", "Wgd.AccentHover"), ("Wgd.PreviewText", "Wgd.Preview"), ("Wgd.TipText", "Wgd.Tip")
+    ];
+
+    // Windows guarantees contrast only between a system text color and its own surface, so in high
+    // contrast every foreground must sit on its partner: highlight is a fill, never text on window.
+    [Fact]
+    public void HighContrastPutsTextOnlyOnTheSurfaceWindowsPairsItWith()
+    {
+        var system = Palette("HighContrast").ToDictionary(e => e.Key,
+            e => Regex.Match(e.Value, @"\A\{x:Static SystemColors\.(\w+)Color\}\z").Groups[1].Value, StringComparer.Ordinal);
+        var paired = new HashSet<(string, string)> { ("WindowText", "Window"), ("HighlightText", "Highlight"), ("InfoText", "Info") };
+        Assert.DoesNotContain(system.Values, string.IsNullOrEmpty);
+        foreach (var (foreground, surface) in UsedPairs)
+            Assert.True(paired.Contains((system[foreground], system[surface])),
+                $"{foreground} ({system[foreground]}) on {surface} ({system[surface]}) is not a Windows color pair");
+        Assert.Equal(new[] { "Wgd.AccentFill", "Wgd.AccentHover" }, system.Where(e => e.Value == "Highlight").Select(e => e.Key).Order());
+    }
+
+    // Accent is text and icons, AccentFill and AccentHover are the surfaces under OnAccent text.
+    [Fact]
+    public void AccentKeysKeepTheirTextOrFillRole()
+    {
+        var uses = new List<(string Property, string Key)>();
+        foreach (var text in Sources("*.xaml").Where(f => !System.IO.Path.GetFileName(f).StartsWith("Palette.", StringComparison.Ordinal))
+                     .Select(File.ReadAllText))
+        {
+            foreach (Match m in Regex.Matches(text, @"Property=""(\w+)""\s+Value=""\{DynamicResource (Wgd\.\w+)\}"""))
+                uses.Add((m.Groups[1].Value, m.Groups[2].Value));
+            foreach (Match m in Regex.Matches(text, @"\s(\w+)=""\{DynamicResource (Wgd\.\w+)\}"""))
+                if (m.Groups[1].Value != "Value") uses.Add((m.Groups[1].Value, m.Groups[2].Value));
+        }
+        string[] fills = ["Background", "BorderBrush", "SelectionBrush", "Glow"];
+        Assert.Contains(uses, u => u.Key == "Wgd.AccentFill");
+        Assert.All(uses.Where(u => u.Key is "Wgd.AccentFill" or "Wgd.AccentHover"), u => Assert.Contains(u.Property, fills));
+        Assert.All(uses.Where(u => u.Key == "Wgd.Accent"), u => Assert.DoesNotContain(u.Property, new[] { "Background", "SelectionBrush", "Glow" }));
+        Assert.All(uses.Where(u => u.Key == "Wgd.OnAccent"), u => Assert.Equal("Foreground", u.Property));
     }
 
     [Fact]

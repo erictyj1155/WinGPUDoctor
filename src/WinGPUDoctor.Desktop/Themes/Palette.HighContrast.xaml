@@ -1,5 +1,7 @@
-<!-- High-contrast palette: the same keys mapped to the active Windows contrast theme's system
-     colors, so tints and accents give way to the user's chosen colors. Reloaded when they change. -->
+<!-- High-contrast palette: the same keys mapped to the active Windows contrast theme's system colors,
+     so tints and accents give way to the user's chosen colors. Text only ever sits on the surface that
+     Windows pairs it with: window text on window, highlight text on highlight, info text on info.
+     Reloaded when the colors change. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <SolidColorBrush x:Key="Wgd.Background" Color="{x:Static SystemColors.WindowColor}" />
@@ -7,7 +9,8 @@
   <SolidColorBrush x:Key="Wgd.Line" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="Wgd.Text" Color="{x:Static SystemColors.WindowTextColor}" />
   <SolidColorBrush x:Key="Wgd.Muted" Color="{x:Static SystemColors.WindowTextColor}" />
-  <SolidColorBrush x:Key="Wgd.Accent" Color="{x:Static SystemColors.HighlightColor}" />
+  <SolidColorBrush x:Key="Wgd.Accent" Color="{x:Static SystemColors.WindowTextColor}" />
+  <SolidColorBrush x:Key="Wgd.AccentFill" Color="{x:Static SystemColors.HighlightColor}" />
   <SolidColorBrush x:Key="Wgd.AccentHover" Color="{x:Static SystemColors.HighlightColor}" />
   <SolidColorBrush x:Key="Wgd.OnAccent" Color="{x:Static SystemColors.HighlightTextColor}" />
   <SolidColorBrush x:Key="Wgd.Data" Color="{x:Static SystemColors.WindowTextColor}" />

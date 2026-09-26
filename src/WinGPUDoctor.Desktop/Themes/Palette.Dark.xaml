@@ -7,7 +7,9 @@
   <SolidColorBrush x:Key="Wgd.Line" Color="#2E3844" />
   <SolidColorBrush x:Key="Wgd.Text" Color="#E4EAF0" />
   <SolidColorBrush x:Key="Wgd.Muted" Color="#8795A3" />
+  <!-- Accent is amber text and icons; AccentFill is the amber surface under OnAccent text. -->
   <SolidColorBrush x:Key="Wgd.Accent" Color="#F2A541" />
+  <SolidColorBrush x:Key="Wgd.AccentFill" Color="#F2A541" />
   <SolidColorBrush x:Key="Wgd.AccentHover" Color="#F5B561" />
   <SolidColorBrush x:Key="Wgd.OnAccent" Color="#1A1307" />
   <SolidColorBrush x:Key="Wgd.Data" Color="#7CC4E0" />

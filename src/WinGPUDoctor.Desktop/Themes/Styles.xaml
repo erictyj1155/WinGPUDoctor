@@ -74,9 +74,9 @@
 
   <!-- Buttons -->
   <Style x:Key="Wgd.PrimaryButton" TargetType="Button">
-    <Setter Property="Background" Value="{DynamicResource Wgd.Accent}" />
+    <Setter Property="Background" Value="{DynamicResource Wgd.AccentFill}" />
     <Setter Property="Foreground" Value="{DynamicResource Wgd.OnAccent}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.AccentFill}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="20,9" />
     <Setter Property="FontSize" Value="14.5" />
@@ -200,8 +200,8 @@
               <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Wgd.Text}" />
             </Trigger>
             <Trigger Property="IsChecked" Value="True">
-              <Setter TargetName="Box" Property="Background" Value="{DynamicResource Wgd.Accent}" />
-              <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Wgd.Accent}" />
+              <Setter TargetName="Box" Property="Background" Value="{DynamicResource Wgd.AccentFill}" />
+              <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource Wgd.AccentFill}" />
               <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
@@ -272,7 +272,7 @@
     <Setter Property="FontFamily" Value="{StaticResource Wgd.MonoFont}" />
     <Setter Property="FontSize" Value="12.5" />
     <Setter Property="Padding" Value="12,10" />
-    <Setter Property="SelectionBrush" Value="{DynamicResource Wgd.Accent}" />
+    <Setter Property="SelectionBrush" Value="{DynamicResource Wgd.AccentFill}" />
     <Setter Property="CaretBrush" Value="{DynamicResource Wgd.Text}" />
     <Setter Property="Template">
       <Setter.Value>
@@ -345,7 +345,7 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ProgressBar">
-          <views:SweepBar Track="{DynamicResource Wgd.Line}" Glow="{DynamicResource Wgd.Accent}" />
+          <views:SweepBar Track="{DynamicResource Wgd.Line}" Glow="{DynamicResource Wgd.AccentFill}" />
         </ControlTemplate>
       </Setter.Value>
     </Setter>
