@@ -60,6 +60,23 @@ public class DesktopSaveTests
     }
 
     [Fact]
+    public async Task ContentsSummaryNamesFieldsWithoutClaimingTheirValues()
+    {
+        var model = await Scanned("redacted");
+        var save = model.Save!;
+        // The fixture's adapter name is hidden, so the summary must not promise a name.
+        Assert.Equal(DataState.Redacted, model.Result!.Document.Report.Facts.Gpus.Value![0].Name.State);
+        var adapters = save.Contents.Single(l => l.Label == UiText.Get("Card.Adapters.Title"));
+        Assert.Equal(UiText.Format("Save.Contains.Adapters", "1"), adapters.Value);
+        Assert.Contains("fields", adapters.Value);
+        Assert.DoesNotContain("token=private", adapters.Value);
+        Assert.All(save.Contents, l => Assert.DoesNotContain("each with", l.Value));
+        Assert.Equal(UiText.Get("Save.ContainsNote"), save.ContentsNote);
+        Assert.Contains("hidden by the privacy filter", save.ContentsNote);
+        Assert.Contains("unresolved", save.ContentsNote);
+    }
+
+    [Fact]
     public async Task SaveWritesExactlyThePreviewAndAFormatChangeProducesANewPreview()
     {
         using var folder = new TempFolder();

@@ -37,9 +37,10 @@
   <data name="Save.FormatJson" xml:space="preserve"><value>JSON (for tools)</value></data>
   <data name="Save.ReviewShort" xml:space="preserve"><value>Model and device names can be distinctive, and automatic filtering can't guarantee anonymity.</value></data>
   <data name="Save.ContainsTitle" xml:space="preserve"><value>What this report contains</value></data>
-  <data name="Save.Contains.System" xml:space="preserve"><value>Windows version and build, manufacturer and model</value></data>
-  <data name="Save.Contains.Adapters" xml:space="preserve"><value>{0}, each with name, PCI IDs and driver details</value></data>
-  <data name="Save.Contains.Displays" xml:space="preserve"><value>{0}, each with resolution, refresh rate, output technology and adapter links</value></data>
+  <data name="Save.ContainsNote" xml:space="preserve"><value>These are the report's fields. Any value may be unavailable, hidden by the privacy filter or unresolved; the exact text below shows each one.</value></data>
+  <data name="Save.Contains.System" xml:space="preserve"><value>Fields for Windows version and build, manufacturer and model</value></data>
+  <data name="Save.Contains.Adapters" xml:space="preserve"><value>{0} entries, with fields for name, PCI IDs and driver details</value></data>
+  <data name="Save.Contains.Displays" xml:space="preserve"><value>{0} entries, with fields for resolution, refresh rate, output technology and adapter links</value></data>
   <data name="Save.Contains.Steps" xml:space="preserve"><value>{0} reading steps and their results</value></data>
   <data name="Save.PreviewLabel" xml:space="preserve"><value>Exact report text</value></data>
   <data name="Save.RedactedHint" xml:space="preserve"><value>Hidden values appear in the preview as "Redacted (SensitiveValue)" in Markdown, or with the state "redacted" in JSON.</value></data>

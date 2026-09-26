@@ -233,6 +233,7 @@
           </DockPanel>
           <TextBlock Text="{views:Text Save.ContainsTitle}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,2"
                      AutomationProperties.HeadingLevel="Level3" />
+          <TextBlock Text="{Binding ContentsNote}" TextWrapping="Wrap" Margin="0,0,0,4" />
           <ItemsControl ItemsSource="{Binding Contents}" ItemTemplate="{StaticResource FactTemplate}" Focusable="False" />
           <!-- The exact text that Save writes; clipboard copy is intentionally blocked (GUI plan section 8). -->
           <TextBlock Text="{views:Text Save.PreviewLabel}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,12,0,4"

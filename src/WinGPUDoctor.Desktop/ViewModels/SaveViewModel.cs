@@ -27,8 +27,10 @@ public sealed class SaveViewModel : ObservableObject
         Refresh();
     }
 
-    // A short overview of what the exact text below contains, from the same retained report.
+    // A short overview of the fields the exact text below contains, from the same retained report.
+    // It names fields, never values: any value may be unavailable, redacted or unresolved.
     public IReadOnlyList<FactLine> Contents { get; }
+    public string ContentsNote { get; } = UiText.Get("Save.ContainsNote");
 
     private static IReadOnlyList<FactLine> Summarize(DiagnosticReport report)
     {
