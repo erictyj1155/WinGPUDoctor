@@ -22,9 +22,11 @@ public sealed class MainViewModel : ObservableObject
     private ScanState _state;
     private ResultViewModel? _result;
     private SaveViewModel? _save;
-    private bool _cancelRequested;
+    private StopRequest _stopRequest;
     private bool _closeRequested;
     private bool _closeRaised;
+
+    private enum StopRequest { None, Pending, Controlled, Forced }
 
     public MainViewModel(Func<CancellationToken, Task<CollectionSnapshot>> collect, TimeProvider? clock = null,
         TimeSpan? closeWait = null)
@@ -33,7 +35,8 @@ public sealed class MainViewModel : ObservableObject
         _clock = clock ?? TimeProvider.System;
         _closeWait = closeWait ?? DefaultCloseWait;
         ScanCommand = new RelayCommand(() => _ = ScanAsync(), () => CanScan);
-        CancelCommand = new RelayCommand(Cancel, () => State == ScanState.Scanning && !_cancelRequested);
+        CancelCommand = new RelayCommand(() => _ = CancelAsync(),
+            () => State == ScanState.Scanning && _stopRequest == StopRequest.None);
         OpenSaveCommand = new RelayCommand(OpenSave, () => IsViewingResult);
         CloseSaveCommand = new RelayCommand(() => Save = null, () => IsSaving);
     }
@@ -68,8 +71,14 @@ public sealed class MainViewModel : ObservableObject
     public bool IsResult => State == ScanState.Result;
     public bool IsStopped => State == ScanState.Stopped;
     public bool NeedsRestart => State == ScanState.NeedsRestart;
-    public string BusyText => UiText.Get(State != ScanState.Cancelling ? "Scan.Reading"
-        : _closeRequested ? "Scan.StoppingToClose" : "Scan.Stopping");
+    public string BusyText => UiText.Get(State == ScanState.Cancelling
+        ? _closeRequested ? "Scan.StoppingToClose" : "Scan.Stopping"
+        : _stopRequest switch
+        {
+            StopRequest.Pending => "Scan.RequestingStop",
+            StopRequest.Forced => "Scan.Finishing",
+            _ => "Scan.Reading"
+        });
 
     // A new scan discards the previous report before collection starts.
     public ResultViewModel? Result
@@ -114,7 +123,7 @@ public sealed class MainViewModel : ObservableObject
         Result = null;
         var session = new HostScanSession(); // Controllers are terminal, so every scan gets a fresh one.
         _session = session;
-        _cancelRequested = false;
+        _stopRequest = StopRequest.None;
         State = ScanState.Scanning;
         ScanState next;
         ResultViewModel? result = null;
@@ -144,26 +153,42 @@ public sealed class MainViewModel : ObservableObject
         if (_closeRequested) RaiseCloseReady();
     }
 
-    // The request is sent synchronously. Only a Controlled result shows "Stopping"; Forced means
-    // output commitment already won, so the result is shown as usual. Never escalates.
-    public void Cancel()
+    // CancellationTokenSource.Cancel() runs token callbacks synchronously, so the request is sent on
+    // the thread pool and can never hold the UI thread. Until its result is known the screen shows a
+    // neutral "Requesting stop"; Controlled then shows "Stopping", while Forced means output commitment
+    // already won and the scan finishes with its result. Single-use; never escalates.
+    public async Task CancelAsync()
     {
-        if (State != ScanState.Scanning || _cancelRequested || _session is not { } session) return;
-        _cancelRequested = true;
-        CancelCommand.NotifyCanExecuteChanged();
-        if (session.RequestCancellation() == HostInterruptResult.Controlled) State = ScanState.Cancelling;
+        if (State != ScanState.Scanning || _stopRequest != StopRequest.None || _session is not { } session) return;
+        SetStopRequest(StopRequest.Pending);
+        var result = await Task.Run(session.RequestCancellation);
+        if (!ReferenceEquals(_session, session) || State != ScanState.Scanning) return; // The scan already ended.
+        if (result == HostInterruptResult.Controlled)
+        {
+            _stopRequest = StopRequest.Controlled;
+            State = ScanState.Cancelling;
+        }
+        else SetStopRequest(StopRequest.Forced);
     }
 
-    // Closing during a scan first sends the cancellation request, then closes when the scan has
-    // stopped or, at the latest, after the bounded wait.
+    private void SetStopRequest(StopRequest value)
+    {
+        _stopRequest = value;
+        OnPropertyChanged(nameof(BusyText));
+        CancelCommand.NotifyCanExecuteChanged();
+    }
+
+    // Closing during a scan starts the close deadline first, independently of the cancellation request,
+    // then sends that request. The window closes when the scan has stopped or, at the latest, when the
+    // deadline passes, even if the request itself never returns.
     public bool RequestClose()
     {
         if (!IsBusy) return true;
         if (_closeRequested) return false;
         _closeRequested = true;
-        Cancel();
-        OnPropertyChanged(nameof(BusyText));
         _ = CloseAfterBoundAsync();
+        OnPropertyChanged(nameof(BusyText));
+        _ = CancelAsync();
         return false;
     }
 

@@ -13,6 +13,17 @@ public class DesktopTests
     private static readonly TimeSpan Wait = TimeSpan.FromSeconds(10);
     private static TaskCompletionSource<bool> Gate() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    // Waits for a state set by a continuation on another thread; fails instead of hanging.
+    private static async Task WaitUntil(Func<bool> condition)
+    {
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        while (!condition())
+        {
+            if (elapsed.Elapsed > Wait) throw new TimeoutException("Condition was not reached.");
+            await Task.Delay(5);
+        }
+    }
+
     public static TheoryData<string> Fixtures => new() { "single", "multiple", "empty", "topology", "unmatched", "redacted", "incomplete" };
 
     internal static CollectionSnapshot Fixture(string name) => name switch
@@ -151,11 +162,13 @@ public class DesktopTests
         Assert.False(model.ScanCommand.CanExecute(null));
         Assert.True(model.CancelCommand.CanExecute(null));
 
-        model.CancelCommand.Execute(null);
-        Assert.True(token.IsCancellationRequested); // Sent before Cancel returned.
-        Assert.Equal(ScanState.Cancelling, model.State);
-        Assert.False(model.CancelCommand.CanExecute(null));
-        model.Cancel(); // The second cancel is a no-op.
+        var request = model.CancelAsync();
+        Assert.False(model.CancelCommand.CanExecute(null)); // Disabled at once.
+        await request.WaitAsync(Wait);
+        Assert.True(token.IsCancellationRequested);
+        Assert.Equal(ScanState.Cancelling, model.State); // Controlled.
+        Assert.Equal(UiText.Get("Scan.Stopping"), model.BusyText);
+        await model.CancelAsync(); // The second cancel is a no-op.
         Assert.Equal(ScanState.Cancelling, model.State);
 
         stop.SetResult(true);
@@ -227,8 +240,9 @@ public class DesktopTests
         var scan = model.ScanAsync();
         await preparing.Task.WaitAsync(Wait); // Output commitment has won; the report is being prepared.
 
-        model.CancelCommand.Execute(null);
+        await model.CancelAsync().WaitAsync(Wait);
         Assert.Equal(ScanState.Scanning, model.State); // Forced: not shown as stopping.
+        Assert.Equal(UiText.Get("Scan.Finishing"), model.BusyText);
         Assert.False(model.CancelCommand.CanExecute(null)); // Still single-use.
         release.SetResult(true);
         await scan.WaitAsync(Wait);
@@ -237,7 +251,7 @@ public class DesktopTests
     }
 
     [Fact]
-    public async Task ClosingDuringAScanSendsCancellationFirstAndClosesOnceStopped()
+    public async Task ClosingDuringAScanRequestsCancellationAndClosesOnceStopped()
     {
         Assert.True(new MainViewModel(_ => Task.FromResult(Fixture("single"))).RequestClose());
         var clock = new DeadlineTests.ManualClock();
@@ -250,8 +264,8 @@ public class DesktopTests
         var token = await collecting.Task.WaitAsync(Wait);
 
         Assert.False(model.RequestClose());
-        Assert.True(token.IsCancellationRequested); // Sent before RequestClose returned.
-        Assert.Equal(ScanState.Cancelling, model.State);
+        await WaitUntil(() => model.State == ScanState.Cancelling); // Controlled.
+        Assert.True(token.IsCancellationRequested);
         Assert.Equal(UiText.Get("Scan.StoppingToClose"), model.BusyText);
         Assert.False(model.RequestClose()); // Still waiting for the controlled stop.
         Assert.Equal(0, Volatile.Read(ref closeReady));
@@ -284,6 +298,7 @@ public class DesktopTests
         var token = await collecting.Task.WaitAsync(Wait);
 
         Assert.False(model.RequestClose());
+        await WaitUntil(() => model.State == ScanState.Cancelling);
         Assert.True(token.IsCancellationRequested);
         clock.Advance((long)MainViewModel.DefaultCloseWait.TotalMilliseconds - 1);
         Assert.False(closed.Task.IsCompleted);
@@ -294,6 +309,50 @@ public class DesktopTests
         never.SetResult(true);
         await scan.WaitAsync(Wait);
         Assert.Equal(ScanState.Stopped, model.State); // Cancellation won, so the late snapshot is discarded.
+        Assert.Equal(1, Volatile.Read(ref closeReady));
+    }
+
+    [Fact]
+    public async Task ABlockingCancellationCallbackNeverHoldsTheCallerAndTheCloseStillFires()
+    {
+        var clock = new DeadlineTests.ManualClock();
+        var collecting = Collecting();
+        var callbackEntered = Gate();
+        using var unblock = new ManualResetEventSlim();
+        var stop = Gate();
+        var model = new MainViewModel(async token =>
+        {
+            // Token callbacks run inside CancellationTokenSource.Cancel(); this one blocks that thread.
+            using var registration = token.Register(() => { callbackEntered.TrySetResult(true); unblock.Wait(3 * Wait); });
+            collecting.SetResult(token);
+            await stop.Task.WaitAsync(Wait);
+            throw new SupervisedCollectionException("host-cancelled");
+        }, clock);
+        var closed = Gate();
+        var closeReady = 0;
+        model.CloseReady += (_, _) => { Interlocked.Increment(ref closeReady); closed.TrySetResult(true); };
+        var scan = model.ScanAsync();
+        await collecting.Task.WaitAsync(Wait);
+
+        // RequestClose returns while the request is still stuck in the callback (a synchronous
+        // request would hang here and fail the wait).
+        Assert.False(await Task.Run(model.RequestClose).WaitAsync(Wait));
+        await callbackEntered.Task.WaitAsync(Wait);
+        Assert.Equal(ScanState.Scanning, model.State);
+        Assert.Equal(UiText.Get("Scan.RequestingStop"), model.BusyText);
+        Assert.False(model.CancelCommand.CanExecute(null));
+
+        // The deadline started before the request, so it fires although the request never returned.
+        clock.Advance((long)MainViewModel.DefaultCloseWait.TotalMilliseconds);
+        await closed.Task.WaitAsync(Wait);
+        Assert.False(unblock.IsSet);
+
+        // Once the request returns, the Controlled result is still shown as a controlled stop.
+        unblock.Set();
+        await WaitUntil(() => model.State == ScanState.Cancelling);
+        stop.SetResult(true);
+        await scan.WaitAsync(Wait);
+        Assert.Equal(ScanState.Stopped, model.State);
         Assert.Equal(1, Volatile.Read(ref closeReady));
     }
 
