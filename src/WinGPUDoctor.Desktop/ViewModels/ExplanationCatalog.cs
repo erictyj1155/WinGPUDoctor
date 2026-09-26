@@ -17,8 +17,8 @@ public static class ExplanationCatalog
 
     // Report terms explained in card details; only facts that the report actually contains.
     public static IReadOnlyList<string> GlossaryTerms { get; } =
-        ["PciVendorId", "DriverVersion", "DriverDate", "MonitorName", "Resolution", "RefreshRate", "OutputTechnology",
-            "SourceAdapter", "TargetAdapter"];
+        ["System", "Adapters", "Driver", "PciVendorId", "DriverVersion", "DriverDate", "MonitorName", "Resolution", "RefreshRate",
+            "OutputTechnology", "SourceAdapter", "TargetAdapter"];
 
     public static CatalogEntry? Finding(string id) => FindingIds.Contains(id, StringComparer.Ordinal) ? Entry("Finding." + id) : null;
     public static CatalogEntry Warning(WarningCode code) => Entry("Warning." + Defined(code));

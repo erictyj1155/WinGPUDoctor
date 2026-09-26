@@ -179,24 +179,28 @@ public class DesktopCatalogTests
     [Fact]
     public void DetailsExplainFieldsAndShowExactValuesWithProvenance()
     {
-        var display = Result(DesktopTests.Fixture("topology")).Cards[3];
+        var display = Result(DesktopTests.Fixture("topology")).MainCards[2];
         Assert.All(display.Facts, f => Assert.True(f.HasHelp)); // Every display field has a glossary tip.
-        var refresh = display.Facts.Single(f => f.Label == UiText.Get("Field.RefreshRate"));
-        Assert.Equal(ExplanationCatalog.Glossary("RefreshRate"), refresh.Help);
-        Assert.Equal(UiText.Format("Info.About", refresh.Label), refresh.HelpName);
+        // Resolution and refresh rate form the card's sentence; their glossary is the title's (i) tip.
+        Assert.Contains(ExplanationCatalog.Glossary("RefreshRate"), display.TitleTip);
+        Assert.Contains(ExplanationCatalog.Glossary("Resolution"), display.TitleTip);
+        Assert.Equal(UiText.Format("Info.About", display.Title), display.TitleTipName);
+        var output = display.Facts.Single(f => f.Label == UiText.Get("Field.OutputTechnology"));
+        Assert.Equal(ExplanationCatalog.Glossary("OutputTechnology"), output.Help);
+        Assert.Equal(UiText.Format("Info.About", output.Label), output.HelpName);
         var technical = display.Technical.ToDictionary(t => t.Label);
         Assert.Equal("165/1 (165 Hz)", technical[UiText.Get("Field.RefreshRate")].Value);
         Assert.Equal("165000/1000 (165 Hz)", technical[UiText.Get("Field.SignalRate")].Value);
         Assert.Contains(ExplanationCatalog.Source(DataSource.DisplayConfig), technical[UiText.Get("Field.RefreshRate")].Provenance);
 
-        var adapter = Result(DesktopTests.Fixture("redacted")).Cards[1];
-        var redacted = adapter.Technical[0];
+        var hidden = Result(DesktopTests.Fixture("redacted"));
+        var redacted = hidden.DriverCards[0].Technical[0];
         Assert.Equal(UiText.Get("Technical.NoValue"), redacted.Value);
         Assert.Contains(ExplanationCatalog.Reason(ReasonCode.SensitiveValue).Title, redacted.Provenance);
         Assert.Contains(ExplanationCatalog.Reason(ReasonCode.SensitiveValue).Meaning, redacted.Provenance);
         // An unavailable value explains its state in the tip.
         var state = ExplanationCatalog.State(DataState.Redacted);
-        Assert.Equal(state.Meaning + " " + state.NotMeaning, adapter.Facts[0].Help);
+        Assert.Equal(state.Meaning + " " + state.NotMeaning, hidden.MainCards[1].Facts[0].Help);
     }
 
     [Fact]

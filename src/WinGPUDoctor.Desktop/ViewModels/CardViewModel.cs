@@ -4,23 +4,30 @@ using WinGPUDoctor.Core;
 namespace WinGPUDoctor.Desktop.ViewModels;
 
 // One labelled fact. Unavailable states always carry an icon and text, never color alone.
-// Help is secondary text (field glossary, state meaning) shown behind an (i) tip.
+// Help is secondary text (field glossary, state meaning) shown behind an (i) tip. IsData marks a
+// reported value (shown as data) rather than descriptive text.
 public sealed record FactLine(string Label, string Value, bool IsAvailable, string StateGlyph)
 {
     public string? Help { get; init; }
     public bool HasHelp => Help is not null;
     public string HelpName => UiText.Format("Info.About", Label);
+    public bool IsData { get; init; } = true;
 
-    internal static FactLine Of(string labelKey, Observation<string> field) => field.State == DataState.Available
-        ? Text(labelKey, field.Value!)
-        : Unavailable(labelKey, field.State);
+    internal static FactLine Of(string labelKey, Observation<string> field) => Labelled(UiText.Get(labelKey), field);
+
+    // A fact whose label is report data, such as an adapter's report-local label.
+    internal static FactLine Labelled(string label, Observation<string> field) => field.State == DataState.Available
+        ? new(label, field.Value!, true, "")
+        : UnavailableAs(label, field.State);
 
     internal static FactLine Text(string labelKey, string value) => new(UiText.Get(labelKey), value, true, "");
 
-    internal static FactLine Unavailable(string labelKey, DataState state)
+    internal static FactLine Unavailable(string labelKey, DataState state) => UnavailableAs(UiText.Get(labelKey), state);
+
+    private static FactLine UnavailableAs(string label, DataState state)
     {
         var entry = ExplanationCatalog.State(state);
-        return new(UiText.Get(labelKey), entry.Title, false, Glyph(state))
+        return new(label, entry.Title, false, Glyph(state))
         {
             Help = entry.NotMeaning is null ? entry.Meaning : entry.Meaning + " " + entry.NotMeaning
         };
@@ -77,6 +84,10 @@ public sealed record TechnicalLine(string Label, string Value, string Provenance
     }
 }
 
+public enum CardTone { Data, Accent }
+
+// A result card. Main cards add an icon badge (Glyph, tinted by Tone), one plain-language sentence
+// (Say) and an (i) tip on the title; the facts below are the small details.
 public sealed class CardViewModel(string title, string? subtitle, IReadOnlyList<FactLine> facts, IReadOnlyList<string> notes,
     IReadOnlyList<Explanation>? explanations = null, IReadOnlyList<TechnicalLine>? technical = null)
 {
@@ -86,8 +97,16 @@ public sealed class CardViewModel(string title, string? subtitle, IReadOnlyList<
     public IReadOnlyList<string> Notes { get; } = notes;
     public IReadOnlyList<Explanation> Explanations { get; } = explanations ?? [];
     public IReadOnlyList<TechnicalLine> Technical { get; } = technical ?? [];
+    public string? Glyph { get; init; }
+    public CardTone Tone { get; init; }
+    public string? Say { get; init; }
+    public string? TitleTip { get; init; }
     public bool HasSubtitle => Subtitle is not null;
     public bool HasTechnical => Technical.Count > 0;
+    public bool HasBadge => Glyph is not null;
+    public bool HasSay => Say is not null;
+    public bool HasTitleTip => TitleTip is not null;
+    public string TitleTipName => UiText.Format("Info.About", Title);
 }
 
 internal static class DisplayFormat
@@ -100,6 +119,9 @@ internal static class DisplayFormat
         rate.Numerator.ToString(CultureInfo.InvariantCulture), rate.Denominator.ToString(CultureInfo.InvariantCulture), Rate(rate));
 
     internal static string Resolution(PixelSize size) => UiText.Format("Unit.Resolution",
+        size.WidthPixels.ToString(CultureInfo.CurrentCulture), size.HeightPixels.ToString(CultureInfo.CurrentCulture));
+
+    internal static string ShortResolution(PixelSize size) => UiText.Format("Unit.ResolutionShort",
         size.WidthPixels.ToString(CultureInfo.CurrentCulture), size.HeightPixels.ToString(CultureInfo.CurrentCulture));
 
     // Output technology is Windows' reported value; unknown tokens are shown as reported.

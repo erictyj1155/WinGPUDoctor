@@ -36,6 +36,9 @@
   <data name="Scan.Usually" xml:space="preserve"><value>This usually takes a few seconds.</value></data>
   <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>
 
+  <data name="Result.Eyebrow" xml:space="preserve"><value>SCAN RESULTS</value></data>
+  <data name="Result.Title" xml:space="preserve"><value>Here's what Windows reported</value></data>
+  <data name="Result.More" xml:space="preserve"><value>MORE ABOUT THIS SCAN</value></data>
   <data name="Result.ScanAgain" xml:space="preserve"><value>Scan again</value></data>
   <data name="Result.SaveReport" xml:space="preserve"><value>Save report…</value></data>
 
@@ -71,21 +74,40 @@
   <data name="Restart.Message" xml:space="preserve"><value>The scan could not complete. Restart WinGPUDoctor before scanning again.</value></data>
   <data name="Restart.Close" xml:space="preserve"><value>Close WinGPUDoctor</value></data>
 
-  <data name="Summary.Complete" xml:space="preserve"><value>Scan complete.</value></data>
-  <data name="Summary.Incomplete" xml:space="preserve"><value>Scan complete, but some information could not be read. The cards below show which parts.</value></data>
+  <data name="Summary.ReportsBoth" xml:space="preserve"><value>Windows reports {0} and {1}.</value></data>
+  <data name="Summary.ReportsOne" xml:space="preserve"><value>Windows reports {0}.</value></data>
+  <data name="Summary.AdaptersUnavailable" xml:space="preserve"><value>The graphics adapter list isn't available in this report.</value></data>
+  <data name="Summary.PathsUnavailable" xml:space="preserve"><value>Active display path information isn't available in this report.</value></data>
+  <data name="Summary.Incomplete" xml:space="preserve"><value>Some information could not be read; the cards below show which parts.</value></data>
+  <data name="Summary.HiddenNone" xml:space="preserve"><value>Nothing was hidden by the privacy filter.</value></data>
+  <data name="Summary.HiddenOne" xml:space="preserve"><value>1 field was hidden by the privacy filter.</value></data>
+  <data name="Summary.HiddenMany" xml:space="preserve"><value>{0} fields were hidden by the privacy filter.</value></data>
+  <data name="Count.Adapters.One" xml:space="preserve"><value>1 graphics adapter</value></data>
+  <data name="Count.Adapters.Many" xml:space="preserve"><value>{0} graphics adapters</value></data>
+  <data name="Count.Paths.One" xml:space="preserve"><value>1 active display path</value></data>
+  <data name="Count.Paths.Many" xml:space="preserve"><value>{0} active display paths</value></data>
   <data name="Summary.Adapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>
   <data name="Summary.DisplayPaths" xml:space="preserve"><value>Active display paths</value></data>
   <data name="Summary.Redacted" xml:space="preserve"><value>Fields hidden by the privacy filter</value></data>
 
-  <data name="Card.System.Title" xml:space="preserve"><value>This PC</value></data>
+  <data name="Card.System.Title" xml:space="preserve"><value>Your PC</value></data>
+  <data name="Card.System.NoName" xml:space="preserve"><value>Manufacturer and model not available</value></data>
   <data name="Card.Adapters.Title" xml:space="preserve"><value>Graphics adapters</value></data>
+  <data name="Card.Adapters.Say" xml:space="preserve"><value>Windows reports {0}.</value></data>
+  <data name="Card.Adapters.SayNone" xml:space="preserve"><value>Windows returned no graphics adapters.</value></data>
+  <data name="Card.Adapters.Unavailable" xml:space="preserve"><value>The graphics adapter list isn't available in this report.</value></data>
   <data name="Card.Adapters.Empty" xml:space="preserve"><value>Windows returned no graphics adapters. This does not prove that the PC has no graphics adapter.</value></data>
   <data name="Card.Adapter.Title" xml:space="preserve"><value>Graphics adapter</value></data>
   <data name="Card.ReportLabel" xml:space="preserve"><value>Label in this report: {0}</value></data>
   <data name="Card.Displays.Title" xml:space="preserve"><value>Active display paths</value></data>
+  <data name="Card.Displays.SayNone" xml:space="preserve"><value>No active display paths reported</value></data>
+  <data name="Card.Displays.Unavailable" xml:space="preserve"><value>Active display path information isn't available in this report.</value></data>
   <data name="Card.Displays.Empty" xml:space="preserve"><value>Windows reported no active display paths in this scan. This does not mean that no display or graphics hardware is present.</value></data>
   <data name="Card.Display.Title" xml:space="preserve"><value>Active display path {0}</value></data>
-  <data name="Card.Limits.Title" xml:space="preserve"><value>What this can't tell you</value></data>
+  <data name="Card.Driver.Title" xml:space="preserve"><value>Driver for {0}</value></data>
+  <data name="Driver.Say" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="Driver.SayUnavailable" xml:space="preserve"><value>Driver version not available</value></data>
+  <data name="Card.Limits.Title" xml:space="preserve"><value>What this scan can't tell you</value></data>
   <data name="Card.Limits.Intro" xml:space="preserve"><value>This scan shows what Windows reports. It can't tell you:</value></data>
   <data name="Card.Limits.RenderingGpu" xml:space="preserve"><value>Which graphics adapter a game or app uses.</value></data>
   <data name="Card.Limits.Utilization" xml:space="preserve"><value>How busy a graphics adapter is, or its power state.</value></data>
@@ -102,16 +124,19 @@
   <data name="Field.PciVendorId" xml:space="preserve"><value>PCI vendor ID</value></data>
   <data name="Field.DriverProvider" xml:space="preserve"><value>Driver provider</value></data>
   <data name="Field.DriverVersion" xml:space="preserve"><value>Driver version</value></data>
-  <data name="Field.DriverDate" xml:space="preserve"><value>Driver date (reported by the provider; not the installation date)</value></data>
-  <data name="Field.MonitorName" xml:space="preserve"><value>Monitor name (reported)</value></data>
+  <data name="Field.DriverDate" xml:space="preserve"><value>Driver date</value></data>
+  <data name="Field.MonitorName" xml:space="preserve"><value>Monitor name</value></data>
   <data name="Field.Resolution" xml:space="preserve"><value>Resolution</value></data>
   <data name="Field.RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
-  <data name="Field.OutputTechnology" xml:space="preserve"><value>Output technology (reported by Windows)</value></data>
-  <data name="Field.SourceAdapter" xml:space="preserve"><value>Display source adapter</value></data>
-  <data name="Field.TargetAdapter" xml:space="preserve"><value>Display target adapter</value></data>
+  <data name="Field.OutputTechnology" xml:space="preserve"><value>Output technology</value></data>
+  <data name="Field.SourceAdapter" xml:space="preserve"><value>Source adapter</value></data>
+  <data name="Field.TargetAdapter" xml:space="preserve"><value>Target adapter</value></data>
 
   <data name="Display.Association.Unresolved" xml:space="preserve"><value>A link to a graphics adapter could not be established in this report</value></data>
   <data name="Display.Association.Named" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="Display.Mode" xml:space="preserve"><value>{0} at {1}</value></data>
+  <data name="Display.ModeUnavailable" xml:space="preserve"><value>Resolution and refresh rate not available</value></data>
+  <data name="Unit.ResolutionShort" xml:space="preserve"><value>{0} × {1}</value></data>
   <data name="Unit.Hertz" xml:space="preserve"><value>{0} Hz</value></data>
   <data name="Unit.Resolution" xml:space="preserve"><value>{0} × {1} pixels</value></data>
 
@@ -301,6 +326,9 @@
   <data name="Source.NotCollected" xml:space="preserve"><value>Not collected</value></data>
   <data name="Source.SetupApiInstanceJoin" xml:space="preserve"><value>Windows device identity match (SetupAPI)</value></data>
 
+  <data name="Glossary.System" xml:space="preserve"><value>Windows version and build come from Windows. Manufacturer and model come from the PC's firmware and can be missing, generic or customized.</value></data>
+  <data name="Glossary.Adapters" xml:space="preserve"><value>The graphics adapters that Windows reports as present, each with its label in this report. The list does not show which adapter a game or app uses.</value></data>
+  <data name="Glossary.Driver" xml:space="preserve"><value>The driver details Windows reports for this adapter. They do not show whether the driver is up to date.</value></data>
   <data name="Glossary.PciVendorId" xml:space="preserve"><value>A four-digit hexadecimal number from the device's PCI identity, as reported by Windows. WinGPUDoctor shows it as reported and does not translate it into a company name.</value></data>
   <data name="Glossary.DriverVersion" xml:space="preserve"><value>The version number of the installed graphics driver, as reported by Windows.</value></data>
   <data name="Glossary.DriverDate" xml:space="preserve"><value>The date recorded by the driver provider. It is not the installation date and does not show whether the driver is up to date.</value></data>

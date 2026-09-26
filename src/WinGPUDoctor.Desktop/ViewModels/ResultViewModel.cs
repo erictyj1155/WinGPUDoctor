@@ -4,8 +4,10 @@ using WinGPUDoctor.Core;
 
 namespace WinGPUDoctor.Desktop.ViewModels;
 
-// Cards over the round-tripped report. Copy states reported facts and limits only:
-// no health verdict, driver freshness, rendering GPU, physical connection or inferred vendor.
+// Cards over the round-tripped report, in the guided layout: a summary sentence, three main cards
+// (this PC, graphics adapters, one per active display path), one driver card per adapter, the limits
+// note and further notes about the scan. Copy states reported facts and limits only: no health
+// verdict, driver freshness, rendering GPU, physical connection or inferred vendor.
 public sealed class ResultViewModel
 {
     private static readonly Regex DisplayEvidence = new(@"\Afacts\.displays\.value\[(\d+)\]", RegexOptions.CultureInvariant);
@@ -15,107 +17,148 @@ public sealed class ResultViewModel
         Document = document;
         var report = document.Report;
         IsIncomplete = report.Warnings.Contains(WarningCode.CollectionIncomplete);
-        Headline = UiText.Get(IsIncomplete ? "Summary.Incomplete" : "Summary.Complete");
-        Summary = BuildSummary(report);
-        Cards = [SystemCard(report.Facts.System), .. AdapterCards(report.Facts.Gpus),
-            .. DisplayCards(report.Facts.Displays, report.Facts.Gpus), FindingsCard(report.Findings),
-            WarningsCard(report.Warnings), CollectionCard(report.Collection), LimitsCard()];
+        Headline = UiText.Get("Result.Title");
+        Summary = BuildSummary(report, IsIncomplete);
+        MainCards = [SystemCard(report.Facts.System), AdaptersCard(report.Facts.Gpus), .. DisplayCards(report.Facts.Displays, report.Facts.Gpus)];
+        DriverCards = [.. DriverCardsFor(report.Facts.Gpus)];
+        MoreCards = [FindingsCard(report.Findings), WarningsCard(report.Warnings), CollectionCard(report.Collection)];
+        Limits = new[] { "Card.Limits.RenderingGpu", "Card.Limits.Utilization", "Card.Limits.HybridMode", "Card.Limits.DriverFreshness",
+            "Card.Limits.Health", "Card.Limits.Connection" }.Select(UiText.Get).ToArray();
+        Cards = [.. MainCards, .. DriverCards, .. MoreCards];
     }
 
     public ReportDocument Document { get; }
     public bool IsIncomplete { get; }
     public string Headline { get; }
-    public IReadOnlyList<FactLine> Summary { get; }
+    public string Summary { get; }
+    public IReadOnlyList<CardViewModel> MainCards { get; }
+    public IReadOnlyList<CardViewModel> DriverCards { get; }
+    public IReadOnlyList<CardViewModel> MoreCards { get; }
+    public bool HasDriverCards => DriverCards.Count > 0;
+    public IReadOnlyList<string> Limits { get; }
+
+    // Every card in display order.
     public IReadOnlyList<CardViewModel> Cards { get; }
 
     private static string Number(int value) => value.ToString(CultureInfo.CurrentCulture);
 
-    private static IReadOnlyList<FactLine> BuildSummary(DiagnosticReport report)
+    private static string Count(string key, int value) =>
+        value == 1 ? UiText.Get(key + ".One") : UiText.Format(key + ".Many", Number(value));
+
+    // What Windows reported, whether reading was incomplete, and how many values were hidden. It never
+    // says that everything was read: a completed step can still leave individual values missing.
+    private static string BuildSummary(DiagnosticReport report, bool incomplete)
     {
-        var lines = new List<FactLine>
+        var facts = report.Facts;
+        var adapters = facts.Gpus.State == DataState.Available ? Count("Count.Adapters", facts.Gpus.Value!.Count) : null;
+        var paths = facts.Displays.State == DataState.Available ? Count("Count.Paths", facts.Displays.Value!.Count) : null;
+        var sentences = new List<string?>
         {
-            report.Facts.Gpus.State == DataState.Available
-                ? FactLine.Text("Summary.Adapters", Number(report.Facts.Gpus.Value!.Count))
-                : FactLine.Unavailable("Summary.Adapters", report.Facts.Gpus.State),
-            report.Facts.Displays.State == DataState.Available
-                ? FactLine.Text("Summary.DisplayPaths", Number(report.Facts.Displays.Value!.Count))
-                : FactLine.Unavailable("Summary.DisplayPaths", report.Facts.Displays.State)
+            (adapters, paths) switch
+            {
+                ({ } a, { } p) => UiText.Format("Summary.ReportsBoth", a, p),
+                ({ } a, null) => UiText.Format("Summary.ReportsOne", a),
+                (null, { } p) => UiText.Format("Summary.ReportsOne", p),
+                _ => null
+            },
+            adapters is null ? UiText.Get("Summary.AdaptersUnavailable") : null,
+            paths is null ? UiText.Get("Summary.PathsUnavailable") : null,
+            incomplete ? UiText.Get("Summary.Incomplete") : null,
+            report.Privacy.RedactedFields switch
+            {
+                0 => UiText.Get("Summary.HiddenNone"),
+                1 => UiText.Get("Summary.HiddenOne"),
+                var hidden => UiText.Format("Summary.HiddenMany", Number(hidden))
+            }
         };
-        if (report.Privacy.RedactedFields > 0)
-            lines.Add(FactLine.Text("Summary.Redacted", Number(report.Privacy.RedactedFields)));
-        return lines;
+        return string.Join(" ", sentences.OfType<string>());
     }
 
-    private static CardViewModel SystemCard(SystemFacts system) => new(UiText.Get("Card.System.Title"), null,
-    [
-        FactLine.Of("Field.WindowsVersion", system.WindowsVersion), FactLine.Of("Field.WindowsBuild", system.WindowsBuild),
-        FactLine.Of("Field.Manufacturer", system.Manufacturer), FactLine.Of("Field.Model", system.Model)
-    ], [], technical:
-    [
-        TechnicalLine.Of("Field.WindowsVersion", system.WindowsVersion), TechnicalLine.Of("Field.WindowsBuild", system.WindowsBuild),
-        TechnicalLine.Of("Field.Manufacturer", system.Manufacturer), TechnicalLine.Of("Field.Model", system.Model)
-    ]);
-
-    private static IEnumerable<CardViewModel> AdapterCards(Observation<IReadOnlyList<GpuFacts>> gpus)
+    // Manufacturer and model form the sentence; the details list Windows and any value that is unavailable.
+    private static CardViewModel SystemCard(SystemFacts system)
     {
-        if (gpus.State != DataState.Available)
+        var names = new[] { system.Manufacturer, system.Model }.Where(f => f.State == DataState.Available).Select(f => f.Value!).ToArray();
+        var facts = new List<FactLine> { FactLine.Of("Field.WindowsVersion", system.WindowsVersion), FactLine.Of("Field.WindowsBuild", system.WindowsBuild) };
+        if (system.Manufacturer.State != DataState.Available) facts.Add(FactLine.Of("Field.Manufacturer", system.Manufacturer));
+        if (system.Model.State != DataState.Available) facts.Add(FactLine.Of("Field.Model", system.Model));
+        return new(UiText.Get("Card.System.Title"), null, facts, [], technical:
+        [
+            TechnicalLine.Of("Field.WindowsVersion", system.WindowsVersion), TechnicalLine.Of("Field.WindowsBuild", system.WindowsBuild),
+            TechnicalLine.Of("Field.Manufacturer", system.Manufacturer), TechnicalLine.Of("Field.Model", system.Model)
+        ])
         {
-            yield return new(UiText.Get("Card.Adapters.Title"), null, [FactLine.Unavailable("Summary.Adapters", gpus.State)], [],
-                technical: [TechnicalLine.Of("Summary.Adapters", gpus, list => Number(list.Count))]);
-            yield break;
-        }
-        if (gpus.Value!.Count == 0)
-            yield return new(UiText.Get("Card.Adapters.Title"), null, [], [UiText.Get("Card.Adapters.Empty")]);
-        foreach (var gpu in gpus.Value)
-        {
-            var title = gpu.Name.State == DataState.Available ? gpu.Name.Value! : UiText.Get("Card.Adapter.Title");
-            yield return new(title, UiText.Format("Card.ReportLabel", gpu.Id),
-            [
-                FactLine.Of("Field.AdapterName", gpu.Name), FactLine.Of("Field.PciVendorId", gpu.PciVendorId).WithGlossary("PciVendorId"),
-                FactLine.Of("Field.DriverProvider", gpu.Driver.Provider),
-                FactLine.Of("Field.DriverVersion", gpu.Driver.Version).WithGlossary("DriverVersion"),
-                FactLine.Of("Field.DriverDate", gpu.Driver.Date).WithGlossary("DriverDate")
-            ], [], technical:
-            [
-                TechnicalLine.Of("Field.AdapterName", gpu.Name), TechnicalLine.Of("Field.PciVendorId", gpu.PciVendorId),
-                TechnicalLine.Of("Field.PciDeviceId", gpu.PciDeviceId), TechnicalLine.Of("Field.Classification", gpu.Classification),
-                TechnicalLine.Of("Field.DriverProvider", gpu.Driver.Provider), TechnicalLine.Of("Field.DriverVersion", gpu.Driver.Version),
-                TechnicalLine.Of("Field.DriverDate", gpu.Driver.Date)
-            ]);
-        }
+            Glyph = "", Tone = CardTone.Data, TitleTip = ExplanationCatalog.Glossary("System"),
+            Say = names.Length > 0 ? string.Join(" ", names) : UiText.Get("Card.System.NoName")
+        };
     }
 
+    // The inventory as Windows reports it: one line per adapter with its report label and name.
+    private static CardViewModel AdaptersCard(Observation<IReadOnlyList<GpuFacts>> gpus)
+    {
+        var title = UiText.Get("Card.Adapters.Title");
+        TechnicalLine[] technical = [TechnicalLine.Of("Summary.Adapters", gpus, list => Number(list.Count))];
+        var tip = ExplanationCatalog.Glossary("Adapters");
+        if (gpus.State != DataState.Available)
+            return new(title, null, [FactLine.Unavailable("Summary.Adapters", gpus.State)], [], technical: technical)
+            {
+                Glyph = "", Tone = CardTone.Accent, TitleTip = tip, Say = UiText.Get("Card.Adapters.Unavailable")
+            };
+        var list = gpus.Value!;
+        return new(title, null, list.Select(g => FactLine.Labelled(g.Id, g.Name)).ToArray(),
+            list.Count == 0 ? [UiText.Get("Card.Adapters.Empty")] : [], technical: technical)
+        {
+            Glyph = "", Tone = CardTone.Accent, TitleTip = tip,
+            Say = list.Count == 0 ? UiText.Get("Card.Adapters.SayNone") : UiText.Format("Card.Adapters.Say", Count("Count.Adapters", list.Count))
+        };
+    }
+
+    // One card per active display path: the mode as a sentence, then output technology and both adapter links.
     private static IEnumerable<CardViewModel> DisplayCards(Observation<IReadOnlyList<DisplayFacts>> displays,
         Observation<IReadOnlyList<GpuFacts>> gpus)
     {
+        TechnicalLine[] count = [TechnicalLine.Of("Summary.DisplayPaths", displays, list => Number(list.Count))];
         if (displays.State != DataState.Available)
         {
             yield return new(UiText.Get("Card.Displays.Title"), null, [FactLine.Unavailable("Summary.DisplayPaths", displays.State)], [],
-                technical: [TechnicalLine.Of("Summary.DisplayPaths", displays, list => Number(list.Count))]);
+                technical: count) { Glyph = "", Tone = CardTone.Data, Say = UiText.Get("Card.Displays.Unavailable") };
             yield break;
         }
         if (displays.Value!.Count == 0)
-            yield return new(UiText.Get("Card.Displays.Title"), null, [], [UiText.Get("Card.Displays.Empty")]);
+            yield return new(UiText.Get("Card.Displays.Title"), null, [], [UiText.Get("Card.Displays.Empty")], technical: count)
+            {
+                Glyph = "", Tone = CardTone.Data, Say = UiText.Get("Card.Displays.SayNone")
+            };
         for (var i = 0; i < displays.Value.Count; i++)
         {
             var d = displays.Value[i];
-            yield return new(DisplayTitle(i), UiText.Format("Card.ReportLabel", d.Id),
-            [
-                FactLine.Of("Field.MonitorName", d.Name).WithGlossary("MonitorName"),
-                (d.SourceResolution.State == DataState.Available
-                    ? FactLine.Text("Field.Resolution", DisplayFormat.Resolution(d.SourceResolution.Value!))
-                    : FactLine.Unavailable("Field.Resolution", d.SourceResolution.State)).WithGlossary("Resolution"),
-                (d.PathRefreshRate.State == DataState.Available
-                    ? FactLine.Text("Field.RefreshRate", DisplayFormat.Rate(d.PathRefreshRate.Value!))
-                    : FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State)).WithGlossary("RefreshRate"),
-                (d.OutputTechnology.State == DataState.Available
-                    ? FactLine.Text("Field.OutputTechnology", DisplayFormat.OutputTechnology(d.OutputTechnology.Value!))
-                    : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State)).WithGlossary("OutputTechnology"),
-                Association("Field.SourceAdapter", d.SourceAdapter, gpus).WithGlossary("SourceAdapter"),
-                Association("Field.TargetAdapter", d.TargetAdapter, gpus).WithGlossary("TargetAdapter")
-            ], [], technical: DisplayTechnical(d));
+            var facts = new List<FactLine>();
+            if (d.SourceResolution.State != DataState.Available)
+                facts.Add(FactLine.Unavailable("Field.Resolution", d.SourceResolution.State).WithGlossary("Resolution"));
+            if (d.PathRefreshRate.State != DataState.Available)
+                facts.Add(FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State).WithGlossary("RefreshRate"));
+            facts.Add(FactLine.Of("Field.MonitorName", d.Name).WithGlossary("MonitorName"));
+            facts.Add((d.OutputTechnology.State == DataState.Available
+                ? FactLine.Text("Field.OutputTechnology", DisplayFormat.OutputTechnology(d.OutputTechnology.Value!))
+                : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State)).WithGlossary("OutputTechnology"));
+            facts.Add(Association("Field.SourceAdapter", d.SourceAdapter, gpus).WithGlossary("SourceAdapter"));
+            facts.Add(Association("Field.TargetAdapter", d.TargetAdapter, gpus).WithGlossary("TargetAdapter"));
+            yield return new(DisplayTitle(i), UiText.Format("Card.ReportLabel", d.Id), facts, [], technical: DisplayTechnical(d))
+            {
+                Glyph = "", Tone = CardTone.Data, Say = DisplayMode(d),
+                TitleTip = ExplanationCatalog.Glossary("Resolution") + "\n\n" + ExplanationCatalog.Glossary("RefreshRate")
+            };
         }
     }
+
+    // Resolution and refresh rate as people say them, for example "2560 × 1600 at 165 Hz".
+    private static string DisplayMode(DisplayFacts d) => (d.SourceResolution.State, d.PathRefreshRate.State) switch
+    {
+        (DataState.Available, DataState.Available) => UiText.Format("Display.Mode",
+            DisplayFormat.ShortResolution(d.SourceResolution.Value!), DisplayFormat.Rate(d.PathRefreshRate.Value!)),
+        (DataState.Available, _) => DisplayFormat.ShortResolution(d.SourceResolution.Value!),
+        (_, DataState.Available) => DisplayFormat.Rate(d.PathRefreshRate.Value!),
+        _ => UiText.Get("Display.ModeUnavailable")
+    };
 
     private static string DisplayTitle(int index) => UiText.Format("Card.Display.Title", Number(index + 1));
 
@@ -151,6 +194,38 @@ public sealed class ResultViewModel
             : id);
     }
 
+    // One card per adapter: provider and version as the sentence, then date and PCI vendor ID.
+    private static IEnumerable<CardViewModel> DriverCardsFor(Observation<IReadOnlyList<GpuFacts>> gpus)
+    {
+        if (gpus.State != DataState.Available) yield break;
+        foreach (var gpu in gpus.Value!)
+        {
+            var driver = gpu.Driver;
+            var facts = new List<FactLine>();
+            if (driver.Provider.State != DataState.Available) facts.Add(FactLine.Of("Field.DriverProvider", driver.Provider));
+            if (driver.Version.State != DataState.Available) facts.Add(FactLine.Of("Field.DriverVersion", driver.Version).WithGlossary("DriverVersion"));
+            facts.Add(FactLine.Of("Field.DriverDate", driver.Date).WithGlossary("DriverDate"));
+            facts.Add(FactLine.Of("Field.PciVendorId", gpu.PciVendorId).WithGlossary("PciVendorId"));
+            var say = (driver.Provider.State, driver.Version.State) switch
+            {
+                (DataState.Available, DataState.Available) => UiText.Format("Driver.Say", driver.Provider.Value!, driver.Version.Value!),
+                (_, DataState.Available) => driver.Version.Value!,
+                _ => UiText.Get("Driver.SayUnavailable")
+            };
+            yield return new(UiText.Format("Card.Driver.Title", gpu.Id), gpu.Name.State == DataState.Available ? gpu.Name.Value : null,
+                facts, [], technical:
+            [
+                TechnicalLine.Of("Field.AdapterName", gpu.Name), TechnicalLine.Of("Field.PciVendorId", gpu.PciVendorId),
+                TechnicalLine.Of("Field.PciDeviceId", gpu.PciDeviceId), TechnicalLine.Of("Field.Classification", gpu.Classification),
+                TechnicalLine.Of("Field.DriverProvider", driver.Provider), TechnicalLine.Of("Field.DriverVersion", driver.Version),
+                TechnicalLine.Of("Field.DriverDate", driver.Date)
+            ])
+            {
+                Glyph = "", Tone = CardTone.Accent, Say = say, TitleTip = ExplanationCatalog.Glossary("Driver")
+            };
+        }
+    }
+
     // Findings in report order. Unknown IDs fall back to Core's own message, never to invented copy.
     private static CardViewModel FindingsCard(IReadOnlyList<DiagnosticFinding> findings)
     {
@@ -178,17 +253,13 @@ public sealed class ResultViewModel
                 r.Status == CollectorStatus.Succeeded, r.Status switch
                 {
                     CollectorStatus.Succeeded => "",
-                    CollectorStatus.Unsupported => "\uE946",
-                    _ => "\uE7BA"
-                }) { Help = ExplanationCatalog.Collector(r.Status).Meaning }).ToArray(), [],
+                    CollectorStatus.Unsupported => "",
+                    _ => ""
+                }) { Help = ExplanationCatalog.Collector(r.Status).Meaning, IsData = false }).ToArray(), [],
             technical: runs.Select(r => new TechnicalLine(ExplanationCatalog.Source(r.Source),
                 UiText.Format("Technical.Run", r.Status, r.Reason, Number(r.Attempts), r.QueryMode),
                 r.Issues.Count == 0 ? UiText.Get("Technical.NoIssues")
                     : string.Join("; ", r.Issues.Select(i => i.NativeErrorCode is { } code
                         ? UiText.Format("Technical.IssueCode", i.Operation, i.Reason, code.ToString(CultureInfo.InvariantCulture))
                         : UiText.Format("Technical.Issue", i.Operation, i.Reason))))).ToArray());
-
-    private static CardViewModel LimitsCard() => new(UiText.Get("Card.Limits.Title"), UiText.Get("Card.Limits.Intro"), [],
-        new[] { "Card.Limits.RenderingGpu", "Card.Limits.Utilization", "Card.Limits.HybridMode", "Card.Limits.DriverFreshness",
-            "Card.Limits.Health", "Card.Limits.Connection" }.Select(UiText.Get).ToArray());
 }

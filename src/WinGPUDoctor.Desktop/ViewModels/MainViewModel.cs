@@ -25,6 +25,7 @@ public sealed class MainViewModel : ObservableObject
     private StopRequest _stopRequest;
     private bool _closeRequested;
     private bool _closeRaised;
+    private bool _showTechnical;
 
     private enum StopRequest { None, Pending, Controlled, Forced }
 
@@ -105,6 +106,9 @@ public sealed class MainViewModel : ObservableObject
     }
 
     public bool IsViewingResult => State == ScanState.Result && Result is not null && Save is null;
+
+    // One switch for the technical details of every result card; it stays as chosen for the session.
+    public bool ShowTechnical { get => _showTechnical; set => Set(ref _showTechnical, value); }
     public bool IsSaving => State == ScanState.Result && Save is not null;
 
     private void OpenSave()

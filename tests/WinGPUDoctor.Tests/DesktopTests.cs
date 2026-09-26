@@ -102,7 +102,7 @@ public class DesktopTests
     }
 
     [Fact]
-    public async Task CompletedScanShowsSummaryCardsFromTheRetainedReport()
+    public async Task CompletedScanShowsGuidedCardsFromTheRetainedReport()
     {
         var model = new MainViewModel(_ => Task.FromResult(Fixture("topology")));
         Assert.Equal(ScanState.Welcome, model.State);
@@ -115,42 +115,99 @@ public class DesktopTests
         Assert.True(model.ScanCommand.CanExecute(null));
         var result = Assert.IsType<ResultViewModel>(model.Result);
         Assert.False(result.IsIncomplete);
-        Assert.Equal(UiText.Get("Summary.Complete"), result.Headline);
-        Assert.Equal(new[] { "2", "1" }, result.Summary.Select(l => l.Value));
-        // This PC, two adapters, one display path, then findings, report notes, collection and limits.
+        Assert.Equal(UiText.Get("Result.Title"), result.Headline);
+        Assert.Equal("Windows reports 2 graphics adapters and 1 active display path. Nothing was hidden by the privacy filter.", result.Summary);
+
+        // Three main cards (your PC, graphics adapters, one per display path), each with a badge, a sentence and an (i).
+        Assert.Equal(new[] { UiText.Get("Card.System.Title"), UiText.Get("Card.Adapters.Title"), UiText.Format("Card.Display.Title", "1") },
+            result.MainCards.Select(c => c.Title));
+        Assert.All(result.MainCards, c => Assert.True(c.HasBadge && c.HasSay && c.HasTitleTip));
+        Assert.Equal("Example OEM Example Model", result.MainCards[0].Say);
+        Assert.Equal("Windows reports 2 graphics adapters.", result.MainCards[1].Say);
+        Assert.Equal(new[] { "gpu-1", "gpu-2" }, result.MainCards[1].Facts.Select(f => f.Label));
+        var display = result.MainCards[2];
+        Assert.Equal("2560 × 1600 at 165 Hz", display.Say);
+        var facts = display.Facts.ToDictionary(f => f.Label, f => f.Value);
+        Assert.Equal("DisplayPort (embedded)", facts[UiText.Get("Field.OutputTechnology")]);
+        Assert.Equal("gpu-2 (Example GPU)", facts[UiText.Get("Field.SourceAdapter")]);
+        Assert.Equal("gpu-2 (Example GPU)", facts[UiText.Get("Field.TargetAdapter")]);
+
+        // One driver card per adapter.
+        Assert.Equal(new[] { "Driver for gpu-1", "Driver for gpu-2" }, result.DriverCards.Select(c => c.Title));
+        Assert.Equal("Example Vendor 1.2.3.4", result.DriverCards[0].Say);
+        Assert.Equal("Example GPU", result.DriverCards[0].Subtitle);
+        Assert.Contains(result.DriverCards[0].Facts, f => f.Label == UiText.Get("Field.PciVendorId") && f.Value == "10DE");
+        Assert.Contains(result.DriverCards[0].Facts, f => f.Label == UiText.Get("Field.DriverDate") && f.Value == "2026-09-01");
+
+        // Then findings, report notes and collection; every card is listed in display order.
+        Assert.Equal(new[] { "Card.Findings.Title", "Card.Warnings.Title", "Card.Collection.Title" }.Select(UiText.Get),
+            result.MoreCards.Select(c => c.Title));
         Assert.Equal(8, result.Cards.Count);
-        Assert.Equal("Example GPU", result.Cards[1].Title);
-        Assert.Contains(result.Cards[1].Facts, f => f.Label == UiText.Get("Field.PciVendorId") && f.Value == "10DE");
-        var display = result.Cards[3].Facts.ToDictionary(f => f.Label, f => f.Value);
-        Assert.Equal("2560 × 1600 pixels", display[UiText.Get("Field.Resolution")]);
-        Assert.Equal("165 Hz", display[UiText.Get("Field.RefreshRate")]);
-        Assert.Equal("DisplayPort (embedded)", display[UiText.Get("Field.OutputTechnology")]);
-        Assert.Equal("gpu-2 (Example GPU)", display[UiText.Get("Field.SourceAdapter")]);
-        Assert.Equal("gpu-2 (Example GPU)", display[UiText.Get("Field.TargetAdapter")]);
-        Assert.Equal(UiText.Get("Card.Limits.Title"), result.Cards[7].Title);
+        Assert.Equal(6, result.Limits.Count);
+        Assert.False(model.ShowTechnical); // One switch for the whole page, off by default.
     }
 
     [Fact]
     public async Task UnavailableValuesUseFriendlyStateTextWithAnIcon()
     {
         var redacted = await ScanResult("redacted");
-        var name = redacted.Cards[1].Facts[0];
-        Assert.Equal(UiText.Get("Card.Adapter.Title"), redacted.Cards[1].Title);
+        var name = redacted.MainCards[1].Facts[0];
+        Assert.Equal("gpu-1", name.Label);
         Assert.False(name.IsAvailable);
         Assert.Equal(UiText.Get("State.Redacted"), name.Value);
         Assert.NotEmpty(name.StateGlyph);
-        Assert.Contains(redacted.Summary, l => l.Label == UiText.Get("Summary.Redacted") && l.Value == "1");
+        Assert.Null(redacted.DriverCards[0].Subtitle); // A hidden name is never shown.
+        Assert.Equal("Windows reports 1 graphics adapter. " + UiText.Get("Summary.PathsUnavailable") + " " + UiText.Get("Summary.HiddenOne"),
+            redacted.Summary);
+        Assert.Equal(UiText.Get("Card.Displays.Unavailable"), redacted.MainCards[2].Say);
 
         var unmatched = await ScanResult("unmatched");
-        var association = unmatched.Cards[3].Facts.Single(f => f.Label == UiText.Get("Field.SourceAdapter"));
+        var association = unmatched.MainCards[2].Facts.Single(f => f.Label == UiText.Get("Field.SourceAdapter"));
         Assert.False(association.IsAvailable);
         Assert.Equal(UiText.Get("Display.Association.Unresolved"), association.Value);
 
         var incomplete = await ScanResult("incomplete");
         Assert.True(incomplete.IsIncomplete);
-        Assert.Equal(UiText.Get("Summary.Incomplete"), incomplete.Headline);
+        Assert.Contains(UiText.Get("Summary.Incomplete"), incomplete.Summary);
+
+        var empty = await ScanResult("empty");
+        Assert.Equal(UiText.Get("Card.Adapters.SayNone"), empty.MainCards[1].Say);
+        Assert.Empty(empty.DriverCards);
     }
 
+    [Fact]
+    public void EveryDisplayPathGetsACardWithItsOwnSourceAndTargetLinks()
+    {
+        var topology = Fixture("topology");
+        var path = topology.Facts.Displays.Value![0];
+        static Observation<AdapterMatch> Linked(string gpu) => Observation<AdapterMatch>.Known(
+            new(gpu, AdapterMatchEvidence.ExactSetupApiInstanceId, AdapterMatchConfidence.Exact), DataSource.SetupApiInstanceJoin);
+        var split = path with { SourceAdapter = Linked("gpu-1"), TargetAdapter = Linked("gpu-2") };
+        var unresolved = path with
+        {
+            TargetAdapter = Observation<AdapterMatch>.Absent(DataState.Unknown, DataSource.SetupApiInstanceJoin, ReasonCode.UnmatchedAdapter)
+        };
+        var snapshot = topology with
+        {
+            Facts = topology.Facts with
+            {
+                Displays = Observation<IReadOnlyList<DisplayFacts>>.Known([path, split, unresolved], DataSource.DisplayConfig)
+            }
+        };
+        var result = new ResultViewModel(ReportDocument.From(PrivacyPolicy.Prepare(snapshot, new(2026, 9, 26))));
+
+        Assert.StartsWith("Windows reports 2 graphics adapters and 3 active display paths.", result.Summary);
+        Assert.Equal(new[] { "1", "2", "3" }.Select(n => UiText.Format("Card.Display.Title", n)), result.MainCards.Skip(2).Select(c => c.Title));
+        Dictionary<string, FactLine> Links(int card) => result.MainCards[card].Facts.ToDictionary(f => f.Label);
+        var source = UiText.Get("Field.SourceAdapter");
+        var target = UiText.Get("Field.TargetAdapter");
+        Assert.Equal("gpu-1 (Example GPU)", Links(3)[source].Value); // Source and target on different adapters.
+        Assert.Equal("gpu-2 (Example GPU)", Links(3)[target].Value);
+        Assert.Equal("gpu-2 (Example GPU)", Links(4)[source].Value);
+        Assert.False(Links(4)[target].IsAvailable); // An unconfirmed link keeps the neutral wording and an icon.
+        Assert.Equal(UiText.Get("Display.Association.Unresolved"), Links(4)[target].Value);
+        Assert.NotEmpty(Links(4)[target].StateGlyph);
+    }
     [Fact]
     public async Task CancelIsSingleUseAndStopsWithoutAReport()
     {

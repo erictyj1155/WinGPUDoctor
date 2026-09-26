@@ -351,6 +351,20 @@
     </Setter>
   </Style>
 
+  <Style x:Key="Wgd.Note" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Wgd.AccentTint}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.AccentEdge}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="16,14" />
+  </Style>
+  <Style x:Key="Wgd.ActionBar" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Wgd.Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Wgd.Line}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="32,12" />
+  </Style>
+
   <Style x:Key="Wgd.Warn" TargetType="Border">
     <Setter Property="Background" Value="{DynamicResource Wgd.AccentTint}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Wgd.AccentEdge}" />

@@ -20,6 +20,7 @@
     </Style>
     <Style x:Key="StateGlyph" TargetType="TextBlock">
       <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+      <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
       <Setter Property="Margin" Value="0,2,6,0" />
       <Style.Triggers>
         <DataTrigger Binding="{Binding IsAvailable}" Value="True">
@@ -28,13 +29,34 @@
       </Style.Triggers>
     </Style>
 
+    <!-- Reported values are data (cyan monospace); unavailable states and descriptions are plain text. -->
+    <Style x:Key="FactValue" TargetType="TextBlock">
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="FontSize" Value="13.5" />
+      <Style.Triggers>
+        <MultiDataTrigger>
+          <MultiDataTrigger.Conditions>
+            <Condition Binding="{Binding IsData}" Value="True" />
+            <Condition Binding="{Binding IsAvailable}" Value="True" />
+          </MultiDataTrigger.Conditions>
+          <Setter Property="FontFamily" Value="{StaticResource Wgd.MonoFont}" />
+          <Setter Property="FontSize" Value="12.5" />
+          <Setter Property="Foreground" Value="{DynamicResource Wgd.Data}" />
+          <Setter Property="Margin" Value="0,1,0,0" />
+        </MultiDataTrigger>
+        <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+          <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
     <DataTemplate x:Key="FactTemplate" DataType="{x:Type vm:FactLine}">
-      <Grid Margin="0,3">
+      <Grid Margin="0,5,0,0">
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" MaxWidth="280" />
-          <ColumnDefinition Width="2*" />
+          <ColumnDefinition Width="Auto" SharedSizeGroup="FactLabel" />
+          <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TextBlock TextWrapping="Wrap" Margin="0,0,12,0">
+        <TextBlock TextWrapping="Wrap" MaxWidth="180" Margin="0,0,14,0" FontSize="13" Foreground="{DynamicResource Wgd.Muted}">
           <Run Text="{Binding Label, Mode=OneWay}" />
           <InlineUIContainer BaselineAlignment="Center">
             <views:InfoTip Text="{Binding Help}" Label="{Binding HelpName}"
@@ -43,36 +65,42 @@
         </TextBlock>
         <DockPanel Grid.Column="1">
           <TextBlock DockPanel.Dock="Left" Text="{Binding StateGlyph}" Style="{StaticResource StateGlyph}" />
-          <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+          <TextBlock Text="{Binding Value}" Style="{StaticResource FactValue}" />
         </DockPanel>
       </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="NoteTemplate">
-      <DockPanel Margin="0,3">
-        <TextBlock DockPanel.Dock="Left" Text="&#xE946;" FontFamily="{StaticResource IconFont}" Margin="0,2,8,0" />
-        <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+      <DockPanel Margin="0,6,0,0">
+        <TextBlock DockPanel.Dock="Left" Text="&#xE946;" FontFamily="{StaticResource IconFont}" Foreground="{DynamicResource Wgd.Muted}"
+                   Margin="0,2,8,0" />
+        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13.5" />
+      </DockPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="LimitTemplate">
+      <DockPanel Margin="0,2">
+        <TextBlock DockPanel.Dock="Left" Text="&#x2022;" Foreground="{DynamicResource Wgd.Accent}" Margin="2,0,8,0" />
+        <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="13.5" />
       </DockPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="ExplanationTemplate" DataType="{x:Type vm:Explanation}">
-      <StackPanel Margin="0,10,0,0">
-        <TextBlock Text="{Binding Context}" TextWrapping="Wrap" Foreground="{DynamicResource Wgd.Muted}"
+      <StackPanel Margin="0,12,0,0">
+        <TextBlock Text="{Binding Context}" Style="{StaticResource Wgd.Small}"
                    Visibility="{Binding HasContext, Converter={StaticResource Visible}}" />
-        <TextBlock TextWrapping="Wrap">
+        <TextBlock TextWrapping="Wrap" FontSize="14">
           <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
           <InlineUIContainer BaselineAlignment="Center">
             <views:InfoTip Text="{Binding Tip}" Label="{Binding TipName}"
                            Visibility="{Binding HasTip, Converter={StaticResource Visible}}" />
           </InlineUIContainer>
         </TextBlock>
-        <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" Margin="0,2,0,0" />
+        <TextBlock Text="{Binding Meaning}" TextWrapping="Wrap" FontSize="13.5" Margin="0,2,0,0" />
       </StackPanel>
     </DataTemplate>
 
-    <Style x:Key="Provenance" TargetType="TextBlock">
-      <Setter Property="TextWrapping" Value="Wrap" />
-      <Setter Property="Foreground" Value="{DynamicResource Wgd.Muted}" />
+    <Style x:Key="Provenance" TargetType="TextBlock" BasedOn="{StaticResource Wgd.Small}">
       <Setter Property="FontSize" Value="12" />
       <Style.Triggers>
         <DataTrigger Binding="{Binding Provenance}" Value="">
@@ -82,39 +110,82 @@
     </Style>
 
     <DataTemplate x:Key="TechnicalTemplate" DataType="{x:Type vm:TechnicalLine}">
-      <Grid Margin="0,3">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" MaxWidth="280" />
-          <ColumnDefinition Width="2*" />
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" Margin="0,0,12,0" Foreground="{DynamicResource Wgd.Muted}" />
-        <StackPanel Grid.Column="1">
-          <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
-          <TextBlock Text="{Binding Provenance}" Style="{StaticResource Provenance}" />
-        </StackPanel>
-      </Grid>
+      <StackPanel Margin="0,8,0,0">
+        <TextBlock Text="{Binding Label}" Style="{StaticResource Wgd.Small}" FontSize="12" />
+        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" FontFamily="{StaticResource Wgd.MonoFont}" FontSize="12.5" />
+        <TextBlock Text="{Binding Provenance}" Style="{StaticResource Provenance}" />
+      </StackPanel>
     </DataTemplate>
 
+    <!-- Card badge: a Fluent icon on a tint of the card's tone. -->
+    <Style x:Key="CardBadge" TargetType="Border">
+      <Setter Property="Width" Value="38" />
+      <Setter Property="Height" Value="38" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="Margin" Value="0,0,0,12" />
+      <Setter Property="Background" Value="{DynamicResource Wgd.DataTint}" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Tone}" Value="Accent">
+          <Setter Property="Background" Value="{DynamicResource Wgd.AccentTint}" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="CardBadgeGlyph" TargetType="TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Wgd.Data}" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding Tone}" Value="Accent">
+          <Setter Property="Foreground" Value="{DynamicResource Wgd.Accent}" />
+        </DataTrigger>
+      </Style.Triggers>
+    </Style>
+
+    <!-- Technical details show under every card while the page's single switch is on. -->
+    <Style x:Key="TechnicalSection" TargetType="StackPanel">
+      <Setter Property="Visibility" Value="Collapsed" />
+      <Style.Triggers>
+        <MultiDataTrigger>
+          <MultiDataTrigger.Conditions>
+            <Condition Binding="{Binding HasTechnical}" Value="True" />
+            <Condition Binding="{Binding DataContext.ShowTechnical, RelativeSource={RelativeSource AncestorType=Window}}" Value="True" />
+          </MultiDataTrigger.Conditions>
+          <Setter Property="Visibility" Value="Visible" />
+        </MultiDataTrigger>
+      </Style.Triggers>
+    </Style>
+
     <DataTemplate x:Key="CardTemplate" DataType="{x:Type vm:CardViewModel}">
-      <Border Margin="0,0,0,12" Style="{StaticResource Wgd.Card}">
+      <Border Style="{StaticResource Wgd.Card}">
         <StackPanel>
-          <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
-                     AutomationProperties.HeadingLevel="Level2" />
-          <TextBlock Text="{Binding Subtitle}" TextWrapping="Wrap" Foreground="{DynamicResource Wgd.Muted}" Margin="0,2,0,0"
+          <Border Style="{StaticResource CardBadge}" Visibility="{Binding HasBadge, Converter={StaticResource Visible}}">
+            <TextBlock Text="{Binding Glyph}" Style="{StaticResource CardBadgeGlyph}" />
+          </Border>
+          <TextBlock Style="{StaticResource Wgd.Heading}" AutomationProperties.HeadingLevel="Level2">
+            <Run Text="{Binding Title, Mode=OneWay}" />
+            <InlineUIContainer BaselineAlignment="Center">
+              <views:InfoTip Text="{Binding TitleTip}" Label="{Binding TitleTipName}"
+                             Visibility="{Binding HasTitleTip, Converter={StaticResource Visible}}" />
+            </InlineUIContainer>
+          </TextBlock>
+          <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Wgd.Small}" Margin="0,2,0,0"
                      Visibility="{Binding HasSubtitle, Converter={StaticResource Visible}}" />
-          <ItemsControl ItemsSource="{Binding Facts}" ItemTemplate="{StaticResource FactTemplate}"
-                        Focusable="False" Margin="0,8,0,0" />
+          <TextBlock Text="{Binding Say}" FontFamily="{StaticResource Wgd.DisplayFont}" FontSize="18" FontWeight="SemiBold"
+                     TextWrapping="Wrap" Margin="0,10,0,4" Visibility="{Binding HasSay, Converter={StaticResource Visible}}" />
+          <ItemsControl ItemsSource="{Binding Facts}" ItemTemplate="{StaticResource FactTemplate}" Focusable="False"
+                        Grid.IsSharedSizeScope="True" Margin="0,4,0,0" />
           <ItemsControl ItemsSource="{Binding Notes}" ItemTemplate="{StaticResource NoteTemplate}" Focusable="False" />
           <ItemsControl ItemsSource="{Binding Explanations}" ItemTemplate="{StaticResource ExplanationTemplate}" Focusable="False" />
-          <CheckBox x:Name="TechnicalToggle" Content="{views:Text Card.ShowTechnical}" Margin="0,10,0,4"
-                    Style="{StaticResource Wgd.Check}"
-                    Visibility="{Binding HasTechnical, Converter={StaticResource Visible}}" />
-          <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False"
-                        Visibility="{Binding IsChecked, ElementName=TechnicalToggle, Converter={StaticResource Visible}}" />
+          <StackPanel Style="{StaticResource TechnicalSection}">
+            <Border Height="1" Background="{DynamicResource Wgd.Line}" Margin="0,14,0,2" />
+            <ItemsControl ItemsSource="{Binding Technical}" ItemTemplate="{StaticResource TechnicalTemplate}" Focusable="False" />
+          </StackPanel>
         </StackPanel>
       </Border>
-    </DataTemplate>
-  </Window.Resources>
+    </DataTemplate>  </Window.Resources>
 
   <Grid>
     <!-- Welcome and scanning: direction B. Content and actions on the left; on the right a readout that
@@ -229,23 +300,75 @@
       </ScrollViewer>
     </Grid>
 
-    <!-- Result -->
-    <DockPanel Margin="24,16" Visibility="{Binding IsViewingResult, Converter={StaticResource Visible}}">
-      <StackPanel DockPanel.Dock="Top" DataContext="{Binding Result}" Margin="0,0,0,12">
-        <TextBlock Text="{Binding Headline}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
-                   AutomationProperties.HeadingLevel="Level2" />
-        <ItemsControl ItemsSource="{Binding Summary}" ItemTemplate="{StaticResource FactTemplate}"
-                      Focusable="False" Margin="0,8,0,0" />
-      </StackPanel>
-      <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,12,0,0">
-        <Button x:Name="SaveReport" Content="{views:Text Result.SaveReport}" Command="{Binding OpenSaveCommand}"
-                Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,0" />
-        <Button x:Name="ResultScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}" Style="{StaticResource Wgd.GhostButton}" />
-      </StackPanel>
-      <ScrollViewer x:Name="ResultScroll" VerticalScrollBarVisibility="Auto" Focusable="True"
-                    AutomationProperties.Name="{views:Text Result.CardsName}">
-        <ItemsControl ItemsSource="{Binding Result.Cards}" ItemTemplate="{StaticResource CardTemplate}"
-                      Focusable="False" Margin="0,0,8,0" />
+    <!-- Results: direction C's guided layout in direction B's colors. The actions stay visible below. -->
+    <DockPanel Visibility="{Binding IsViewingResult, Converter={StaticResource Visible}}">
+      <Border DockPanel.Dock="Bottom" Style="{StaticResource Wgd.ActionBar}">
+        <DockPanel>
+          <CheckBox x:Name="TechnicalToggle" DockPanel.Dock="Right" Content="{views:Text Card.ShowTechnical}"
+                    IsChecked="{Binding ShowTechnical}" Style="{StaticResource Wgd.Check}" Margin="16,0,0,0" />
+          <WrapPanel>
+            <Button x:Name="SaveReport" Content="{views:Text Result.SaveReport}" Command="{Binding OpenSaveCommand}"
+                    Style="{StaticResource Wgd.PrimaryButton}" Margin="0,0,12,0" />
+            <Button x:Name="ResultScan" Content="{views:Text Result.ScanAgain}" Command="{Binding ScanCommand}"
+                    Style="{StaticResource Wgd.GhostButton}" />
+          </WrapPanel>
+        </DockPanel>
+      </Border>
+      <ScrollViewer x:Name="ResultScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                    Focusable="True" AutomationProperties.Name="{views:Text Result.CardsName}">
+        <StackPanel DataContext="{Binding Result}" Margin="32,28,32,32" MaxWidth="1200">
+          <StackPanel HorizontalAlignment="Center" MaxWidth="700" Margin="0,0,0,24">
+            <TextBlock Text="{views:Text Result.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding Headline}" Style="{StaticResource Wgd.Title}" FontSize="28" HorizontalAlignment="Center"
+                       TextAlignment="Center" AutomationProperties.HeadingLevel="Level1" />
+            <TextBlock Text="{Binding Summary}" Style="{StaticResource Wgd.Lead}" HorizontalAlignment="Center" TextAlignment="Center" />
+          </StackPanel>
+
+          <ItemsControl ItemsSource="{Binding MainCards}" ItemTemplate="{StaticResource CardTemplate}" Focusable="False">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <views:CardGrid MinColumnWidth="260" MaxColumns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+
+          <ItemsControl ItemsSource="{Binding DriverCards}" ItemTemplate="{StaticResource CardTemplate}" Focusable="False"
+                        Margin="0,14,0,0" Visibility="{Binding HasDriverCards, Converter={StaticResource Visible}}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <views:CardGrid MinColumnWidth="300" MaxColumns="2" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+
+          <Border Style="{StaticResource Wgd.Note}" Margin="0,18,0,0">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" Text="&#xE946;" Style="{StaticResource Wgd.Glyph}" />
+              <StackPanel>
+                <TextBlock Text="{views:Text Card.Limits.Title}" Style="{StaticResource Wgd.Heading}"
+                           AutomationProperties.HeadingLevel="Level2" />
+                <TextBlock Text="{views:Text Card.Limits.Intro}" TextWrapping="Wrap" FontSize="13.5" Margin="0,4,0,6" />
+                <ItemsControl ItemsSource="{Binding Limits}" ItemTemplate="{StaticResource LimitTemplate}" Focusable="False">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <views:CardGrid MinColumnWidth="280" MaxColumns="2" Spacing="2" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                </ItemsControl>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
+          <TextBlock Text="{views:Text Result.More}" Style="{StaticResource Wgd.Eyebrow}" Margin="0,28,0,12"
+                     AutomationProperties.HeadingLevel="Level2" />
+          <ItemsControl ItemsSource="{Binding MoreCards}" ItemTemplate="{StaticResource CardTemplate}" Focusable="False">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <views:CardGrid MinColumnWidth="300" MaxColumns="3" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+          </ItemsControl>
+        </StackPanel>
       </ScrollViewer>
     </DockPanel>
 
