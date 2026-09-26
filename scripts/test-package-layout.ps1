@@ -30,8 +30,20 @@ Assert-True ((Get-PackageName '0.1.0') -ceq 'WinGPUDoctor-0.1.0-win-x64' -and
 # Every application-local runtime file that each executable declares is in its layout.
 $cliDeclared = @(Get-DepsRuntimeFiles (Join-Path $cli 'wingpudoctor.deps.json'))
 $guiDeclared = @(Get-DepsRuntimeFiles (Join-Path $gui 'wingpudoctor-gui.deps.json'))
-Assert-True ($cliDeclared.Count -gt 0 -and @($cliDeclared | Where-Object { $release -notcontains $_ }).Count -eq 0) 'the CLI deps.json files are packaged'
-Assert-True ($guiDeclared.Count -gt 0 -and @($guiDeclared | Where-Object { $dev -notcontains $_ }).Count -eq 0) 'the GUI deps.json files are packaged'
+Assert-True ($cliDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $cliDeclared $release).Count -eq 0) 'the CLI deps.json files are packaged'
+Assert-True ($guiDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $guiDeclared $dev).Count -eq 0) 'the GUI deps.json files are packaged'
+# Every asset group the worker closure reads counts, native included: a synthetic deps.json whose native library
+# is missing from the layout is reported, which makes packaging fail.
+$syntheticDeps = '{ "runtimeTarget": { "name": ".NETCoreApp,Version=v10.0" }, "targets": { ".NETCoreApp,Version=v10.0": {
+  "app/1.0.0": { "runtime": { "app.dll": {} } },
+  "Native.Package/1.0.0": { "native": { "runtimes/win-x64/native/example-native.dll": {} } },
+  "Rid.Package/1.0.0": { "runtimeTargets": { "runtimes/win/lib/net10.0/Rid.Package.dll": { "rid": "win", "assetType": "runtime" } } },
+  "Localized.Package/1.0.0": { "resources": { "lib/net10.0/de/Localized.Package.resources.dll": { "locale": "de" } } } } } }'
+$syntheticFiles = @(ConvertFrom-DepsRuntimeFiles $syntheticDeps)
+Assert-True (Same $syntheticFiles @('app.dll', 'example-native.dll', 'runtimes/win/lib/net10.0/Rid.Package.dll', 'de/Localized.Package.resources.dll')) 'runtime, native, runtimeTargets and resources assets are all read'
+$withoutNative = @('app.dll', 'runtimes/win/lib/net10.0/Rid.Package.dll', 'de/Localized.Package.resources.dll')
+Assert-True ((@(Get-UnpackagedRuntimeFiles $syntheticFiles $withoutNative) -join '|') -ceq 'example-native.dll') 'an unpackaged native library is reported, so packaging fails'
+Assert-True (@(Get-UnpackagedRuntimeFiles $syntheticFiles (@($withoutNative) + 'example-native.dll')).Count -eq 0) 'nothing is reported once the native library is packaged'
 foreach ($relative in Get-PackageSharedFiles) {
     Assert-True ((Get-FileHash (Join-Path $cli $relative)).Hash -ceq (Get-FileHash (Join-Path $gui $relative)).Hash) "shared $relative is identical in both builds"
 }

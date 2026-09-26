@@ -58,8 +58,8 @@ foreach ($relative in $parentFiles) {
 # Every application-local runtime file that an executable declares must be packaged beside it.
 $declared = @(Get-DepsRuntimeFiles (Join-Path $source 'wingpudoctor.deps.json'))
 if ($DevGui) { $declared += @(Get-DepsRuntimeFiles (Join-Path $guiSource 'wingpudoctor-gui.deps.json')) }
-$undeclared = @($declared | Where-Object { $parentFiles -notcontains $_ })
-if ($undeclared.Count) { throw "A declared runtime file is not in the package list: $($undeclared -join ', ')" }
+$unpackaged = @(Get-UnpackagedRuntimeFiles $declared $parentFiles)
+if ($unpackaged.Count) { throw "A declared runtime file is not in the package list: $($unpackaged -join ', ')" }
 foreach ($relative in $documentFiles) {
     $file = Get-Item -LiteralPath (Join-Path $projectRoot $relative) -ErrorAction Stop
     if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Invalid package document: $relative" }

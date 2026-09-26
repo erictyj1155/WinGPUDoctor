@@ -30,17 +30,30 @@ function Get-PackageName([string]$Version, [switch]$Dev) {
 }
 
 # Application-local runtime files that an app's deps.json declares (framework files are not listed there).
+# The asset groups match the worker closure (worker-runtime-closure.ps1): runtime and native by file name,
+# runtimeTargets by relative path, resources by locale.
 function Get-DepsRuntimeFiles([string]$DepsPath) {
-    $deps = Get-Content -LiteralPath $DepsPath -Raw | ConvertFrom-Json -AsHashtable
+    ConvertFrom-DepsRuntimeFiles (Get-Content -LiteralPath $DepsPath -Raw)
+}
+
+function ConvertFrom-DepsRuntimeFiles([string]$Json) {
+    $deps = $Json | ConvertFrom-Json -AsHashtable
     $target = $deps.targets[$deps.runtimeTarget.name]
     if (!$target) { throw 'Runtime target is missing from deps.json.' }
     $files = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach ($library in $target.Values) {
-        if ($library.ContainsKey('runtime')) { foreach ($asset in $library.runtime.Keys) { [void]$files.Add([IO.Path]::GetFileName($asset)) } }
+        foreach ($group in @('runtime', 'native')) {
+            if ($library.ContainsKey($group)) { foreach ($asset in $library[$group].Keys) { [void]$files.Add([IO.Path]::GetFileName($asset)) } }
+        }
         if ($library.ContainsKey('runtimeTargets')) { foreach ($asset in $library.runtimeTargets.Keys) { [void]$files.Add($asset.Replace('\', '/')) } }
         if ($library.ContainsKey('resources')) {
             foreach ($asset in $library.resources.Keys) { [void]$files.Add($library.resources[$asset].locale + '/' + [IO.Path]::GetFileName($asset)) }
         }
     }
     $files | Sort-Object
+}
+
+# Declared runtime files that a package layout would leave out; packaging fails if any remain.
+function Get-UnpackagedRuntimeFiles([string[]]$Declared, [string[]]$PackageFiles) {
+    @($Declared | Where-Object { $PackageFiles -notcontains $_ } | Sort-Object -Unique)
 }
