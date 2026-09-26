@@ -6,9 +6,10 @@ using System.Windows.Input;
 
 namespace WinGPUDoctor.Desktop.Views;
 
-// An (i) button for secondary text. It is a Tab stop; the text appears on mouse hover, on keyboard
-// focus, and on Enter/Space or click, and closes with Escape or when focus leaves. Screen readers
-// get the button name from Label and the text itself as HelpText.
+// An (i) button for secondary text. It is a Tab stop; the text appears on mouse hover, when the user
+// Tabs to it, and on Enter/Space or click, and closes with Escape or when focus leaves. Focus that
+// returns when the window is reactivated (for example after Alt+Tab) does not open it. Screen
+// readers get the button name from Label and the text itself as HelpText.
 public sealed class InfoTip : Button
 {
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), typeof(string),
@@ -25,7 +26,8 @@ public sealed class InfoTip : Button
         Content = "\uE946";
         _tip = new ToolTip { Content = _body, Placement = PlacementMode.Bottom };
         ToolTip = _tip;
-        ToolTipService.SetShowsToolTipOnKeyboardFocus(this, true);
+        // The control decides itself when keyboard focus opens the tip (see ShowsOnFocusChange).
+        ToolTipService.SetShowsToolTipOnKeyboardFocus(this, false);
         ToolTipService.SetInitialShowDelay(this, 250);
         ToolTipService.SetShowDuration(this, int.MaxValue);
     }
@@ -49,8 +51,13 @@ public sealed class InfoTip : Button
     protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
     {
         base.OnGotKeyboardFocus(e);
-        if (InputManager.Current.MostRecentInputDevice is KeyboardDevice) Open();
+        if (ShowsOnFocusChange(InputManager.Current.MostRecentInputDevice is KeyboardDevice, e.OldFocus is not null)) Open();
     }
+
+    // Tab navigation moves keyboard focus from another element. Focus restored on window reactivation
+    // arrives from no element, and mouse focus is handled by hover and click.
+    public static bool ShowsOnFocusChange(bool keyboardInput, bool fromAnotherElement) =>
+        keyboardInput && fromAnotherElement;
 
     private void Open()
     {

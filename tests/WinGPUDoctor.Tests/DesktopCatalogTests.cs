@@ -212,7 +212,8 @@ public class DesktopCatalogTests
                 Assert.True(tip.IsTabStop);
                 Assert.Equal("About Resolution", System.Windows.Automation.AutomationProperties.GetName(tip));
                 Assert.Equal("Explanation", System.Windows.Automation.AutomationProperties.GetHelpText(tip));
-                Assert.True(System.Windows.Controls.ToolTipService.GetShowsToolTipOnKeyboardFocus(tip));
+                // The service's own keyboard-focus opening is off; the control opens only for Tab (below).
+                Assert.False(System.Windows.Controls.ToolTipService.GetShowsToolTipOnKeyboardFocus(tip));
                 var toolTip = Assert.IsType<System.Windows.Controls.ToolTip>(tip.ToolTip);
                 Assert.Equal("Explanation", Assert.IsType<System.Windows.Controls.TextBlock>(toolTip.Content).Text);
             }
@@ -222,5 +223,14 @@ public class DesktopCatalogTests
         thread.Start();
         thread.Join();
         failure?.Throw();
+    }
+
+    [Fact]
+    public void InfoTipOpensOnFocusOnlyWhenTabbedTo()
+    {
+        Assert.True(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: true, fromAnotherElement: true)); // Tab
+        // Window reactivation (for example Alt+Tab back) restores focus from no element.
+        Assert.False(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: true, fromAnotherElement: false));
+        Assert.False(WinGPUDoctor.Desktop.Views.InfoTip.ShowsOnFocusChange(keyboardInput: false, fromAnotherElement: true)); // Mouse
     }
 }
