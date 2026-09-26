@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>wingpudoctor-gui</AssemblyName>
+    <RootNamespace>WinGPUDoctor.Desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <WorkerOutputDirectory>$(MSBuildThisFileDirectory)..\WinGPUDoctor.Worker\bin\$(Configuration)\net10.0-windows</WorkerOutputDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../WinGPUDoctor.Host/WinGPUDoctor.Host.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Supervisor/WinGPUDoctor.Supervisor.csproj" />
+    <!-- No Windows API is used here, but worker deployment checks the loaded Core/Protocol/Windows identities. -->
+    <ProjectReference Include="../WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />
+    <ProjectReference Include="../WinGPUDoctor.Worker/WinGPUDoctor.Worker.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="CopyWorkerDeployment" AfterTargets="Build">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\copy-worker-deployment.ps1&quot; -WorkerOutput &quot;$(WorkerOutputDirectory)&quot; -Destination &quot;$(OutDir)worker&quot;" />
+  </Target>
+</Project>

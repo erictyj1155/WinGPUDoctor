@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English UI copy. Copy states reported facts and existing limits only; see docs/GUI_PLAN.md. -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App.Title" xml:space="preserve"><value>WinGPUDoctor</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>Something went wrong. Close WinGPUDoctor and start it again.</value></data>
+
+  <data name="Welcome.Intro" xml:space="preserve"><value>WinGPUDoctor reads the graphics adapter, driver and active display information that Windows reports, and explains it in plain language.</value></data>
+  <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Reads only. It changes nothing on this PC.</value></data>
+  <data name="Welcome.PromiseNoUpload" xml:space="preserve"><value>WinGPUDoctor never uploads anything.</value></data>
+  <data name="Welcome.PromiseReview" xml:space="preserve"><value>You review exactly what a report contains before you save it.</value></data>
+  <data name="Welcome.Scan" xml:space="preserve"><value>Scan this PC</value></data>
+
+  <data name="Scan.Reading" xml:space="preserve"><value>Reading information from Windows…</value></data>
+  <data name="Scan.Stopping" xml:space="preserve"><value>Stopping the scan…</value></data>
+  <data name="Scan.ListIntro" xml:space="preserve"><value>WinGPUDoctor is reading:</value></data>
+  <data name="Scan.ItemSystem" xml:space="preserve"><value>System details: Windows version, manufacturer and model</value></data>
+  <data name="Scan.ItemAdapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>
+  <data name="Scan.ItemDrivers" xml:space="preserve"><value>Graphics driver details</value></data>
+  <data name="Scan.ItemDisplays" xml:space="preserve"><value>Active display paths</value></data>
+  <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>
+
+  <data name="Result.ScanAgain" xml:space="preserve"><value>Scan again</value></data>
+  <data name="Result.CardsName" xml:space="preserve"><value>Scan results</value></data>
+  <data name="Stopped.Message" xml:space="preserve"><value>Scan stopped. No report was created.</value></data>
+  <data name="Restart.Message" xml:space="preserve"><value>The scan could not complete. Restart WinGPUDoctor before scanning again.</value></data>
+  <data name="Restart.Close" xml:space="preserve"><value>Close WinGPUDoctor</value></data>
+
+  <data name="Summary.Complete" xml:space="preserve"><value>Scan complete.</value></data>
+  <data name="Summary.Incomplete" xml:space="preserve"><value>Scan complete, but some information could not be read. The cards below show which parts.</value></data>
+  <data name="Summary.Adapters" xml:space="preserve"><value>Graphics adapters reported by Windows</value></data>
+  <data name="Summary.DisplayPaths" xml:space="preserve"><value>Active display paths</value></data>
+  <data name="Summary.Redacted" xml:space="preserve"><value>Fields hidden by the privacy filter</value></data>
+
+  <data name="Card.System.Title" xml:space="preserve"><value>This PC</value></data>
+  <data name="Card.Adapters.Title" xml:space="preserve"><value>Graphics adapters</value></data>
+  <data name="Card.Adapters.Empty" xml:space="preserve"><value>Windows returned no graphics adapters. This does not prove that the PC has no graphics adapter.</value></data>
+  <data name="Card.Adapter.Title" xml:space="preserve"><value>Graphics adapter</value></data>
+  <data name="Card.ReportLabel" xml:space="preserve"><value>Label in this report: {0}</value></data>
+  <data name="Card.Displays.Title" xml:space="preserve"><value>Active display paths</value></data>
+  <data name="Card.Displays.Empty" xml:space="preserve"><value>Windows reported no active display paths in this scan. This does not mean that no display or graphics hardware is present.</value></data>
+  <data name="Card.Display.Title" xml:space="preserve"><value>Active display path {0}</value></data>
+  <data name="Card.Limits.Title" xml:space="preserve"><value>What this can't tell you</value></data>
+  <data name="Card.Limits.Intro" xml:space="preserve"><value>This scan shows what Windows reports. It can't tell you:</value></data>
+  <data name="Card.Limits.RenderingGpu" xml:space="preserve"><value>Which graphics adapter a game or app uses.</value></data>
+  <data name="Card.Limits.Utilization" xml:space="preserve"><value>How busy a graphics adapter is, or its power state.</value></data>
+  <data name="Card.Limits.HybridMode" xml:space="preserve"><value>Whether hybrid graphics or a display mode switch (MUX) is active.</value></data>
+  <data name="Card.Limits.DriverFreshness" xml:space="preserve"><value>Whether a driver is up to date. The driver date comes from the provider and does not show that.</value></data>
+  <data name="Card.Limits.Health" xml:space="preserve"><value>Whether the PC, a graphics adapter or a display is healthy or working correctly.</value></data>
+  <data name="Card.Limits.Connection" xml:space="preserve"><value>Which physical port a display is plugged into.</value></data>
+
+  <data name="Field.WindowsVersion" xml:space="preserve"><value>Windows version</value></data>
+  <data name="Field.WindowsBuild" xml:space="preserve"><value>Windows build</value></data>
+  <data name="Field.Manufacturer" xml:space="preserve"><value>Manufacturer</value></data>
+  <data name="Field.Model" xml:space="preserve"><value>Model</value></data>
+  <data name="Field.AdapterName" xml:space="preserve"><value>Name</value></data>
+  <data name="Field.PciVendorId" xml:space="preserve"><value>PCI vendor ID</value></data>
+  <data name="Field.DriverProvider" xml:space="preserve"><value>Driver provider</value></data>
+  <data name="Field.DriverVersion" xml:space="preserve"><value>Driver version</value></data>
+  <data name="Field.DriverDate" xml:space="preserve"><value>Driver date (reported by the provider; not the installation date)</value></data>
+  <data name="Field.MonitorName" xml:space="preserve"><value>Monitor name (reported)</value></data>
+  <data name="Field.Resolution" xml:space="preserve"><value>Resolution</value></data>
+  <data name="Field.RefreshRate" xml:space="preserve"><value>Refresh rate</value></data>
+  <data name="Field.OutputTechnology" xml:space="preserve"><value>Output technology (reported by Windows)</value></data>
+  <data name="Field.SourceAdapter" xml:space="preserve"><value>Display source adapter</value></data>
+  <data name="Field.TargetAdapter" xml:space="preserve"><value>Display target adapter</value></data>
+
+  <data name="Display.Association.Unresolved" xml:space="preserve"><value>Not linked to a graphics adapter listed in this report</value></data>
+  <data name="Display.Association.Named" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="Unit.Hertz" xml:space="preserve"><value>{0} Hz</value></data>
+  <data name="Unit.Resolution" xml:space="preserve"><value>{0} × {1} pixels</value></data>
+
+  <data name="State.Available" xml:space="preserve"><value>Available</value></data>
+  <data name="State.Unknown" xml:space="preserve"><value>Windows didn't provide this</value></data>
+  <data name="State.Unsupported" xml:space="preserve"><value>Not supported here</value></data>
+  <data name="State.Failed" xml:space="preserve"><value>Couldn't be read</value></data>
+  <data name="State.Redacted" xml:space="preserve"><value>Hidden by the privacy filter</value></data>
+
+  <data name="OutputTechnology.hd15" xml:space="preserve"><value>VGA (HD15)</value></data>
+  <data name="OutputTechnology.sVideo" xml:space="preserve"><value>S-Video</value></data>
+  <data name="OutputTechnology.compositeVideo" xml:space="preserve"><value>Composite video</value></data>
+  <data name="OutputTechnology.componentVideo" xml:space="preserve"><value>Component video</value></data>
+  <data name="OutputTechnology.dvi" xml:space="preserve"><value>DVI</value></data>
+  <data name="OutputTechnology.hdmi" xml:space="preserve"><value>HDMI</value></data>
+  <data name="OutputTechnology.lvds" xml:space="preserve"><value>LVDS</value></data>
+  <data name="OutputTechnology.dJpn" xml:space="preserve"><value>D-Jpn</value></data>
+  <data name="OutputTechnology.sdi" xml:space="preserve"><value>SDI</value></data>
+  <data name="OutputTechnology.displayPortExternal" xml:space="preserve"><value>DisplayPort (external)</value></data>
+  <data name="OutputTechnology.displayPortEmbedded" xml:space="preserve"><value>DisplayPort (embedded)</value></data>
+  <data name="OutputTechnology.udiExternal" xml:space="preserve"><value>UDI (external)</value></data>
+  <data name="OutputTechnology.udiEmbedded" xml:space="preserve"><value>UDI (embedded)</value></data>
+  <data name="OutputTechnology.sdTvDongle" xml:space="preserve"><value>SDTV dongle</value></data>
+  <data name="OutputTechnology.miracast" xml:space="preserve"><value>Miracast</value></data>
+  <data name="OutputTechnology.indirectWired" xml:space="preserve"><value>Indirect display (wired)</value></data>
+  <data name="OutputTechnology.indirectVirtual" xml:space="preserve"><value>Indirect display (virtual)</value></data>
+  <data name="OutputTechnology.displayPortUsbTunnel" xml:space="preserve"><value>DisplayPort over USB</value></data>
+  <data name="OutputTechnology.internal" xml:space="preserve"><value>Internal</value></data>
+  <data name="OutputTechnology.other" xml:space="preserve"><value>Other</value></data>
+</root>

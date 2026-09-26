@@ -9,6 +9,7 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1"><PrivateAssets>all</PrivateAssets></PackageReference>
     <ProjectReference Include="../../src/WinGPUDoctor.Protocol/WinGPUDoctor.Protocol.csproj" />
+    <ProjectReference Include="../../src/WinGPUDoctor.Desktop/WinGPUDoctor.Desktop.csproj" />
     <ProjectReference Include="../../src/WinGPUDoctor.Host/WinGPUDoctor.Host.csproj" />
     <ProjectReference Include="../../src/WinGPUDoctor.Supervisor/WinGPUDoctor.Supervisor.csproj" />
     <ProjectReference Include="../../src/WinGPUDoctor.Windows/WinGPUDoctor.Windows.csproj" />

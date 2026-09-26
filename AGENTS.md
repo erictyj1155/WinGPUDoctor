@@ -53,7 +53,9 @@ Keep each fact in its appropriate record and link to details instead of copying 
 - C#/.NET, SDK selected by `global.json`, locked packages, and xUnit. Follow `.editorconfig` (UTF-8, LF, final newline, spaces) and existing local naming/style. `Directory.Build.props` enables nullable references, deterministic builds (Release builds also map source paths to `/_/`), and warnings as errors. Avoid unrelated reformatting.
 - `src/WinGPUDoctor.Core/`: typed facts/states, pure rules, privacy projection, JSON/Markdown. No WMI, native API, hardware, GUI, or file-I/O dependencies.
 - `src/WinGPUDoctor.Windows/`: fixed local WMI queries, isolated DisplayConfig/SetupAPI interop, resource disposal, and exact identity matching; depends on Core.
+- `src/WinGPUDoctor.Host/`: UI-free scan session (cancel-versus-output commitment), host-neutral outcomes, and local `CreateNew` export rules shared by the CLI and GUI.
 - `src/WinGPUDoctor.Cli/`: composition, arguments, preview, and explicit local export. Reuse the same sanitized snapshot for preview and export.
+- `src/WinGPUDoctor.Desktop/`: WPF beginner host (`wingpudoctor-gui`, ADR 0008). It renders only the round-tripped shareable report; view models and copy stay free of WPF types so they are unit-testable.
 - `tests/WinGPUDoctor.Tests/`: deterministic synthetic unit/collector-contract tests. `schemas/` contains versioned contracts; `examples/` contains synthetic reports only; `scripts/` contains development and separately opt-in live checks; `.github/workflows/` defines deterministic CI.
 - Follow `CONTRIBUTING.md`, architecture, relevant ADRs, and the schema guide before behavioral edits. Intentional dependency changes need lock-file and license/security review; architecture-boundary changes need a justified decision record. Do not add DXGI, a vendor SDK, framework, or generated interop without a concrete authorized need.
 

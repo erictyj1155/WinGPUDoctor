@@ -82,14 +82,14 @@ M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and est
 
 The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. The v0.1.0 tag, GitHub Release, release assets and announcement remain pending and separately authorized.
 
-## Milestone 7 — Beginner desktop host (proposed; post-v0.1)
+## Milestone 7 — Beginner desktop host (in progress; post-v0.1)
 
 Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in [ADR 0008](docs/decisions/0008-beginner-desktop-host.md); screens, explanation catalog, delivery steps and validation additions are in [docs/GUI_PLAN.md](docs/GUI_PLAN.md). Gate 1 has passed; each implementation step still needs separate owner authorization.
 
 - [x] Gate 0 scope accepted: WPF host over the unchanged engine; English-first resources.
 - [x] Gate 1: independent review passed with should-fix items, all addressed; ADR 0008 frozen by the owner on 2026-09-25.
 - [x] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior (local checkpoint 2026-09-26; focused re-review of the review follow-up outstanding).
-- [ ] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test.
+- [x] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test (local checkpoint 2026-09-26).
 - [ ] Step 3 explanation catalog and detail views with completeness tests.
 - [ ] Step 4 save/export on shared host rules.
 - [ ] Step 5 packaging with distinct GUI executable name, allowlist and path guard.

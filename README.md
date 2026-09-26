@@ -93,7 +93,9 @@ src/
   WinGPUDoctor.Windows/    Local WMI, isolated DisplayConfig/SetupAPI, matching
   WinGPUDoctor.Supervisor/ Parent budget, worker deployment, Job/process/pipe transport
   WinGPUDoctor.Worker/     Framework-dependent internal operation dispatcher
+  WinGPUDoctor.Host/       UI-free scan session and local export rules shared by hosts
   WinGPUDoctor.Cli/        Arguments, preview, explicit local export
+  WinGPUDoctor.Desktop/    WPF beginner host (M7, in development; not yet packaged)
 tests/WinGPUDoctor.Tests/  Synthetic unit and collector-contract tests
 docs/                     Feasibility, schema guide, decisions, validation
 schemas/                  Versioned JSON Schema

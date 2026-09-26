@@ -106,6 +106,14 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "wingpudoctor-gui": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Host": "[0.1.0, )",
+          "WinGPUDoctor.Supervisor": "[0.1.0, )",
+          "WinGPUDoctor.Windows": "[0.1.0, )"
+        }
+      },
       "wingpudoctor-worker": {
         "type": "Project",
         "dependencies": {

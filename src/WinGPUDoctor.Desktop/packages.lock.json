@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0-windows7.0": {
+      "System.Management": {
+        "type": "Transitive",
+        "resolved": "10.0.12",
+        "contentHash": "ApUsYmsNG8aPiMxsO6ROGZnqJwSZY8zeMlAQcuQg+ilPFUcIyBUC0BL8qA6wmPLNVsvL4nyhUrhhxh6qn0cx0Q=="
+      },
+      "wingpudoctor.core": {
+        "type": "Project"
+      },
+      "wingpudoctor.host": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[0.1.0, )",
+          "WinGPUDoctor.Supervisor": "[0.1.0, )"
+        }
+      },
+      "wingpudoctor.protocol": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[0.1.0, )"
+        }
+      },
+      "wingpudoctor.supervisor": {
+        "type": "Project",
+        "dependencies": {
+          "WinGPUDoctor.Core": "[0.1.0, )",
+          "WinGPUDoctor.Protocol": "[0.1.0, )"
+        }
+      },
+      "wingpudoctor.windows": {
+        "type": "Project",
+        "dependencies": {
+          "System.Management": "[10.0.12, )",
+          "WinGPUDoctor.Core": "[0.1.0, )"
+        }
+      }
+    }
+  }
+}
