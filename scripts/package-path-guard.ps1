@@ -3,7 +3,8 @@
 Add-Type -AssemblyName System.Reflection.Metadata, System.IO.Compression.ZipFile
 
 function Test-FirstPartyDllName([string]$Name) {
-    # WinGPUDoctor.*.dll, wingpudoctor.dll and wingpudoctor-worker.dll. Tested on the file name, so worker/ copies match.
+    # WinGPUDoctor.*.dll, wingpudoctor.dll, wingpudoctor-gui.dll and wingpudoctor-worker.dll. Tested on the file
+    # name, so worker/ copies match.
     [IO.Path]::GetFileName($Name) -match '^wingpudoctor([.-][^/\\]+)?\.dll$'
 }
 
@@ -45,6 +46,12 @@ function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles)
             $debug = @($reader.ReadDebugDirectory())
             # An embedded PDB is compressed, so the byte checks above cannot see inside it.
             if (@($debug | Where-Object Type -eq 'EmbeddedPortablePdb').Count) { "${Name}: embeds a PDB" }
+            # No PDB path of any executable or library (first-party or not, CLI or GUI) may name a user profile.
+            foreach ($entry in @($debug | Where-Object Type -eq 'CodeView')) {
+                if ($reader.ReadCodeViewDebugDirectoryData($entry).Path -match '\A[A-Z]:[\\/]+Users[\\/]') {
+                    "${Name}: PDB path is under a Windows user profile"
+                }
+            }
             if (Test-FirstPartyDllName $fileName) {
                 $codeView = @($debug | Where-Object Type -eq 'CodeView')
                 if ($codeView.Count -ne 1 -or

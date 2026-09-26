@@ -31,6 +31,7 @@ try {
         & (Join-Path $PSScriptRoot 'test-m4-deployment.ps1')
         & (Join-Path $PSScriptRoot 'test-execution-fingerprint.ps1')
         & (Join-Path $PSScriptRoot 'test-m4-process-evidence.ps1')
+        & (Join-Path $PSScriptRoot 'test-package-layout.ps1')
     }
     if ($Action -eq 'preview') {
         & $sdk 'src/WinGPUDoctor.Cli/bin/Release/net10.0-windows/wingpudoctor.dll'

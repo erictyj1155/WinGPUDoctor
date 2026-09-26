@@ -74,6 +74,7 @@ The default local development/build workflow enforces locked restore but skips v
 ```powershell
 ./scripts/dev.ps1 -Action test
 ./scripts/package-v0.1.ps1  # creates a ZIP and SHA-256 file under ignored artifacts/
+./scripts/package-v0.1.ps1 -DevGui  # local test package with the GUI, named -dev; not a release asset
 # ./scripts/dev.ps1 -Action preview invokes live collection; run only with live-check scope.
 # Opt-in repeatability check for the current laptop build:
 ./scripts/validate-m3.ps1

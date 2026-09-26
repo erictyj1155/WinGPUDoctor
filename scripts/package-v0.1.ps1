@@ -1,5 +1,8 @@
 # Build and package the reviewed framework-dependent Windows x64 Release layout.
 # This does not run a live collection or publish anything.
+# -DevGui builds a local test package instead (M7 Step 5): the CLI, wingpudoctor-gui.exe and worker/ in one
+# folder, named WinGPUDoctor-<version>-dev-win-x64 under ignored artifacts/. It is not a release asset.
+param([switch]$DevGui)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $settings = @{
@@ -24,32 +27,39 @@ if ($LASTEXITCODE -ne 0) { throw 'Unable to read the project version.' }
 $versions = @($versionLines | Where-Object { $_ -match '^\d+\.\d+\.\d+$' })
 if ($versions.Count -ne 1) { throw 'The project version must be one numeric release version.' }
 $version = $versions[0]
-$name = "WinGPUDoctor-$version-win-x64"
+. (Join-Path $PSScriptRoot 'package-layout.ps1')
+$name = Get-PackageName $version -Dev:$DevGui
 $artifactRoot = Join-Path $projectRoot 'artifacts'
 $zipPath = Join-Path $artifactRoot "$name.zip"
 $checksumPath = "$zipPath.sha256"
 if ((Test-Path -LiteralPath $zipPath) -or (Test-Path -LiteralPath $checksumPath)) {
-    throw 'This release artifact already exists; refusing to overwrite it.'
+    throw 'This package artifact already exists; refusing to overwrite it.'
 }
 
 & (Join-Path $PSScriptRoot 'dev.ps1') -Action build
 $source = Join-Path $projectRoot 'src/WinGPUDoctor.Cli/bin/Release/net10.0-windows'
+$guiSource = Join-Path $projectRoot 'src/WinGPUDoctor.Desktop/bin/Release/net10.0-windows'
 $workerSource = Join-Path $projectRoot 'src/WinGPUDoctor.Worker/bin/Release/net10.0-windows'
 . (Join-Path $PSScriptRoot 'worker-runtime-closure.ps1')
 . (Join-Path $PSScriptRoot 'package-path-guard.ps1')
 $workerFiles = @(Get-WorkerRuntimeFiles $workerSource)
 if ($workerFiles.Count -eq 0) { throw 'Worker runtime closure is empty.' }
 
-$parentFiles = @(
-    'wingpudoctor.exe', 'wingpudoctor.dll', 'wingpudoctor.deps.json', 'wingpudoctor.runtimeconfig.json',
-    'WinGPUDoctor.Core.dll', 'WinGPUDoctor.Protocol.dll', 'WinGPUDoctor.Supervisor.dll', 'WinGPUDoctor.Windows.dll',
-    'System.CodeDom.dll', 'System.Management.dll', 'runtimes/win/lib/net10.0/System.Management.dll'
-)
+$parentFiles = @(Get-PackageParentFiles -IncludeGui:$DevGui)
+$guiFiles = @(Get-PackageGuiFiles)
+function Get-ParentSource([string]$Relative) {
+    Join-Path $(if ($guiFiles -contains $Relative) { $guiSource } else { $source }) $Relative
+}
 $documentFiles = @('README.md', 'PRIVACY.md', 'SECURITY.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md')
 foreach ($relative in $parentFiles) {
-    $file = Get-Item -LiteralPath (Join-Path $source $relative) -ErrorAction Stop
+    $file = Get-Item -LiteralPath (Get-ParentSource $relative) -ErrorAction Stop
     if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Invalid parent asset: $relative" }
 }
+# Every application-local runtime file that an executable declares must be packaged beside it.
+$declared = @(Get-DepsRuntimeFiles (Join-Path $source 'wingpudoctor.deps.json'))
+if ($DevGui) { $declared += @(Get-DepsRuntimeFiles (Join-Path $guiSource 'wingpudoctor-gui.deps.json')) }
+$undeclared = @($declared | Where-Object { $parentFiles -notcontains $_ })
+if ($undeclared.Count) { throw "A declared runtime file is not in the package list: $($undeclared -join ', ')" }
 foreach ($relative in $documentFiles) {
     $file = Get-Item -LiteralPath (Join-Path $projectRoot $relative) -ErrorAction Stop
     if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Invalid package document: $relative" }
@@ -66,6 +76,30 @@ if ($productVersion -cne $version) { throw "CLI product version does not match $
 $runtimeConfig = Get-Content -LiteralPath (Join-Path $source 'wingpudoctor.runtimeconfig.json') -Raw | ConvertFrom-Json
 if ($runtimeConfig.runtimeOptions.framework.name -cne 'Microsoft.NETCore.App' -or
     $runtimeConfig.runtimeOptions.framework.version -notmatch '^10\.') { throw 'Expected .NET 10 shared runtime configuration is missing.' }
+if ($DevGui) {
+    # The GUI is framework-dependent on the .NET 10 Desktop Runtime, x64, with the same product version.
+    $gui = [IO.File]::ReadAllBytes((Join-Path $guiSource 'wingpudoctor-gui.exe'))
+    if ($gui.Length -lt 256 -or [BitConverter]::ToUInt16($gui, 0) -ne 0x5A4D) { throw 'GUI executable is not a PE image.' }
+    $guiPe = [BitConverter]::ToInt32($gui, 0x3C)
+    if ($guiPe -lt 0 -or $guiPe -gt $gui.Length - 24 -or
+        [BitConverter]::ToUInt32($gui, $guiPe) -ne 0x00004550 -or
+        [BitConverter]::ToUInt16($gui, $guiPe + 4) -ne 0x8664) { throw 'GUI executable is not Windows x64.' }
+    if ([Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $guiSource 'wingpudoctor-gui.exe')).ProductVersion -cne $version) {
+        throw "GUI product version does not match $version."
+    }
+    $guiFrameworks = @((Get-Content -LiteralPath (Join-Path $guiSource 'wingpudoctor-gui.runtimeconfig.json') -Raw | ConvertFrom-Json).runtimeOptions.frameworks)
+    foreach ($framework in 'Microsoft.NETCore.App', 'Microsoft.WindowsDesktop.App') {
+        if (@($guiFrameworks | Where-Object { $_.name -ceq $framework -and $_.version -match '^10\.' }).Count -ne 1) {
+            throw "Expected .NET 10 $framework configuration for the GUI is missing."
+        }
+    }
+    foreach ($relative in Get-PackageSharedFiles) {
+        if ((Get-FileHash -LiteralPath (Join-Path $source $relative) -Algorithm SHA256).Hash -cne
+            (Get-FileHash -LiteralPath (Join-Path $guiSource $relative) -Algorithm SHA256).Hash) {
+            throw "The CLI and GUI builds differ for shared file $relative."
+        }
+    }
+}
 
 $stageParent = Join-Path $artifactRoot ('package-stage-' + [guid]::NewGuid().ToString('N'))
 $stage = Join-Path $stageParent $name
@@ -77,7 +111,7 @@ function Copy-ReviewedFile([string]$From, [string]$Relative) {
     if ((Get-FileHash -LiteralPath $From -Algorithm SHA256).Hash -cne
         (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash) { throw "Copied asset changed: $Relative" }
 }
-foreach ($relative in $parentFiles) { Copy-ReviewedFile (Join-Path $source $relative) $relative }
+foreach ($relative in $parentFiles) { Copy-ReviewedFile (Get-ParentSource $relative) $relative }
 foreach ($relative in $workerFiles.RelativePath) {
     Copy-ReviewedFile (Join-Path $workerSource $relative) (Join-Path 'worker' $relative)
 }
@@ -94,8 +128,9 @@ $actual = @(Get-ChildItem -LiteralPath $stage -Recurse -File | ForEach-Object {
 if ($actual.Count -ne $expected.Count -or @($actual | Where-Object { !$expected.Contains($_) }).Count) {
     throw 'Package staging contains a missing, duplicate, or unexpected file.'
 }
-if (@($actual | Where-Object { Test-FirstPartyDllName $_ }).Count -ne 9) {
-    throw 'Expected 9 first-party DLL entries (5 parent + 4 Worker) for the CodeView check.'
+$firstParty = if ($DevGui) { 11 } else { 10 }
+if (@($actual | Where-Object { Test-FirstPartyDllName $_ }).Count -ne $firstParty) {
+    throw "Expected $firstParty first-party DLL entries (6 CLI$(if ($DevGui) { ' + 1 GUI' }) + 4 Worker) for the CodeView check."
 }
 # No packaged byte may carry the checkout path, the user-profile path, any X:\Users\ path or an unmapped first-party PDB path.
 $forbiddenRoots = @($projectRoot, $env:USERPROFILE)
@@ -129,6 +164,7 @@ $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvar
     Entries = $names.Count
     WorkerFiles = $workerFiles.Count
     Checksum = $checksumPath
+    Kind = if ($DevGui) { 'local test package (not a release asset)' } else { 'release layout' }
 }
 } finally {
     foreach ($setting in $settings.Keys) {
