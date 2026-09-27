@@ -56,6 +56,22 @@ public class DesktopLayoutTests
         });
     }
 
+    // Saving writes only the chosen report: the dialog neither lists it in Windows Recent items nor offers to
+    // overwrite (Host's CreateNew rule refuses an existing file anyway).
+    [Fact]
+    public void TheSaveDialogAddsNoRecentItemAndNeverOverwrites()
+    {
+        OnSta(() =>
+        {
+            var dialog = WinGPUDoctor.Desktop.MainWindow.CreateSaveDialog("wingpudoctor-report.md", ".md", "Markdown report (*.md)|*.md");
+            Assert.False(dialog.AddToRecent);
+            Assert.False(dialog.OverwritePrompt);
+            Assert.True(dialog.AddExtension && dialog.CheckPathExists && dialog.ValidateNames);
+            Assert.Equal("wingpudoctor-report.md", dialog.FileName);
+            Assert.Equal("md", dialog.DefaultExt.TrimStart('.')); // WPF stores the extension without its dot.
+        });
+    }
+
     [Fact]
     public void AnimationsRunOnlyWhileVisibleAndWhenWindowsAnimationEffectsAreOn()
     {

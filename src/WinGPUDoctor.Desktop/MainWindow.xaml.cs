@@ -65,18 +65,22 @@ public partial class MainWindow : Window
     private void OnSaveClick(object sender, RoutedEventArgs e)
     {
         if (_model.Save is not { } save) return;
-        var dialog = new SaveFileDialog
-        {
-            FileName = save.DefaultFileName,
-            DefaultExt = save.FileExtension,
-            Filter = save.FileFilter,
-            AddExtension = true,
-            OverwritePrompt = false,
-            CheckPathExists = true,
-            ValidateNames = true
-        };
+        var dialog = CreateSaveDialog(save.DefaultFileName, save.FileExtension, save.FileFilter);
         if (dialog.ShowDialog(this) == true) save.Save(dialog.FileName);
     }
+
+    // Saving adds no other file: the dialog does not list the report in Windows Recent items (WPF's default does).
+    public static SaveFileDialog CreateSaveDialog(string fileName, string extension, string filter) => new()
+    {
+        FileName = fileName,
+        DefaultExt = extension,
+        Filter = filter,
+        AddExtension = true,
+        OverwritePrompt = false,
+        CheckPathExists = true,
+        ValidateNames = true,
+        AddToRecent = false
+    };
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
