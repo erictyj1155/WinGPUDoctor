@@ -1,8 +1,8 @@
 # Reviewed package file lists, names and output locations, shared by packaging and its deterministic checks.
 # Dot-source only; loading it changes nothing (only the output helpers below write, when packaging calls them).
 
-# Files beside the executables. The CLI list is the release layout; the local test package adds the GUI
-# (ADR 0008 D6: same package root, same worker/). WinGPUDoctor.Host.dll is a CLI dependency since M7 Step 1.
+# Files beside the executables: the CLI and, since 0.2.0, the GUI in the same package root with one worker/
+# (ADR 0008 decision 6). WinGPUDoctor.Host.dll is a CLI dependency since M7 Step 1.
 function Get-PackageCliFiles {
     @('wingpudoctor.exe', 'wingpudoctor.dll', 'wingpudoctor.deps.json', 'wingpudoctor.runtimeconfig.json',
         'WinGPUDoctor.Core.dll', 'WinGPUDoctor.Host.dll', 'WinGPUDoctor.Protocol.dll', 'WinGPUDoctor.Supervisor.dll',
@@ -20,11 +20,9 @@ function Get-PackageSharedFiles {
         'WinGPUDoctor.Windows.dll', 'System.Management.dll', 'runtimes/win/lib/net10.0/System.Management.dll')
 }
 
-function Get-PackageParentFiles([switch]$IncludeGui) {
-    if ($IncludeGui) { @(Get-PackageCliFiles) + @(Get-PackageGuiFiles) } else { Get-PackageCliFiles }
-}
+function Get-PackageParentFiles { @(Get-PackageCliFiles) + @(Get-PackageGuiFiles) }
 
-# The local test package is marked -dev so that it can never be mistaken for a release asset.
+# A local test package has the release contents but is marked -dev, so it can never be mistaken for a release asset.
 function Get-PackageName([string]$Version, [switch]$Dev) {
     if ($Dev) { "WinGPUDoctor-$Version-dev-win-x64" } else { "WinGPUDoctor-$Version-win-x64" }
 }

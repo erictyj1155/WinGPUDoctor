@@ -14,15 +14,15 @@ function Assert-True([bool]$Condition, [string]$Message) {
 }
 function Same([object[]]$Left, [object[]]$Right) { (@($Left | Sort-Object) -join '|') -ceq (@($Right | Sort-Object) -join '|') }
 
-# Layouts: the release layout is the CLI's, now with its Host dependency; the test package adds exactly the GUI.
+# Layout: the CLI with its Host dependency and the GUI in one package root (ADR 0008 decision 6); a -dev test
+# package has the same contents.
 $release = @(Get-PackageParentFiles)
-$dev = @(Get-PackageParentFiles -IncludeGui)
+$cliFiles = @(Get-PackageCliFiles)
 Assert-True ($release -contains 'WinGPUDoctor.Host.dll') 'the release layout includes WinGPUDoctor.Host.dll'
-Assert-True (@($release | Where-Object { $_ -like 'wingpudoctor-gui*' }).Count -eq 0) 'the release layout has no GUI file'
-Assert-True (Same $dev (@($release) + @(Get-PackageGuiFiles))) 'the test package is the release layout plus the GUI files'
-Assert-True (@($dev | Where-Object { $_ -match '\.pdb$' }).Count -eq 0 -and @($dev | Select-Object -Unique).Count -eq $dev.Count) 'no PDB or duplicate entry'
-Assert-True (@($release | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 6) '6 first-party CLI DLLs'
-Assert-True (@($dev | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 7) '7 first-party DLLs with the GUI'
+Assert-True (Same $release (@($cliFiles) + @(Get-PackageGuiFiles)) -and $release -contains 'wingpudoctor-gui.exe' -and $release -contains 'wingpudoctor.exe') 'the release layout is the CLI files plus the GUI files'
+Assert-True (@($release | Where-Object { $_ -match '\.pdb$' }).Count -eq 0 -and @($release | Select-Object -Unique).Count -eq $release.Count) 'no PDB or duplicate entry'
+Assert-True (@($cliFiles | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 6) '6 first-party CLI DLLs'
+Assert-True (@($release | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 7) '7 first-party DLLs with the GUI'
 Assert-True ((Test-FirstPartyDllName 'wingpudoctor-gui.dll') -and (Test-FirstPartyDllName 'worker/wingpudoctor-worker.dll') -and
     !(Test-FirstPartyDllName 'wingpudoctor-gui.exe') -and !(Test-FirstPartyDllName 'System.Management.dll')) 'first-party DLL names'
 Assert-True ((Get-PackageName '0.1.0') -ceq 'WinGPUDoctor-0.1.0-win-x64' -and
@@ -31,8 +31,8 @@ Assert-True ((Get-PackageName '0.1.0') -ceq 'WinGPUDoctor-0.1.0-win-x64' -and
 # Every application-local runtime file that each executable declares is in its layout.
 $cliDeclared = @(Get-DepsRuntimeFiles (Join-Path $cli 'wingpudoctor.deps.json'))
 $guiDeclared = @(Get-DepsRuntimeFiles (Join-Path $gui 'wingpudoctor-gui.deps.json'))
-Assert-True ($cliDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $cliDeclared $release).Count -eq 0) 'the CLI deps.json files are packaged'
-Assert-True ($guiDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $guiDeclared $dev).Count -eq 0) 'the GUI deps.json files are packaged'
+Assert-True ($cliDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $cliDeclared $cliFiles).Count -eq 0) 'the CLI deps.json files are packaged'
+Assert-True ($guiDeclared.Count -gt 0 -and @(Get-UnpackagedRuntimeFiles $guiDeclared $release).Count -eq 0) 'the GUI deps.json files are packaged'
 # Every asset group the worker closure reads counts, native included: a synthetic deps.json whose native library
 # is missing from the layout is reported, which makes packaging fail.
 $syntheticDeps = '{ "runtimeTarget": { "name": ".NETCoreApp,Version=v10.0" }, "targets": { ".NETCoreApp,Version=v10.0": {
