@@ -12,7 +12,7 @@ GitHub Private Vulnerability Reporting is enabled for this repository. To report
 - `asInvoker` executable; no elevation prompts or administrator-only features.
 - WMI/native strings are untrusted. Report allowlist and whole-field redaction precede all export; no raw exception output.
 - DisplayConfig and SetupAPI interop is isolated, read-only, and size/offset tested. Temporary device-information sets use SafeHandle disposal. Raw device identifiers never enter the report model; bounded array sizing/retries and explicit matching failures avoid fallback guesses.
-- No app network client, telemetry, automatic updates, service, or dynamic vendor DLL loader.
+- No app network client, telemetry, automatic updates, service, or dynamic vendor DLL loader. Packaging fails if a packaged assembly references .NET networking or any packaged file imports a Windows networking library; this static check does not cover the shared .NET runtime.
 - File export is explicit and create-new only. A failed write may leave a new partial file; existing files remain intact. Trusted destination selection remains the user's responsibility.
 - Dependencies are versioned/locked; CI uses read-only repository permissions and does not attach live hardware reports. Check the [GitHub Actions history](https://github.com/erictyj1155/WinGPUDoctor/actions) for hosted CI results.
 - M4 workers are launched from the validated deployment directory inside a fresh Job Object at process creation with kill-on-close, one active process, and no breakaway. Exactly two handles are explicitly inherited: the pipe client for standard input/output and write-only NUL for standard error; the job, server-pipe, process/token, console, and unrelated handles are not inherited.

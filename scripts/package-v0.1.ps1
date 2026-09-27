@@ -151,6 +151,14 @@ if ($stageLeaks.Count) {
     $stageLeaks | ForEach-Object { Write-Warning $_ }
     throw 'Package staging contains a local build path; no ZIP was written. Build Release from a Git checkout.'
 }
+# No packaged file may carry network capability (package-path-guard.ps1); the ZIP holds exactly these staged bytes.
+$networkFindings = @(Get-ChildItem -LiteralPath $stage -Recurse -File | ForEach-Object {
+    Get-NetworkCapabilityFindings ([IO.Path]::GetRelativePath($stage, $_.FullName).Replace('\', '/')) ([IO.File]::ReadAllBytes($_.FullName))
+})
+if ($networkFindings.Count) {
+    $networkFindings | ForEach-Object { Write-Warning $_ }
+    throw 'Package staging contains network capability; no ZIP was written.'
+}
 
 # The ZIP is created new and checked through the same exclusive handle before it is released: entry names, entry
 # bytes equal to the staged copies, the path guard, and the SHA-256 for the checksum file.

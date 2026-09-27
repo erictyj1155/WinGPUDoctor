@@ -183,3 +183,72 @@ function Get-ZipArchivePathLeakFindings([IO.Compression.ZipArchive]$Archive, [st
         Get-PathLeakFindings $entry.FullName $buffer.ToArray() $needles $AppHostTemplate
     }
 }
+
+# No network capability in packaged code: the app has no network client (SECURITY.md). A packaged managed assembly
+# must not reference a .NET networking assembly (System.Net.*) or type, and no packaged PE may import or P/Invoke a
+# Windows networking library. This is a static check of what is packaged; the shared framework is not scanned.
+$script:NetworkLibraries = @('ws2_32.dll', 'wsock32.dll', 'mswsock.dll', 'winhttp.dll', 'wininet.dll', 'dnsapi.dll', 'iphlpapi.dll',
+    'httpapi.dll', 'urlmon.dll', 'websocket.dll', 'netapi32.dll', 'mpr.dll', 'rasapi32.dll', 'fwpuclnt.dll', 'winnsi.dll')
+
+# Names of the DLLs in a PE's import and delay-import tables.
+function Get-PeImportedLibraries([byte[]]$Bytes) {
+    $reader = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($Bytes, $false))
+    try {
+        $headers = $reader.PEHeaders
+        if (!$headers.PEHeader) { return }
+        function Get-Offset([int]$Rva) {
+            foreach ($section in $headers.SectionHeaders) {
+                $size = [Math]::Max($section.VirtualSize, $section.SizeOfRawData)
+                if ($Rva -ge $section.VirtualAddress -and $Rva -lt $section.VirtualAddress + $size) { return $Rva - $section.VirtualAddress + $section.PointerToRawData }
+            }
+            -1
+        }
+        function Get-Name([int]$Rva) {
+            $at = Get-Offset $Rva
+            if ($at -lt 0) { return '' }
+            $end = [Array]::IndexOf($Bytes, [byte]0, $at)
+            [Text.Encoding]::ASCII.GetString($Bytes, $at, $end - $at)
+        }
+        foreach ($table in @(@($headers.PEHeader.ImportTableDirectory, 20, 12), @($headers.PEHeader.DelayImportTableDirectory, 32, 4))) {
+            if ($table[0].Size -eq 0) { continue }
+            $at = Get-Offset $table[0].RelativeVirtualAddress
+            while ($at -ge 0 -and $at + $table[1] -le $Bytes.Length) {
+                $nameRva = [BitConverter]::ToInt32($Bytes, $at + $table[2])
+                if ($nameRva -eq 0) { break }
+                Get-Name $nameRva
+                $at += $table[1]
+            }
+        }
+    }
+    catch [BadImageFormatException] { }
+    finally { $reader.Dispose() }
+}
+
+function Get-NetworkCapabilityFindings([string]$Name, [byte[]]$Bytes) {
+    if ([IO.Path]::GetFileName($Name) -notmatch '\.(dll|exe)$') { return }
+    foreach ($library in @(Get-PeImportedLibraries $Bytes)) {
+        if ($script:NetworkLibraries -contains $library.ToLowerInvariant()) { "${Name}: imports network library $library" }
+    }
+    $reader = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($Bytes, $false))
+    try {
+        if (!$reader.HasMetadata) { return }
+        $metadata = [Reflection.Metadata.PEReaderExtensions]::GetMetadataReader($reader)
+        foreach ($handle in $metadata.AssemblyReferences) {
+            $assembly = $metadata.GetString($metadata.GetAssemblyReference($handle).Name)
+            if ($assembly -like 'System.Net*') { "${Name}: references networking assembly $assembly" }
+        }
+        foreach ($handle in $metadata.TypeReferences) {
+            $type = $metadata.GetTypeReference($handle)
+            $namespace = $metadata.GetString($type.Namespace)
+            if ($namespace -eq 'System.Net' -or $namespace -like 'System.Net.*') { "${Name}: references networking type $namespace.$($metadata.GetString($type.Name))" }
+        }
+        $moduleCount = [Reflection.Metadata.Ecma335.MetadataReaderExtensions]::GetTableRowCount($metadata, [Reflection.Metadata.Ecma335.TableIndex]::ModuleRef)
+        for ($row = 1; $row -le $moduleCount; $row++) {
+            $module = $metadata.GetString($metadata.GetModuleReference([Reflection.Metadata.Ecma335.MetadataTokens]::ModuleReferenceHandle($row)).Name)
+            $file = if ($module -like '*.dll') { $module } else { "$module.dll" }
+            if ($script:NetworkLibraries -contains $file.ToLowerInvariant()) { "${Name}: calls into network library $module" }
+        }
+    }
+    catch [BadImageFormatException] { }
+    finally { $reader.Dispose() }
+}

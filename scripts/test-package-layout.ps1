@@ -207,4 +207,20 @@ foreach ($patch in $patches.GetEnumerator()) {
 }
 Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' ([byte[]]($guiExe + [byte]0)) $needles $template) -match 'not the SDK apphost').Count -eq 1) 'an executable with extra trailing bytes is reported'
 
+# No network capability in anything packaged: every built executable and library of the CLI, GUI and worker. The
+# checks themselves detect a .NET networking assembly and a networking import (the GUI launcher patched in memory
+# to import WS2_32.dll in place of USER32.dll, a name of the same length).
+$worker = Join-Path $root 'src/WinGPUDoctor.Worker/bin/Release/net10.0-windows'
+$packagedPe = @(@(Get-PackageCliFiles | ForEach-Object { Join-Path $cli $_ }) + @(Get-PackageGuiFiles | ForEach-Object { Join-Path $gui $_ }) +
+    @(Get-ChildItem -LiteralPath $worker -Recurse -File -Include *.dll, *.exe | ForEach-Object FullName) | Where-Object { $_ -match '\.(dll|exe)$' })
+$networkFindings = @($packagedPe | ForEach-Object { Get-NetworkCapabilityFindings ([IO.Path]::GetFileName($_)) ([IO.File]::ReadAllBytes($_)) })
+$scanned = @($packagedPe | ForEach-Object { [IO.Path]::GetFileName($_) })
+Assert-True ($networkFindings.Count -eq 0 -and @('wingpudoctor.exe', 'wingpudoctor-gui.exe', 'wingpudoctor-worker.dll', 'System.Management.dll', 'System.CodeDom.dll' | Where-Object { $scanned -notcontains $_ }).Count -eq 0) 'no packaged executable or library has network capability'
+$netRequests = Join-Path (Get-ChildItem -LiteralPath (Join-Path $dotnetRoot 'shared/Microsoft.NETCore.App') -Directory | Select-Object -First 1).FullName 'System.Net.Requests.dll'
+Assert-True (@(Get-NetworkCapabilityFindings 'System.Net.Requests.dll' ([IO.File]::ReadAllBytes($netRequests)) | Where-Object { $_ -match 'networking (assembly|type)' }).Count -gt 0) 'a .NET networking assembly is detected'
+$importText = $latin1.GetString($guiExe)
+$importAt = $importText.IndexOf('USER32.dll', [StringComparison]::Ordinal)
+$networked = [byte[]]$guiExe.Clone()
+[Array]::Copy($latin1.GetBytes('WS2_32.dll'), 0, $networked, $importAt, 10)
+Assert-True ($importAt -gt 0 -and @(Get-NetworkCapabilityFindings 'wingpudoctor-gui.exe' $networked | Where-Object { $_ -match 'imports network library WS2_32' }).Count -eq 1) 'a networking import is detected'
 "Package layout checks: $count passed, 0 failed."
