@@ -72,7 +72,7 @@ The decisions D1–D7 are recorded in [ADR 0008](decisions/0008-beginner-desktop
 
 ### Screens
 
-1. **Welcome.** In one sentence: what the app reads (Windows' GPU, driver and active-display information). Three visible promises: *reads only, changes nothing*, *WinGPUDoctor never uploads anything*, *you review before saving*. A single primary "Scan this PC" button.
+1. **Welcome.** In one sentence: what the app reads (Windows' GPU, driver and active-display information). One short line on what it is for (added 2026-09-27): someone helping you with your graphics or display gets the report, which you save and send yourself. Three visible promises: *reads only, changes nothing*, *WinGPUDoctor never uploads anything*, *you review before saving*. A single primary "Scan this PC" button.
 2. **Scanning.** An indeterminate progress indicator, the list of what is being read (system, graphics adapters, drivers, displays) and a Cancel button.
 3. **Results.**
    - A top summary without health language, for example: "Scan complete. Windows reports 2 graphics adapters and 1 active display path. 1 item could not be read." If collection was incomplete, it says so plainly; this is the equivalent of CLI exit `3` with a report.

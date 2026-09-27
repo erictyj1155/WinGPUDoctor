@@ -12,6 +12,7 @@
   <data name="Welcome.Eyebrow" xml:space="preserve"><value>GRAPHICS &amp; DISPLAY DIAGNOSTICS</value></data>
   <data name="Welcome.Title" xml:space="preserve"><value>See what Windows reports about your graphics</value></data>
   <data name="Welcome.Intro" xml:space="preserve"><value>Graphics adapters, drivers and active display paths as Windows reports them, explained in plain language.</value></data>
+  <data name="Welcome.Purpose" xml:space="preserve"><value>Getting help with your graphics or display? Scan once, save the report and send it to the person helping you.</value></data>
   <data name="Welcome.PromiseReadOnly" xml:space="preserve"><value>Reads only. Scanning doesn't change settings, drivers or hardware.</value></data>
   <data name="Welcome.PromiseNoUpload" xml:space="preserve"><value>WinGPUDoctor never uploads anything.</value></data>
   <data name="Welcome.PromiseReview" xml:space="preserve"><value>You review the exact report before you save it.</value></data>

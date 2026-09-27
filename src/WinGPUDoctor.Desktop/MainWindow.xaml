@@ -210,7 +210,10 @@
             <StackPanel Style="{StaticResource Wgd.MainColumn}" Visibility="{Binding IsWelcome, Converter={StaticResource Visible}}">
               <TextBlock Text="{views:Text Welcome.Eyebrow}" Style="{StaticResource Wgd.Eyebrow}" />
               <TextBlock Text="{views:Text Welcome.Title}" Style="{StaticResource Wgd.Title}" AutomationProperties.HeadingLevel="Level1" />
-              <TextBlock Text="{views:Text Welcome.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,24" />
+              <TextBlock Text="{views:Text Welcome.Intro}" Style="{StaticResource Wgd.Lead}" Margin="0,0,0,10" />
+              <!-- What the app is for: the user saves the report and sends it themselves; the app uploads nothing. -->
+              <TextBlock x:Name="WelcomePurpose" Text="{views:Text Welcome.Purpose}" Style="{StaticResource Wgd.Lead}"
+                         Foreground="{DynamicResource Wgd.Text}" Margin="0,0,0,24" />
               <DockPanel Margin="0,0,0,12">
                 <TextBlock DockPanel.Dock="Left" Text="&#xE890;" Style="{StaticResource Wgd.Glyph}" />
                 <TextBlock Text="{views:Text Welcome.PromiseReadOnly}" TextWrapping="Wrap" FontSize="14.5" />
