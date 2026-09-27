@@ -212,6 +212,20 @@ public class DesktopThemeTests
         Assert.False(runtimeConfig.RootElement.GetProperty("runtimeOptions").GetProperty("configProperties").GetProperty(name).GetBoolean());
     }
 
+    // That switch applies to every TextBox and PasswordBox in the process. The only text control is the read-only
+    // preview; a new one, above all an editable one, needs its selection, caret and IME composition checked again.
+    [Fact]
+    public void TheSelectionSwitchReachesOnlyTheReadOnlyPreview()
+    {
+        var controls = Sources("*.xaml").Concat(Sources("*.cs"))
+            .SelectMany(f => Regex.Matches(File.ReadAllText(f), @"<(TextBox|PasswordBox|RichTextBox)\b[^>]*>|new (TextBox|PasswordBox|RichTextBox)\b"))
+            .Select(m => m.Value).ToList();
+        var preview = Assert.Single(controls);
+        Assert.Contains("x:Name=\"PreviewBox\"", preview, StringComparison.Ordinal);
+        Assert.Contains("IsReadOnly=\"True\"", preview, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource Wgd.PreviewBox}\"", preview, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void ColorsAreDefinedOnlyInThePalettes()
     {
