@@ -72,7 +72,7 @@ Limits: without administrator tools file events cannot be attributed to processe
 
 **Blocker 3 status.**
 - **Done in this batch (one laptop):** release-candidate live checks of the CLI and GUI (several scans in one GUI process, cancel while reading, both export formats with schema and privacy checks, Explorer launch), the no-extra-file check and the static and dynamic no-network checks.
-- **Done by the maintainer:** the maintainer ran candidate 2 (SHA-256 `be75bf3d…42f1`) by hand with the network disconnected (airplane mode) and reported on 2026-09-27 that it worked. Only the outcome was reported; which steps were run and what was observed were not recorded.
+- **Done by the maintainer:** on 2026-09-27 the maintainer tested candidate 2 (SHA-256 `be75bf3d…42f1`) by hand from its extracted folder with the network disconnected (airplane mode). The maintainer reported that the GUI scan succeeded and showed the results and that saving a report succeeded; that the CLI preview succeeded; and that `--format json --output .\offline-test.json` showed "Report saved locally" after `EXPORT` was typed. The saved reports were not inspected here.
 - **Waiting for a friend's trial:** the experience when the .NET 10 Desktop Runtime is missing. Results will be added here when reported.
 - **Not done:** the usability check with 2-3 people who don't use the console and the independent review of the UI copy (GUI_PLAN Step 6). Also not live with this candidate: cancel at every stage (only while reading), a `Forced` cancel, closing the window during a scan (done with builds on 2026-09-26), "Animation effects" off, the minimum window size, light or high-contrast themes, a screen reader, and SmartScreen on a downloaded ZIP.
 
