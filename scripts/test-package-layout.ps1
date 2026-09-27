@@ -75,21 +75,34 @@ finally {
     Remove-Item -LiteralPath $temp -Recurse -Force
 }
 
-# Path guard over the GUI files as built: no local checkout or profile path, PDB paths rooted at /_/, and the
-# executables recognized as SDK apphosts by their CodeView record and code, as packaging does.
+# The apphost template is the one MSBuild selects for both executables, from the building SDK's own host pack.
+# A copy anywhere else, such as the writable package cache, is refused, and so is a missing one.
 $localSdk = Join-Path $root '.tools/dotnet/dotnet.exe'
-$dotnetRoot = Split-Path $(if (Test-Path -LiteralPath $localSdk) { $localSdk } else { (Get-Command dotnet -ErrorAction Stop).Source }) -Parent
-$appHosts = @(Get-AppHostTemplateSignatures $dotnetRoot)
-Assert-True ($appHosts.Count -ge 1) 'an SDK apphost template is found'
+$dotnet = if (Test-Path -LiteralPath $localSdk) { $localSdk } else { (Get-Command dotnet -ErrorAction Stop).Source }
+$dotnetRoot = Split-Path $dotnet -Parent
+$templatePath = Get-SelectedAppHostTemplate $dotnet @((Join-Path $root 'src/WinGPUDoctor.Cli/WinGPUDoctor.Cli.csproj'), (Join-Path $root 'src/WinGPUDoctor.Desktop/WinGPUDoctor.Desktop.csproj'))
+$packs = [IO.Path]::GetFullPath((Join-Path $dotnetRoot 'packs/Microsoft.NETCore.App.Host.win-x64'))
+Assert-True ($templatePath -is [string] -and $templatePath.StartsWith($packs + '\', [StringComparison]::OrdinalIgnoreCase)) 'the selected apphost template is in the SDK host pack'
+function Get-TemplateRefusal([string]$Path) { try { [void](Assert-TrustedAppHostTemplate $Path $dotnetRoot); '' } catch { $_.Exception.Message } }
+$inPack = 'runtimes/win-x64/native/apphost.exe'
+Assert-True ((Get-TemplateRefusal (Join-Path $root ".tools/packages/microsoft.netcore.app.host.win-x64/10.0.12/$inPack")) -match 'host pack of the SDK' -and
+    (Get-TemplateRefusal (Join-Path $dotnetRoot 'sdk/10.0.401/AppHostTemplate/apphost.exe')) -match 'host pack of the SDK' -and
+    (Get-TemplateRefusal (Join-Path $packs "10.0.12/../../../../packages/x/$inPack")) -match 'host pack of the SDK') 'an apphost template outside the SDK host pack is refused'
+Assert-True ((Get-TemplateRefusal (Join-Path $packs "0.0.0/$inPack")) -match 'missing') 'a missing apphost template is refused'
+$template = [IO.File]::ReadAllBytes($templatePath)
+
+# Path guard over the GUI files as built: no local checkout or profile path, PDB paths rooted at /_/, and the
+# executables recognized as SDK apphosts of that template, as packaging does.
 $needles = New-PathLeakNeedles @($root, $env:USERPROFILE)
 foreach ($relative in Get-PackageGuiFiles) {
-    $findings = @(Get-PathLeakFindings $relative ([IO.File]::ReadAllBytes((Join-Path $gui $relative))) $needles $appHosts)
+    $findings = @(Get-PathLeakFindings $relative ([IO.File]::ReadAllBytes((Join-Path $gui $relative))) $needles $template)
     Assert-True ($findings.Count -eq 0) "the built $relative carries no local path"
 }
 $cliExe = [IO.File]::ReadAllBytes((Join-Path $cli 'wingpudoctor.exe'))
-Assert-True (@(Get-PathLeakFindings 'wingpudoctor.exe' $cliExe $needles $appHosts).Count -eq 0) 'the built CLI executable is a recognized apphost'
+Assert-True (@(Get-PathLeakFindings 'wingpudoctor.exe' $cliExe $needles $template).Count -eq 0) 'the built CLI executable is a recognized apphost'
 $guiExe = [IO.File]::ReadAllBytes((Join-Path $gui 'wingpudoctor-gui.exe'))
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $guiExe $needles) -match 'not rooted at /_/').Count -eq 1) 'without a known apphost template an executable is rejected'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $guiExe $needles) -match 'not rooted at /_/').Count -eq 1) 'without the apphost template an executable is rejected'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-other.exe' $guiExe $needles $template) -match 'not rooted at /_/').Count -eq 1) 'an apphost that launches a different DLL is rejected'
 
 # Path guard catches leaks in GUI files: synthetic text, and PDB paths rewritten in place to the same length.
 $latin1 = [Text.Encoding]::Latin1
@@ -108,15 +121,33 @@ $dllFindings = @(Get-PathLeakFindings 'wingpudoctor-gui.dll' $dll $needles)
 Assert-True (@($dllFindings -match 'not rooted at /_/').Count -eq 1) 'an unmapped GUI PDB path is reported'
 Assert-True (@($dllFindings -match 'PDB path is under a Windows user profile').Count -eq 1) 'a GUI DLL PDB path under a profile is reported'
 $exe = Get-Rewritten (Join-Path $gui 'wingpudoctor-gui.exe') 'D:\a\_work\' 'C:\Users\a\'
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $exe $needles $appHosts) -match 'PDB path is under a Windows user profile').Count -eq 1) 'a GUI executable PDB path under a profile is reported'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $exe $needles $template) -match 'PDB path is under a Windows user profile').Count -eq 1) 'a GUI executable PDB path under a profile is reported'
 # Any other absolute PDB path in an executable, outside the checkout and user profiles, is rejected too.
 $elsewhere = Get-Rewritten (Join-Path $gui 'wingpudoctor-gui.exe') 'D:\a\_work\1\s\' 'D:\Dev\GPU\app\'
-$elsewhereFindings = @(Get-PathLeakFindings 'wingpudoctor-gui.exe' $elsewhere $needles $appHosts)
+$elsewhereFindings = @(Get-PathLeakFindings 'wingpudoctor-gui.exe' $elsewhere $needles $template)
 Assert-True (@($elsewhereFindings -match 'not rooted at /_/').Count -eq 1 -and @($elsewhereFindings -match 'user profile|user-profile|checkout').Count -eq 0) 'an executable PDB path under D:\Dev is reported as unmapped'
-# The apphost exception needs the template's code as well as its PDB record.
+# The apphost exception covers the whole template: a one-byte change to its code, entry point or other header
+# fields, an executable or longer appended section, or extra trailing bytes is reported.
 $reader = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($guiExe, $false))
-try { $textOffset = ($reader.PEHeaders.SectionHeaders | Where-Object Name -eq '.text').PointerToRawData } finally { $reader.Dispose() }
-$patched = [byte[]]$guiExe.Clone(); $patched[$textOffset + 64] = $patched[$textOffset + 64] -bxor 0xFF
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $patched $needles $appHosts) -match 'not rooted at /_/').Count -eq 1) 'an executable whose code differs from the apphost template is reported'
+try {
+    $headers = $reader.PEHeaders
+    $textOffset = ($headers.SectionHeaders | Where-Object Name -eq '.text').PointerToRawData
+    $optional = $headers.PEHeaderStartOffset
+    $resourceHeader = $optional + 240 + 40 * ($headers.SectionHeaders.Length - 1)
+}
+finally { $reader.Dispose() }
+function Get-Patched([int]$At, [byte]$Mask) { $copy = [byte[]]$guiExe.Clone(); $copy[$At] = $copy[$At] -bxor $Mask; , $copy }
+$patches = [ordered]@{
+    'code' = Get-Patched ($textOffset + 64) 0xFF
+    'entry point' = Get-Patched ($optional + 16) 0x01
+    'DLL characteristics' = Get-Patched ($optional + 70) 0x01
+    'section alignment' = Get-Patched ($optional + 32) 0x10
+    'executable resources' = Get-Patched ($resourceHeader + 39) 0x20
+    'resource section size' = Get-Patched ($resourceHeader + 16) 0x01
+}
+foreach ($patch in $patches.GetEnumerator()) {
+    Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $patch.Value $needles $template) -match 'not rooted at /_/').Count -eq 1) "an executable with a changed $($patch.Key) is reported"
+}
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' ([byte[]]($guiExe + [byte]0)) $needles $template) -match 'not rooted at /_/').Count -eq 1) 'an executable with extra trailing bytes is reported'
 
 "Package layout checks: $count passed, 0 failed."

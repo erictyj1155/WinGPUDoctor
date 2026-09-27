@@ -8,36 +8,94 @@ function Test-FirstPartyDllName([string]$Name) {
     [IO.Path]::GetFileName($Name) -match '^wingpudoctor([.-][^/\\]+)?\.dll$'
 }
 
-# The packaged .exe files are SDK apphosts: the Microsoft-built native launcher, stamped with the app name and
-# resources. Only such a file may keep the launcher's own (non-/_/) PDB path, and it is recognized by content:
-# its CodeView record and its code (.text section) must equal those of an SDK apphost template.
-function Get-AppHostSignature([byte[]]$Bytes) {
-    $reader = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($Bytes, $false))
-    try {
-        $codeView = @($reader.ReadDebugDirectory() | Where-Object Type -eq 'CodeView')
-        $text = @($reader.PEHeaders.SectionHeaders | Where-Object Name -eq '.text')
-        if ($codeView.Count -ne 1 -or $text.Count -ne 1) { return $null }
-        $data = $reader.ReadCodeViewDebugDirectoryData($codeView[0])
-        $length = [Math]::Min($text[0].VirtualSize, $text[0].SizeOfRawData)
-        if ($text[0].PointerToRawData + $length -gt $Bytes.Length) { return $null }
-        $code = [Security.Cryptography.SHA256]::HashData([IO.MemoryStream]::new($Bytes, $text[0].PointerToRawData, $length, $false))
-        '{0}|{1}|{2}|{3}' -f $data.Guid, $data.Age, $data.Path, [Convert]::ToHexString($code)
-    }
-    catch [BadImageFormatException] { $null }
-    finally { $reader.Dispose() }
+# The packaged .exe files are SDK apphosts: the Microsoft-built native launcher that the SDK copies from a template
+# and edits for the app. Only such a file may keep the launcher's own (non-/_/) PDB path. There is one trusted
+# template: the one MSBuild selects for the build (AppHostSourcePath), which must be in the host pack of the SDK
+# that builds the package, reached without a junction or link (Resolve-PlainPath, package-layout.ps1). A copy in
+# a writable package cache is never used.
+function Get-SelectedAppHostTemplate([string]$Dotnet, [string[]]$Projects) {
+    $selected = @(foreach ($project in $Projects) {
+        $lines = @(& $Dotnet msbuild $project -nologo -p:Configuration=Release -t:ResolveFrameworkReferences -getProperty:AppHostSourcePath)
+        if ($LASTEXITCODE -ne 0) { throw 'Unable to read the apphost template that the build uses.' }
+        ($lines -join '').Trim()
+    }) | Sort-Object -Unique
+    if (@($selected).Count -ne 1 -or !$selected) { throw 'The packaged executables must be built from one apphost template.' }
+    Assert-TrustedAppHostTemplate $selected (Split-Path $Dotnet -Parent)
 }
 
-function Get-AppHostTemplateSignatures([string]$DotnetRoot) {
-    # The SDK's own template and the Windows x64 host pack, plus host packs restored into the NuGet cache.
-    $patterns = @(
-        (Join-Path $DotnetRoot 'sdk/*/AppHostTemplate/apphost.exe'),
-        (Join-Path $DotnetRoot 'packs/Microsoft.NETCore.App.Host.win-x64/*/runtimes/win-x64/native/apphost.exe')
-    )
-    if ($env:NUGET_PACKAGES) { $patterns += Join-Path $env:NUGET_PACKAGES 'microsoft.netcore.app.host.win-x64/*/runtimes/win-x64/native/apphost.exe' }
-    $signatures = foreach ($pattern in $patterns) {
-        foreach ($file in @(Get-ChildItem -Path $pattern -File -ErrorAction SilentlyContinue)) { Get-AppHostSignature ([IO.File]::ReadAllBytes($file.FullName)) }
+function Assert-TrustedAppHostTemplate([string]$Path, [string]$DotnetRoot) {
+    $packs = Join-Path $DotnetRoot 'packs/Microsoft.NETCore.App.Host.win-x64'
+    $full = try { Resolve-PlainPath $packs $Path } catch { '' }
+    if (!$full -or [IO.Path]::GetRelativePath($packs, $full) -notmatch '^\d+\.\d+\.\d+\\runtimes\\win-x64\\native\\apphost\.exe$') {
+        throw 'The apphost template must be the Windows x64 host pack of the SDK that builds the package.'
     }
-    , @($signatures | Where-Object { $_ } | Sort-Object -Unique)
+    if (!(Test-Path -LiteralPath $full -PathType Leaf)) { throw 'The selected apphost template is missing.' }
+    $full
+}
+
+# Offsets of the COFF header, optional header and section table of a PE32+ image whose headers leave room for one
+# more section header, or $null.
+function Get-PeHeaderOffsets([byte[]]$Bytes) {
+    if ($Bytes.Length -lt 0x40 -or [BitConverter]::ToUInt16($Bytes, 0) -ne 0x5A4D) { return $null }
+    $coff = [BitConverter]::ToInt32($Bytes, 0x3C) + 4
+    if ($coff -lt 4 -or $coff + 260 -gt $Bytes.Length -or [BitConverter]::ToUInt32($Bytes, $coff - 4) -ne 0x4550 -or
+        [BitConverter]::ToUInt16($Bytes, $coff + 16) -ne 240 -or [BitConverter]::ToUInt16($Bytes, $coff + 20) -ne 0x20B) { return $null }
+    $sections = $coff + 260
+    $end = $sections + 40 * ([BitConverter]::ToUInt16($Bytes, $coff + 2) + 1)
+    if ($end -gt [BitConverter]::ToUInt32($Bytes, $coff + 80) -or $end -gt $Bytes.Length) { return $null }
+    [pscustomobject]@{ Coff = $coff; Optional = $coff + 20; Sections = $sections }
+}
+
+# An SDK apphost is its template with only the SDK's own edits (HostWriter): the app DLL name in the placeholder,
+# the console or GUI subsystem, the time stamp, and one appended read-only .rsrc section holding the app's
+# resources, with the header fields that describe it. Every other template byte (headers, entry point, code, data,
+# relocations and the template's own PDB record) must be unchanged, and nothing else may follow.
+function Test-SdkAppHost([byte[]]$Bytes, [byte[]]$Template, [string]$AppDll) {
+    $t = Get-PeHeaderOffsets $Template
+    $b = Get-PeHeaderOffsets $Bytes
+    if (!$t -or !$b -or $b.Coff -ne $t.Coff -or $Bytes.Length -le $Template.Length) { return $false }
+    $u16 = { param([byte[]]$Data, [int]$At) [BitConverter]::ToUInt16($Data, $At) }
+    $u32 = { param([byte[]]$Data, [int]$At) [BitConverter]::ToUInt32($Data, $At) }
+    $o = $t.Optional
+    $count = & $u16 $Template ($t.Coff + 2)
+    $header = $t.Sections + 40 * $count
+    # The template is a console launcher without resources and with one app-path placeholder.
+    $latin1 = [Text.Encoding]::Latin1
+    $templateText = $latin1.GetString($Template)
+    $marker = 'c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2'
+    $at = $templateText.IndexOf($marker, [StringComparison]::Ordinal)
+    if ((& $u16 $Template ($o + 68)) -ne 3 -or [BitConverter]::ToUInt64($Template, $o + 128) -ne 0 -or
+        $at -lt 0 -or $templateText.IndexOf($marker, $at + 1, [StringComparison]::Ordinal) -ge 0) { return $false }
+    $name = [Text.Encoding]::UTF8.GetBytes($AppDll)
+    if ($name.Length -eq 0 -or $name.Length -gt $marker.Length) { return $false }
+    # All template bytes outside the edited fields are unchanged.
+    $edited = @(@(($t.Coff + 2), 2), @(($t.Coff + 4), 4), @(($o + 8), 4), @(($o + 56), 4), @(($o + 68), 2), @(($o + 128), 8), @($header, 40), @($at, $marker.Length))
+    $unedited = [byte[]]::new($Template.Length)
+    [Array]::Copy($Bytes, $unedited, $Template.Length)
+    foreach ($field in $edited) { [Array]::Copy($Template, $field[0], $unedited, $field[0], $field[1]) }
+    if ([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($unedited)) -cne
+        [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($Template))) { return $false }
+    # The edits are exactly the SDK's: the app DLL name, a subsystem, one more section, and that section is a
+    # read-only .rsrc that holds the resource directory, covers the rest of the file and is counted in the sizes.
+    $expectedName = [byte[]]::new($marker.Length)
+    [Array]::Copy($name, $expectedName, $name.Length)
+    $virtualSize = & $u32 $Bytes ($header + 8)
+    $rawSize = & $u32 $Bytes ($header + 16)
+    $sectionAlignment = & $u32 $Template ($o + 32)
+    $resourceSize = & $u32 $Bytes ($o + 132)
+    [Convert]::ToHexString($Bytes, $at, $marker.Length) -ceq [Convert]::ToHexString($expectedName) -and
+    (& $u16 $Bytes ($o + 68)) -in @(2, 3) -and
+    (& $u16 $Bytes ($t.Coff + 2)) -eq $count + 1 -and
+    $latin1.GetString($Bytes, $header, 8) -ceq ".rsrc`0`0`0" -and
+    $virtualSize -gt 0 -and $virtualSize -le $rawSize -and
+    (& $u32 $Bytes ($header + 12)) -eq (& $u32 $Template ($o + 56)) -and
+    (& $u32 $Bytes ($header + 20)) -eq $Template.Length -and
+    $rawSize -eq $Bytes.Length - $Template.Length -and $rawSize % (& $u32 $Template ($o + 36)) -eq 0 -and
+    [Convert]::ToHexString($Bytes, $header + 24, 12) -ceq ('0' * 24) -and
+    (& $u32 $Bytes ($header + 36)) -eq 0x40000040 -and
+    (& $u32 $Bytes ($o + 128)) -eq (& $u32 $Bytes ($header + 12)) -and $resourceSize -gt 0 -and $resourceSize -le $virtualSize -and
+    (& $u32 $Bytes ($o + 56)) -eq (& $u32 $Template ($o + 56)) + [Math]::Ceiling($virtualSize / $sectionAlignment) * $sectionAlignment -and
+    (& $u32 $Bytes ($o + 8)) -eq (& $u32 $Template ($o + 8)) + $rawSize
 }
 
 function New-PathLeakNeedles([string[]]$Roots) {
@@ -58,7 +116,7 @@ function New-PathLeakNeedles([string[]]$Roots) {
     , $needles.ToArray()
 }
 
-function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles, [string[]]$AppHostSignatures = @()) {
+function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles, [byte[]]$AppHostTemplate = $null) {
     # Findings name the entry and the failed check, never the path itself.
     $text = [Text.Encoding]::Latin1.GetString($Bytes)
     if (@($Needles | Where-Object { $text.IndexOf($_, [StringComparison]::OrdinalIgnoreCase) -ge 0 }).Count) {
@@ -88,7 +146,8 @@ function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles,
             if ((Test-FirstPartyDllName $fileName) -or $fileName -match '\.exe$') {
                 $codeView = @($debug | Where-Object Type -eq 'CodeView')
                 $mapped = $codeView.Count -eq 1 -and $reader.ReadCodeViewDebugDirectoryData($codeView[0]).Path -cmatch '^/_/[^:\\]+\.pdb$'
-                $appHost = $fileName -match '\.exe$' -and $AppHostSignatures.Count -and $AppHostSignatures -contains (Get-AppHostSignature $Bytes)
+                $appHost = $fileName -match '\.exe$' -and $null -ne $AppHostTemplate -and
+                    (Test-SdkAppHost $Bytes $AppHostTemplate ([IO.Path]::ChangeExtension($fileName, '.dll')))
                 if (!$mapped -and !$appHost) { "${Name}: first-party PDB path is not rooted at /_/" }
             }
         }
@@ -96,15 +155,15 @@ function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles,
     }
 }
 
-function Get-DirectoryPathLeakFindings([string]$Root, [string[]]$ForbiddenRoots, [string[]]$AppHostSignatures = @()) {
+function Get-DirectoryPathLeakFindings([string]$Root, [string[]]$ForbiddenRoots, [byte[]]$AppHostTemplate = $null) {
     $needles = New-PathLeakNeedles $ForbiddenRoots
     foreach ($file in Get-ChildItem -LiteralPath $Root -Recurse -File -Force) {
         $relative = [IO.Path]::GetRelativePath($Root, $file.FullName).Replace('\', '/')
-        Get-PathLeakFindings $relative ([IO.File]::ReadAllBytes($file.FullName)) $needles $AppHostSignatures
+        Get-PathLeakFindings $relative ([IO.File]::ReadAllBytes($file.FullName)) $needles $AppHostTemplate
     }
 }
 
-function Get-ZipPathLeakFindings([string]$ZipPath, [string[]]$ForbiddenRoots, [string[]]$AppHostSignatures = @()) {
+function Get-ZipPathLeakFindings([string]$ZipPath, [string[]]$ForbiddenRoots, [byte[]]$AppHostTemplate = $null) {
     $needles = New-PathLeakNeedles $ForbiddenRoots
     $archive = [IO.Compression.ZipFile]::OpenRead($ZipPath)
     try {
@@ -112,7 +171,7 @@ function Get-ZipPathLeakFindings([string]$ZipPath, [string[]]$ForbiddenRoots, [s
             $buffer = [IO.MemoryStream]::new()
             $stream = $entry.Open()
             try { $stream.CopyTo($buffer) } finally { $stream.Dispose() }
-            Get-PathLeakFindings $entry.FullName $buffer.ToArray() $needles $AppHostSignatures
+            Get-PathLeakFindings $entry.FullName $buffer.ToArray() $needles $AppHostTemplate
         }
     }
     finally { $archive.Dispose() }
