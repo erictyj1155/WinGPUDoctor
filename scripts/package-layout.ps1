@@ -22,6 +22,13 @@ function Get-PackageSharedFiles {
 
 function Get-PackageParentFiles { @(Get-PackageCliFiles) + @(Get-PackageGuiFiles) }
 
+# Documents beside the executables. The README's screenshots are packaged at the paths its links use, so the
+# extracted guide shows them without fetching anything.
+function Get-PackageDocumentFiles {
+    @('README.md', 'PRIVACY.md', 'SECURITY.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md',
+        'docs/images/gui-welcome.png', 'docs/images/gui-results.png', 'docs/images/gui-save.png')
+}
+
 # A local test package has the release contents but is marked -dev, so it can never be mistaken for a release asset.
 function Get-PackageName([string]$Version, [switch]$Dev) {
     if ($Dev) { "WinGPUDoctor-$Version-dev-win-x64" } else { "WinGPUDoctor-$Version-win-x64" }

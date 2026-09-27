@@ -6,11 +6,11 @@ Milestones 1–3 provide a small CLI for inventory and **active display paths**.
 
 ## Quick start: the WinGPUDoctor app
 
-The desktop app, `wingpudoctor-gui.exe`, is for people who don't use a console. It reads what Windows reports about your graphics adapters, drivers and active displays, explains it in plain language, and saves a report you can send to someone who is helping you. It changes nothing on your PC and uploads nothing.
+The desktop app, `wingpudoctor-gui.exe`, is for people who don't use a console. It reads what Windows reports about your graphics adapters, drivers and active displays, explains it in plain language, and saves a report you can send to someone who is helping you. Scanning doesn't change settings, drivers or hardware; the app writes a file only when you choose to save a report, and it uploads nothing.
 
 ![The WinGPUDoctor welcome screen](docs/images/gui-welcome.png)
 
-The screenshots in this guide show made-up example data, not a real PC.
+The screenshots in this guide show made-up example data, not a real PC. In the downloaded package they are in the `docs/images` folder.
 
 ### 1. Download
 
@@ -42,7 +42,7 @@ WinGPUDoctor is not code-signed, so Windows can't show a verified publisher for 
    Get-Content .\WinGPUDoctor-0.2.0-win-x64.zip.sha256
    ```
 
-3. Compare the two 64-character values; capital and small letters don't matter. The same value is also in the release notes. If they differ, don't open anything: delete the ZIP and download it again.
+3. Compare the value from the first command with the first 64 characters of the line that the second command shows (the rest of that line is the file name); capital and small letters don't matter. The same value is also in the release notes. If they differ, don't open anything: delete the ZIP and download it again.
 
 A matching checksum shows that the file arrived complete and unchanged; it can't prove who built it.
 
@@ -105,7 +105,7 @@ It can't tell you:
 - Whether the PC, a graphics adapter or a display is healthy or working correctly, or what causes a problem.
 - Which physical port a display is plugged into, or anything about displays that aren't active.
 
-It doesn't fix, change or install anything.
+It doesn't fix, change or install anything. The only file it writes is a report you choose to save.
 
 ## Implemented
 

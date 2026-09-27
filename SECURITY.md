@@ -1,6 +1,6 @@
 # Security
 
-This is a v0.1 release candidate, with no comprehensive security-audit or production-hardening claim. The tested scope is Windows 11 x64 on one ordinary-user laptop; other configurations are unvalidated. There is no response SLA or established maintenance schedule. Use only builds whose source you trust.
+This covers WinGPUDoctor 0.2.0 (the command-line tool and the desktop app), with no comprehensive security-audit or production-hardening claim. The tested scope is Windows 11 x64 on one ordinary-user laptop; other configurations are unvalidated. There is no response SLA or established maintenance schedule. Use only builds whose source you trust.
 
 ## Reporting a vulnerability
 

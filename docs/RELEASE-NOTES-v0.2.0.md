@@ -7,7 +7,7 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 ## What's new
 
 - **Desktop app, `wingpudoctor-gui.exe`.** Start a scan (which you can cancel), read the results as plain-language cards with ⓘ explanations and optional technical details, then review the exact report text and save it as Markdown or JSON. The Welcome screen says what the report is for: someone helping you with your graphics or display gets the report, which you save and send yourself.
-- **Saving follows the command-line rules.** The text you review is exactly what is saved; reports go only to a local drive of this PC, existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, so the report you send is the one you reviewed.
+- **Saving follows the command-line rules.** The text you review is exactly what is saved; reports go only to a local drive of this PC, existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, and the saved file is exactly the preview you saw.
 - **Accessibility and appearance.** The app follows the Windows dark, light and high-contrast themes and the Windows "Animation effects" setting, works with the keyboard, and gives its controls UI Automation names. It uses only built-in Windows fonts and icons, with no vendor logos.
 - **One package.** `WinGPUDoctor-0.2.0-win-x64.zip` contains the app, the command-line tool `wingpudoctor.exe` and one shared `worker` folder in a single folder (ADR 0008, decision 6).
 - **Packaging checks.** Packaging fails if a packaged file carries a local build or user-profile path, if an executable is not the SDK's own launcher with only the SDK's edits, if a runtime file that an executable declares is missing, or if the output folder is reached through a junction or link.
@@ -26,7 +26,7 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 
 ## Not code-signed
 
-The executables are not code-signed, so Windows can't show a verified publisher, and SmartScreen may show "Windows protected your PC" with "Unknown publisher". Before opening the app, compare the ZIP's SHA-256 with the value below and with the attached `.sha256` file:
+The executables are not code-signed, so Windows can't show a verified publisher, and SmartScreen may show "Windows protected your PC" with "Unknown publisher". Before opening the app, compare the ZIP's SHA-256 with the value below and with the first 64 characters of the attached `.sha256` file (the rest of its line is the file name):
 
 ```powershell
 (Get-FileHash .\WinGPUDoctor-0.2.0-win-x64.zip -Algorithm SHA256).Hash

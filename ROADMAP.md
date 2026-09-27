@@ -92,7 +92,7 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 - [x] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test (local checkpoint 2026-09-26).
 - [x] Step 3 explanation catalog and detail views with completeness tests (local checkpoint 2026-09-26).
 - [x] Step 4 save/export on shared host rules (local checkpoint 2026-09-26).
-- [ ] Step 5 packaging with distinct GUI executable name, allowlist and path guard.
+- [x] Step 5 packaging with distinct GUI executable name, allowlist and path guard (release package with the CLI, GUI and `worker/`, 2026-09-27; the missing-runtime experience awaits a friend's trial).
 - [ ] Step 6 deterministic, separately authorized live and usability validation; copy review.
 
 Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.

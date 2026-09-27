@@ -22,6 +22,11 @@ Assert-True ($release -contains 'WinGPUDoctor.Host.dll') 'the release layout inc
 Assert-True (Same $release (@($cliFiles) + @(Get-PackageGuiFiles)) -and $release -contains 'wingpudoctor-gui.exe' -and $release -contains 'wingpudoctor.exe') 'the release layout is the CLI files plus the GUI files'
 Assert-True (@($release | Where-Object { $_ -match '\.pdb$' }).Count -eq 0 -and @($release | Select-Object -Unique).Count -eq $release.Count) 'no PDB or duplicate entry'
 Assert-True (@($cliFiles | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 6) '6 first-party CLI DLLs'
+# Documents: every image the README links to is packaged at that path, so the extracted guide shows it offline.
+$documents = @(Get-PackageDocumentFiles)
+$readmeImages = @([regex]::Matches((Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw), '!\[[^\]]*\]\(([^)\s]+)\)') | ForEach-Object { $_.Groups[1].Value })
+Assert-True ($documents -contains 'README.md' -and $documents -contains 'PRIVACY.md' -and $readmeImages.Count -ge 1 -and
+    @($readmeImages | Where-Object { $documents -notcontains $_ -or !(Test-Path -LiteralPath (Join-Path $root $_) -PathType Leaf) }).Count -eq 0) 'every README image is a packaged document'
 Assert-True (@($release | Where-Object { Test-FirstPartyDllName $_ }).Count -eq 7) '7 first-party DLLs with the GUI'
 Assert-True ((Test-FirstPartyDllName 'wingpudoctor-gui.dll') -and (Test-FirstPartyDllName 'worker/wingpudoctor-worker.dll') -and
     !(Test-FirstPartyDllName 'wingpudoctor-gui.exe') -and !(Test-FirstPartyDllName 'System.Management.dll')) 'first-party DLL names'

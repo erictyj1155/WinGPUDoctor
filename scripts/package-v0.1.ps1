@@ -59,7 +59,7 @@ $guiFiles = @(Get-PackageGuiFiles)
 function Get-ParentSource([string]$Relative) {
     Join-Path $(if ($guiFiles -contains $Relative) { $guiSource } else { $source }) $Relative
 }
-$documentFiles = @('README.md', 'PRIVACY.md', 'SECURITY.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md')
+$documentFiles = @(Get-PackageDocumentFiles)
 foreach ($relative in $parentFiles) {
     $file = Get-Item -LiteralPath (Get-ParentSource $relative) -ErrorAction Stop
     if ($file.PSIsContainer -or ($file.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Invalid parent asset: $relative" }
