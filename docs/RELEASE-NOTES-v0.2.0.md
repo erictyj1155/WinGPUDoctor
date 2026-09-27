@@ -1,6 +1,6 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package size and SHA-256 below are filled in only after the release package is built and passes its final validation. Tagging and publishing need separate owner authorization after the final review.
+> **Draft: not published.** The package below was built and validated locally on 2026-09-27. Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
@@ -9,7 +9,7 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 - **Desktop app, `wingpudoctor-gui.exe`.** Start a scan (which you can cancel), read the results as plain-language cards with ⓘ explanations and optional technical details, then review the exact report text and save it as Markdown or JSON. The Welcome screen says what the report is for: someone helping you with your graphics or display gets the report, which you save and send yourself.
 - **Saving follows the command-line rules.** The text you review is exactly what is saved; reports go only to a local drive of this PC, existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, so the report you send is the one you reviewed.
 - **Accessibility and appearance.** The app follows the Windows dark, light and high-contrast themes and the Windows "Animation effects" setting, works with the keyboard, and gives its controls UI Automation names. It uses only built-in Windows fonts and icons, with no vendor logos.
-- **One package.** `WinGPUDoctor-0.2.0-win-x64.zip` contains the app, the command-line tool `wingpudoctor.exe` and one shared `worker` folder in a single folder (ADR 0008 D6).
+- **One package.** `WinGPUDoctor-0.2.0-win-x64.zip` contains the app, the command-line tool `wingpudoctor.exe` and one shared `worker` folder in a single folder (ADR 0008, decision 6).
 - **Packaging checks.** Packaging fails if a packaged file carries a local build or user-profile path, if an executable is not the SDK's own launcher with only the SDK's edits, if a runtime file that an executable declares is missing, or if the output folder is reached through a junction or link.
 
 ## Unchanged
@@ -34,7 +34,7 @@ The executables are not code-signed, so Windows can't show a verified publisher,
 
 | File | Size | SHA-256 |
 |---|---|---|
-| `WinGPUDoctor-0.2.0-win-x64.zip` | *to be filled* | *to be filled* |
+| `WinGPUDoctor-0.2.0-win-x64.zip` | 874,080 bytes | `ad7045d93b7df8f6d74ba31de4dddd7e65d87ac6f73d41afebdefb9598ae02b7` |
 
 A matching checksum shows that the download is complete and unchanged; it can't prove who built it. If it matches, select **More info**, then **Run anyway**. If it doesn't, delete the ZIP and download it again.
 
@@ -46,9 +46,13 @@ A scan shows what Windows reports. It can't tell you which graphics adapter a ga
 
 Details and dates are in `docs/VALIDATION.md`.
 
-- **Deterministic checks** (2026-09-27, at the 0.2.0 version commit): Release build with 0 warnings and 0 errors, 373 xUnit tests, the schema and helper checks and 48 package-layout checks passed.
+- **Deterministic checks** (2026-09-27, at the release-package commit): Release build with 0 warnings and 0 errors, 374 xUnit tests, the schema and helper checks and 56 package-layout checks passed. The dependency audit found no known vulnerable direct or transitive NuGet package.
+- **Release package:** built from the release-package commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
-- **App, live on one Windows 11 x64 laptop, non-administrator** (2026-09-26 and 2026-09-27, from builds and local test packages of the app, not from the release ZIP):
+- **From the extracted release ZIP, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27):
+  - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
+  - App, opened through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
+- **App, earlier live checks** (2026-09-26 and 2026-09-27, from builds and local test packages of the app):
   - Scan, results, cancel (stopped in about 0.3 s), saving Markdown and JSON through the real Save dialog, and a clean close with no worker left running.
   - Saved files were byte-identical to the preview; JSON reports passed the schema and privacy checks.
   - Dark and light themes, and an active high-contrast theme.
@@ -59,7 +63,7 @@ Details and dates are in `docs/VALIDATION.md`.
 
 ## Not verified
 
-- The v0.2.0 release ZIP itself: not yet built or validated at the time of this draft.
+- The release ZIP itself in the light and high-contrast themes (both were checked earlier with test packages).
 - Other PCs, GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
 - A screen reader such as Narrator or NVDA, and usability sessions with beginners.
 - What happens when the .NET 10 Desktop Runtime is missing.
