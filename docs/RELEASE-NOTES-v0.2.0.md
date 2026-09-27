@@ -1,6 +1,6 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package below is candidate 2, built from clean build output and validated locally on 2026-09-27. Two checks are still open: a run with the network disconnected (by the maintainer) and a trial without the .NET 10 Desktop Runtime (by a friend). Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
+> **Draft: not published.** The package below is candidate 2, built from clean build output and validated locally on 2026-09-27. One check is still open: a trial without the .NET 10 Desktop Runtime (by a friend). Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
@@ -53,6 +53,7 @@ Details and dates are in `docs/VALIDATION.md`.
   - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
   - App, launched directly and through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
   - No extra files: during scans and saves, nothing attributable to WinGPUDoctor was written under `%APPDATA%`, `%LOCALAPPDATA%` or `%TEMP%`; the only new files were the reports chosen in the Save dialog or on the command line (the report is not added to Windows Recent items).
+  - Network disconnected: the maintainer ran the candidate by hand in airplane mode and reported that it worked.
   - No network connections: with the network connected, the app, the command-line tool and their worker processes owned no TCP or UDP connection in any poll (about every 20-35 ms), and packaged code has no network capability. Polling can miss a connection that opens and closes between two polls.
 - **App, earlier live checks** (2026-09-26 and 2026-09-27, from builds and local test packages of the app):
   - Scan, results, cancel (stopped in about 0.3 s), saving Markdown and JSON through the real Save dialog, and a clean close with no worker left running.
@@ -65,7 +66,6 @@ Details and dates are in `docs/VALIDATION.md`.
 
 ## Not verified
 
-- A run with the network disconnected (airplane mode): to be done by hand by the maintainer.
 - The release ZIP itself in the light and high-contrast themes (both were checked earlier with test packages).
 - Other PCs, GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
 - A screen reader such as Narrator or NVDA, and usability sessions with beginners.
