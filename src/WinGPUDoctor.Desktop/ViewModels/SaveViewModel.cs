@@ -41,20 +41,22 @@ public sealed class SaveViewModel : ObservableObject
     private static IReadOnlyList<FactLine> Summarize(DiagnosticReport report)
     {
         static string Count(int value) => value.ToString(CultureInfo.CurrentCulture);
+        // "1 entry", "2 entries": each counted phrase has a .One and a .Many form.
+        static string Counted(string key, int value) => value == 1 ? UiText.Get(key + ".One") : UiText.Format(key + ".Many", Count(value));
         var facts = report.Facts;
         static FactLine Described(string labelKey, string text) => FactLine.Text(labelKey, text) with { IsData = false };
         return
         [
             Described("Card.System.Title", UiText.Get("Save.Contains.System")),
             facts.Gpus.State == DataState.Available
-                ? Described("Card.Adapters.Title", UiText.Format("Save.Contains.Adapters", Count(facts.Gpus.Value!.Count)))
+                ? Described("Card.Adapters.Title", Counted("Save.Contains.Adapters", facts.Gpus.Value!.Count))
                 : FactLine.Unavailable("Card.Adapters.Title", facts.Gpus.State),
             facts.Displays.State == DataState.Available
-                ? Described("Card.Displays.Title", UiText.Format("Save.Contains.Displays", Count(facts.Displays.Value!.Count)))
+                ? Described("Card.Displays.Title", Counted("Save.Contains.Displays", facts.Displays.Value!.Count))
                 : FactLine.Unavailable("Card.Displays.Title", facts.Displays.State),
             FactLine.Text("Card.Findings.Title", Count(report.Findings.Count)),
             FactLine.Text("Card.Warnings.Title", Count(report.Warnings.Count)),
-            Described("Card.Collection.Title", UiText.Format("Save.Contains.Steps", Count(report.Collection.Count)))
+            Described("Card.Collection.Title", Counted("Save.Contains.Steps", report.Collection.Count))
         ];
     }
 

@@ -47,9 +47,9 @@ public class DesktopSaveTests
         Assert.Equal(UiText.Get("Save.ReviewShort"), save.ReviewText);
         // The summary of what the exact text contains comes from the same retained report.
         var contents = save.Contents.ToDictionary(l => l.Label);
-        Assert.Equal(UiText.Format("Save.Contains.Adapters", "1"), contents[UiText.Get("Card.Adapters.Title")].Value);
+        Assert.Equal(UiText.Get("Save.Contains.Adapters.One"), contents[UiText.Get("Card.Adapters.Title")].Value);
         Assert.Equal(UiText.Get("State.Unsupported"), contents[UiText.Get("Card.Displays.Title")].Value);
-        Assert.Equal(UiText.Format("Save.Contains.Steps", "4"), contents[UiText.Get("Card.Collection.Title")].Value);
+        Assert.Equal(UiText.Format("Save.Contains.Steps.Many", "4"), contents[UiText.Get("Card.Collection.Title")].Value);
         Assert.False(contents[UiText.Get("Card.Adapters.Title")].IsData); // A description of fields, not a reported value.
         // The preview header counts hidden values; how they appear is behind its (i) tip.
         Assert.Equal(UiText.Format("Save.Hidden", "1"), save.HiddenLabel);
@@ -61,6 +61,24 @@ public class DesktopSaveTests
         Assert.True(model.IsViewingResult);
     }
 
+    // Counts read naturally: "1 entry" but "2 entries", "1 reading step" but "5 reading steps".
+    [Fact]
+    public async Task ContentsSummaryCountsUseSingularAndPlural()
+    {
+        var two = (await Scanned("topology")).Save!.Contents.ToDictionary(l => l.Label, l => l.Value);
+        Assert.Equal("2 entries, with fields for name, PCI IDs and driver details", two[UiText.Get("Card.Adapters.Title")]);
+        Assert.Equal("1 entry, with fields for resolution, refresh rate, output technology and adapter links", two[UiText.Get("Card.Displays.Title")]);
+        Assert.Equal("5 reading steps and their results", two[UiText.Get("Card.Collection.Title")]);
+        var one = (await Scanned("incomplete")).Save!.Contents.ToDictionary(l => l.Label, l => l.Value);
+        Assert.Equal("1 reading step and its result", one[UiText.Get("Card.Collection.Title")]);
+        foreach (var key in new[] { "Save.Contains.Adapters", "Save.Contains.Displays", "Save.Contains.Steps", "Count.Adapters", "Count.Paths" })
+        {
+            Assert.StartsWith("1 ", UiText.Get(key + ".One"), StringComparison.Ordinal);
+            Assert.DoesNotContain("{0}", UiText.Get(key + ".One"), StringComparison.Ordinal);
+            Assert.Contains("{0}", UiText.Get(key + ".Many"), StringComparison.Ordinal);
+        }
+    }
+
     [Fact]
     public async Task ContentsSummaryNamesFieldsWithoutClaimingTheirValues()
     {
@@ -69,7 +87,7 @@ public class DesktopSaveTests
         // The fixture's adapter name is hidden, so the summary must not promise a name.
         Assert.Equal(DataState.Redacted, model.Result!.Document.Report.Facts.Gpus.Value![0].Name.State);
         var adapters = save.Contents.Single(l => l.Label == UiText.Get("Card.Adapters.Title"));
-        Assert.Equal(UiText.Format("Save.Contains.Adapters", "1"), adapters.Value);
+        Assert.Equal(UiText.Get("Save.Contains.Adapters.One"), adapters.Value);
         Assert.Contains("fields", adapters.Value);
         Assert.DoesNotContain("token=private", adapters.Value);
         Assert.All(save.Contents, l => Assert.DoesNotContain("each with", l.Value));

@@ -55,9 +55,12 @@
   <data name="Save.ContainsTitle" xml:space="preserve"><value>What this report contains</value></data>
   <data name="Save.ContainsNote" xml:space="preserve"><value>These are the report's fields. Any value may be unavailable, hidden by the privacy filter or unresolved; the exact report text shows each one.</value></data>
   <data name="Save.Contains.System" xml:space="preserve"><value>Fields for Windows version and build, manufacturer and model</value></data>
-  <data name="Save.Contains.Adapters" xml:space="preserve"><value>{0} entries, with fields for name, PCI IDs and driver details</value></data>
-  <data name="Save.Contains.Displays" xml:space="preserve"><value>{0} entries, with fields for resolution, refresh rate, output technology and adapter links</value></data>
-  <data name="Save.Contains.Steps" xml:space="preserve"><value>{0} reading steps and their results</value></data>
+  <data name="Save.Contains.Adapters.One" xml:space="preserve"><value>1 entry, with fields for name, PCI IDs and driver details</value></data>
+  <data name="Save.Contains.Adapters.Many" xml:space="preserve"><value>{0} entries, with fields for name, PCI IDs and driver details</value></data>
+  <data name="Save.Contains.Displays.One" xml:space="preserve"><value>1 entry, with fields for resolution, refresh rate, output technology and adapter links</value></data>
+  <data name="Save.Contains.Displays.Many" xml:space="preserve"><value>{0} entries, with fields for resolution, refresh rate, output technology and adapter links</value></data>
+  <data name="Save.Contains.Steps.One" xml:space="preserve"><value>1 reading step and its result</value></data>
+  <data name="Save.Contains.Steps.Many" xml:space="preserve"><value>{0} reading steps and their results</value></data>
   <data name="Save.PreviewLabel" xml:space="preserve"><value>EXACT REPORT TEXT</value></data>
   <data name="Save.Hidden" xml:space="preserve"><value>{0} hidden</value></data>
   <data name="Save.HiddenName" xml:space="preserve"><value>About hidden values</value></data>
