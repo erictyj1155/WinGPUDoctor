@@ -14,6 +14,7 @@ $settings = @{
 }
 $previous = @{}
 $previousPresent = @{}
+$pins = @{}
 $callerEnvironment = [Environment]::GetEnvironmentVariables('Process')
 foreach ($setting in $settings.Keys) {
     $previousPresent[$setting] = $callerEnvironment.Contains($setting)
@@ -31,13 +32,13 @@ if ($versions.Count -ne 1) { throw 'The project version must be one numeric rele
 $version = $versions[0]
 . (Join-Path $PSScriptRoot 'package-layout.ps1')
 $name = Get-PackageName $version -Dev:$DevGui
-# Output goes only through plain folders inside artifacts/: no junction, symbolic link or mount point on the way
-# (package-layout.ps1). This is checked again after the build, before staging and before the ZIP is written.
+# Output goes only through plain folders inside artifacts/: no junction, symbolic link or mount point on the way.
+# Every folder written into, from artifacts/ down to the staging folders, is pinned from before the build until
+# the checksum is written, so none can be renamed or replaced meanwhile; every file is created new without
+# following a link (package-layout.ps1).
 $artifacts = Join-Path $projectRoot 'artifacts'
 $artifactRoot = Resolve-PlainPath $artifacts $(if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory, $projectRoot) } else { $artifacts })
-function Assert-PlainOutput { [void](Resolve-PlainPath $artifacts $artifactRoot) }
-[void][IO.Directory]::CreateDirectory($artifactRoot)
-Assert-PlainOutput
+[void](Add-PinnedFolders $pins $artifacts $artifactRoot)
 $zipPath = Join-Path $artifactRoot "$name.zip"
 $checksumPath = "$zipPath.sha256"
 if ((Test-PathEntry $zipPath) -or (Test-PathEntry $checksumPath)) {
@@ -109,15 +110,15 @@ if ($DevGui) {
     }
 }
 
-Assert-PlainOutput
-$stageParent = Join-Path $artifactRoot ('package-stage-' + [guid]::NewGuid().ToString('N'))
-$stage = Join-Path $stageParent $name
-[void][IO.Directory]::CreateDirectory($stage)
-[void](Resolve-PlainPath $artifacts $stage)
+# Staging folders are new and pinned; each file is written new, and the bytes written are what the ZIP must hold.
+$stage = Add-PinnedFolders $pins $artifactRoot (Join-Path $artifactRoot ('package-stage-' + [guid]::NewGuid().ToString('N')) $name) -New
+$stagedHashes = @{}
 function Copy-ReviewedFile([string]$From, [string]$Relative) {
     $destination = Join-Path $stage $Relative
-    [void][IO.Directory]::CreateDirectory((Split-Path $destination -Parent))
-    Copy-Item -LiteralPath $From -Destination $destination
+    [void](Add-PinnedFolders $pins $stage (Split-Path $destination -Parent) -New)
+    $bytes = [IO.File]::ReadAllBytes($From)
+    Write-NewFile $destination $bytes ([IO.File]::GetLastWriteTimeUtc($From))
+    $script:stagedHashes[$Relative.Replace('\', '/')] = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes))
     if ((Get-FileHash -LiteralPath $From -Algorithm SHA256).Hash -cne
         (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash) { throw "Copied asset changed: $Relative" }
 }
@@ -154,28 +155,38 @@ if ($stageLeaks.Count) {
     throw 'Package staging contains a local build path; no ZIP was written. Build Release from a Git checkout.'
 }
 
-Assert-PlainOutput
-if ((Test-PathEntry $zipPath) -or (Test-PathEntry $checksumPath)) { throw 'This package artifact already exists; refusing to overwrite it.' }
-[IO.Compression.ZipFile]::CreateFromDirectory($stage, $zipPath, [IO.Compression.CompressionLevel]::Optimal, $true)
-$archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
+# The ZIP is created new and checked through the same exclusive handle before it is released: entry names, entry
+# bytes equal to the staged copies, the path guard, and the SHA-256 for the checksum file.
+$zipStream = [WinGPUDoctor.Packaging.PinnedOutput]::CreateNewFile($zipPath)
 try {
-    $entries = @($archive.Entries | Where-Object { $_.Name })
-    $names = @($entries | ForEach-Object { $_.FullName })
-    if ($names.Count -ne $expected.Count -or @($names | Where-Object {
-        !$_.StartsWith("$name/", [StringComparison]::Ordinal) -or !$expected.Contains($_.Substring($name.Length + 1))
-    }).Count) { throw 'ZIP entries differ from the reviewed package file list.' }
-} finally { $archive.Dispose() }
-$zipLeaks = @(Get-ZipPathLeakFindings $zipPath $forbiddenRoots $appHostTemplate)
-if ($zipLeaks.Count) {
-    $zipLeaks | ForEach-Object { Write-Warning $_ }
-    throw 'The ZIP contains a local build path; no checksum was written.'
-}
-
-$hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText($checksumPath, "$hash  $name.zip`n", [Text.UTF8Encoding]::new($false))
+    [IO.Compression.ZipFile]::CreateFromDirectory($stage, $zipStream, [IO.Compression.CompressionLevel]::Optimal, $true)
+    $zipStream.Position = 0
+    $archive = [IO.Compression.ZipArchive]::new($zipStream, [IO.Compression.ZipArchiveMode]::Read, $true)
+    try {
+        $entries = @($archive.Entries | Where-Object { $_.Name })
+        $names = @($entries | ForEach-Object { $_.FullName })
+        if ($names.Count -ne $expected.Count -or @($names | Where-Object {
+            !$_.StartsWith("$name/", [StringComparison]::Ordinal) -or !$expected.Contains($_.Substring($name.Length + 1))
+        }).Count) { throw 'ZIP entries differ from the reviewed package file list.' }
+        foreach ($entry in $entries) {
+            $entryStream = $entry.Open()
+            try { $entryHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($entryStream)) } finally { $entryStream.Dispose() }
+            if ($entryHash -cne $stagedHashes[$entry.FullName.Substring($name.Length + 1)]) { throw "A ZIP entry differs from the staged file: $($entry.FullName)" }
+        }
+        $zipLeaks = @(Get-ZipArchivePathLeakFindings $archive $forbiddenRoots $appHostTemplate)
+    } finally { $archive.Dispose() }
+    if ($zipLeaks.Count) {
+        $zipLeaks | ForEach-Object { Write-Warning $_ }
+        throw 'The ZIP contains a local build path; no checksum was written.'
+    }
+    $zipStream.Position = 0
+    $hash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($zipStream)).ToLowerInvariant()
+    $zipBytes = $zipStream.Length
+} finally { $zipStream.Dispose() }
+Write-NewFile $checksumPath ([Text.UTF8Encoding]::new($false).GetBytes("$hash  $name.zip`n"))
 [pscustomobject]@{
     Zip = $zipPath
-    Bytes = (Get-Item -LiteralPath $zipPath).Length
+    Bytes = $zipBytes
     Sha256 = $hash
     Entries = $names.Count
     WorkerFiles = $workerFiles.Count
@@ -183,6 +194,7 @@ $hash = (Get-FileHash -LiteralPath $zipPath -Algorithm SHA256).Hash.ToLowerInvar
     Kind = if ($DevGui) { 'local test package (not a release asset)' } else { 'release layout' }
 }
 } finally {
+    foreach ($pin in $pins.Values) { $pin.Dispose() }
     foreach ($setting in $settings.Keys) {
         if ($previousPresent[$setting]) { [Environment]::SetEnvironmentVariable($setting, $previous[$setting], 'Process') }
         else { Remove-Item -LiteralPath "Env:$setting" -ErrorAction SilentlyContinue }

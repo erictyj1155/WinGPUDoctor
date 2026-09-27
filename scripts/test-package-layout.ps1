@@ -69,6 +69,42 @@ try {
     Assert-True ((Test-PathEntry $dangling) -and (Get-Refusal $base 'dangling/new') -match 'junction') 'a junction to a missing target is refused'
     Assert-True ((Get-Refusal $link 'new') -match 'junction') 'a junction as the base is refused'
     Assert-True ((Get-Refusal $base '../outside') -match 'inside' -and (Get-Refusal $base $outside) -match 'inside') 'a folder outside the base is refused'
+
+    # Writing: pinned folders cannot be renamed or replaced while held, a junction is refused rather than followed,
+    # and a new file is never created over an existing name (a junction there, or a file that keeps its content).
+    function Get-Thrown([scriptblock]$Action) { try { $null = & $Action; '' } catch { $_.Exception.Message } }
+    $pins = @{}
+    try {
+        $inner = Add-PinnedFolders $pins $base (Join-Path $base 'pinned/inner') -New
+        Assert-True ($inner -ceq (Join-Path $base 'pinned\inner') -and [IO.Directory]::Exists($inner) -and $pins.Count -eq 3) 'new output folders are created and pinned'
+        Assert-True ((Get-Thrown { [IO.Directory]::Move($inner, (Join-Path $base 'pinned\renamed')) }) -ne '' -and [IO.Directory]::Exists($inner)) 'a pinned folder cannot be renamed'
+        Assert-True ((Get-Thrown { [WinGPUDoctor.Packaging.PinnedOutput]::Pin($link).Dispose() }) -match 'junction' -and
+            (Get-Thrown { [WinGPUDoctor.Packaging.PinnedOutput]::Pin($dangling).Dispose() }) -match 'junction') 'a junction is refused, not pinned through'
+        $others = @{}
+        try { Assert-True ((Get-Thrown { Add-PinnedFolders $others $base (Join-Path $base 'plain') -New }) -match 'new folder') 'a folder that must be new is refused if it exists' }
+        finally { foreach ($pin in $others.Values) { $pin.Dispose() } }
+        $written = Join-Path $inner 'new.txt'
+        $when = [DateTime]::new(2026, 1, 2, 3, 4, 5, [DateTimeKind]::Utc)
+        Write-NewFile $written ([Text.Encoding]::ASCII.GetBytes('new')) $when
+        Assert-True ([IO.File]::ReadAllText($written) -ceq 'new' -and [IO.File]::GetLastWriteTimeUtc($written) -eq $when) 'a new file is written with its time stamp'
+        Assert-True ((Get-Thrown { Write-NewFile $written ([Text.Encoding]::ASCII.GetBytes('x')) }) -match 'refusing to overwrite' -and
+            [IO.File]::ReadAllText($written) -ceq 'new') 'an existing file is neither replaced nor truncated'
+        [void](New-Item -ItemType Junction -Path (Join-Path $inner 'linked.txt') -Target $outside)
+        Assert-True ((Get-Thrown { Write-NewFile (Join-Path $inner 'linked.txt') ([Text.Encoding]::ASCII.GetBytes('x')) }) -match 'refusing to overwrite' -and
+            @(Get-ChildItem -LiteralPath $outside -Force).Count -eq 0) 'a link at a new file name is not followed'
+        [IO.Directory]::Delete((Join-Path $inner 'linked.txt'))
+        # A link whose target is missing: following it would create a file outside the pinned folder.
+        $missing = Join-Path $temp 'missing-target'
+        [void][IO.Directory]::CreateDirectory($missing)
+        [void](New-Item -ItemType Junction -Path (Join-Path $inner 'dangling.txt') -Target $missing)
+        [IO.Directory]::Delete($missing)
+        Assert-True ((Get-Thrown { Write-NewFile (Join-Path $inner 'dangling.txt') ([Text.Encoding]::ASCII.GetBytes('x')) }) -match 'refusing to overwrite' -and
+            !(Test-PathEntry $missing)) 'a dangling link at a new file name is not followed'
+        [IO.Directory]::Delete((Join-Path $inner 'dangling.txt'))
+    }
+    finally { foreach ($pin in $pins.Values) { $pin.Dispose() } }
+    [IO.Directory]::Move($inner, (Join-Path $base 'pinned\renamed'))
+    Assert-True ([IO.Directory]::Exists((Join-Path $base 'pinned\renamed'))) 'a released folder can be renamed again'
 }
 finally {
     foreach ($junction in $link, $dangling) { if (Test-PathEntry $junction) { [IO.Directory]::Delete($junction) } }

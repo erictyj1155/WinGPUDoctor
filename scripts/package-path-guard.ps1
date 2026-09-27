@@ -164,15 +164,18 @@ function Get-DirectoryPathLeakFindings([string]$Root, [string[]]$ForbiddenRoots,
 }
 
 function Get-ZipPathLeakFindings([string]$ZipPath, [string[]]$ForbiddenRoots, [byte[]]$AppHostTemplate = $null) {
-    $needles = New-PathLeakNeedles $ForbiddenRoots
     $archive = [IO.Compression.ZipFile]::OpenRead($ZipPath)
-    try {
-        foreach ($entry in @($archive.Entries | Where-Object { $_.Name })) {
-            $buffer = [IO.MemoryStream]::new()
-            $stream = $entry.Open()
-            try { $stream.CopyTo($buffer) } finally { $stream.Dispose() }
-            Get-PathLeakFindings $entry.FullName $buffer.ToArray() $needles $AppHostTemplate
-        }
-    }
+    try { Get-ZipArchivePathLeakFindings $archive $ForbiddenRoots $AppHostTemplate }
     finally { $archive.Dispose() }
+}
+
+# For an archive that is already open, such as the ZIP that packaging still holds exclusively.
+function Get-ZipArchivePathLeakFindings([IO.Compression.ZipArchive]$Archive, [string[]]$ForbiddenRoots, [byte[]]$AppHostTemplate = $null) {
+    $needles = New-PathLeakNeedles $ForbiddenRoots
+    foreach ($entry in @($Archive.Entries | Where-Object { $_.Name })) {
+        $buffer = [IO.MemoryStream]::new()
+        $stream = $entry.Open()
+        try { $stream.CopyTo($buffer) } finally { $stream.Dispose() }
+        Get-PathLeakFindings $entry.FullName $buffer.ToArray() $needles $AppHostTemplate
+    }
 }

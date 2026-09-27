@@ -1,5 +1,5 @@
 # Reviewed package file lists, names and output locations, shared by packaging and its deterministic checks.
-# Dot-source only; it reads build output and changes nothing.
+# Dot-source only; loading it changes nothing (only the output helpers below write, when packaging calls them).
 
 # Files beside the executables. The CLI list is the release layout; the local test package adds the GUI
 # (ADR 0008 D6: same package root, same worker/). WinGPUDoctor.Host.dll is a CLI dependency since M7 Step 1.
@@ -84,4 +84,90 @@ function Resolve-PlainPath([string]$Base, [string]$Path) {
         }
     }
     $full
+}
+
+# Writing without following links, even if another process changes artifacts/ meanwhile. A pinned folder is
+# opened as itself (a junction or link there is refused, not followed) and without delete sharing, so while the
+# handle is open nobody can rename, delete or replace it; packaging pins every folder it writes into, from
+# artifacts/ down. A new file is created only if nothing, not even a dangling link, has its name, and a link at
+# that name is never followed (FILE_FLAG_OPEN_REPARSE_POINT with CREATE_NEW), so no existing file is truncated.
+if (!('WinGPUDoctor.Packaging.PinnedOutput' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System; using System.ComponentModel; using System.IO; using System.Runtime.InteropServices; using Microsoft.Win32.SafeHandles;
+namespace WinGPUDoctor.Packaging {
+public static class PinnedOutput {
+    const uint ListDirectory = 0x1, ReadAttributes = 0x80, GenericRead = 0x80000000, GenericWrite = 0x40000000;
+    const uint ShareRead = 0x1, ShareWrite = 0x2, CreateNewDisposition = 1, OpenExisting = 3;
+    const uint BackupSemantics = 0x02000000, OpenReparsePoint = 0x00200000, DirectoryAttribute = 0x10, ReparseAttribute = 0x400;
+    const int AlreadyExists = 183;
+    [StructLayout(LayoutKind.Sequential)]
+    struct FileInformation {
+        public uint Attributes, CreatedLow, CreatedHigh, AccessedLow, AccessedHigh, WrittenLow, WrittenHigh;
+        public uint Volume, SizeHigh, SizeLow, Links, IndexHigh, IndexLow;
+    }
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool CreateDirectoryW(string name, IntPtr security);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileInformation information);
+
+    static IOException Failure(string message, int error) => new IOException(message + " " + new Win32Exception(error).Message);
+
+    // Pins an existing plain folder; throws if the path is a junction, link, mount point or file.
+    public static SafeFileHandle Pin(string path) {
+        var handle = CreateFileW(path, ListDirectory | ReadAttributes, ShareRead | ShareWrite, IntPtr.Zero, OpenExisting,
+            BackupSemantics | OpenReparsePoint, IntPtr.Zero);
+        if (handle.IsInvalid) throw Failure("An output folder could not be pinned.", Marshal.GetLastWin32Error());
+        if (!GetFileInformationByHandle(handle, out var information) || (information.Attributes & DirectoryAttribute) == 0 ||
+            (information.Attributes & ReparseAttribute) != 0) {
+            handle.Dispose();
+            throw new IOException("The output path passes through a junction, symbolic link or mount point, or is not a folder.");
+        }
+        return handle;
+    }
+
+    // Creates a folder inside a pinned parent, or keeps an existing plain one unless it must be new, and pins it.
+    public static SafeFileHandle CreateAndPin(string path, bool mustBeNew) {
+        if (!CreateDirectoryW(path, IntPtr.Zero)) {
+            var error = Marshal.GetLastWin32Error();
+            if (error != AlreadyExists || mustBeNew) throw Failure("An output folder could not be created as a new folder.", error);
+        }
+        return Pin(path);
+    }
+
+    // Creates a new file for exclusive writing; fails if anything already has that name.
+    public static FileStream CreateNewFile(string path) {
+        var handle = CreateFileW(path, GenericRead | GenericWrite, 0, IntPtr.Zero, CreateNewDisposition, OpenReparsePoint, IntPtr.Zero);
+        if (handle.IsInvalid) throw Failure("A package file could not be created as a new file; refusing to overwrite.", Marshal.GetLastWin32Error());
+        return new FileStream(handle, FileAccess.ReadWrite);
+    }
+}
+}
+'@
+}
+
+# Pins $Path and every folder between the pinned $Base and it, creating missing ones (all of them if $New).
+# $Pins maps each pinned full path to its handle; the caller disposes them when it has finished writing.
+function Add-PinnedFolders([hashtable]$Pins, [string]$Base, [string]$Path, [switch]$New) {
+    $baseFull = Resolve-PlainPath $Base $Base
+    $full = Resolve-PlainPath $Base $Path
+    if (!$Pins.ContainsKey($baseFull)) { $Pins[$baseFull] = [WinGPUDoctor.Packaging.PinnedOutput]::CreateAndPin($baseFull, $false) }
+    $current = $baseFull
+    foreach ($part in @(if ($full.Length -gt $baseFull.Length) { $full.Substring($baseFull.Length + 1).Split([IO.Path]::DirectorySeparatorChar) })) {
+        $current = Join-Path $current $part
+        if (!$Pins.ContainsKey($current)) { $Pins[$current] = [WinGPUDoctor.Packaging.PinnedOutput]::CreateAndPin($current, [bool]$New) }
+    }
+    $full
+}
+
+# Writes a new file inside a pinned folder (Add-PinnedFolders); fails rather than replace or follow anything there.
+function Write-NewFile([string]$Path, [byte[]]$Bytes, [Nullable[DateTime]]$LastWriteTimeUtc = $null) {
+    $stream = [WinGPUDoctor.Packaging.PinnedOutput]::CreateNewFile($Path)
+    try {
+        $stream.Write($Bytes, 0, $Bytes.Length)
+        $stream.Flush()
+        if ($null -ne $LastWriteTimeUtc) { [IO.File]::SetLastWriteTimeUtc($stream.SafeFileHandle, [DateTime]$LastWriteTimeUtc) }
+    }
+    finally { $stream.Dispose() }
 }
