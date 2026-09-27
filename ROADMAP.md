@@ -19,7 +19,7 @@ M2 does not determine application rendering GPU, utilization/power, MUX position
 ## Milestone 3 — single-laptop validation and hardening (complete locally)
 
 - [x] Six fresh non-administrator CLI collections on the unchanged internal-display configuration, split into two batches with a pause between them.
-- [x] Stable one-path, exact-correlation, 2560 × 1600, identity/progressive, rational-rate, privacy, schema, and exit-status checks; reports and anomalies retained under ignored `artifacts/`.
+- [x] Stable one-path, exact-correlation, source-mode, identity/progressive, rational-rate, privacy, schema, and exit-status checks; reports and anomalies retained under ignored `artifacts/`.
 - [x] Empty optional monitor friendly name kept as explicit `unknown/missingValue` with a diagnostic, without independently making collection partial or changing CLI exit to `3`.
 - [x] Substantive source/target API, mode, adapter, provider, and retry failures remain incomplete (exit `3`); export refusal/failure remain exits `4`/`5`, and privacy redaction retains its existing warning/count semantics.
 - [x] Tightened deterministic coverage for affected severity combinations, retry growth/shrink, count guards, repeated collector use, path isolation, and multi-path privacy references.

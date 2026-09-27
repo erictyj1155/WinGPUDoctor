@@ -150,7 +150,7 @@ public sealed class ResultViewModel
         }
     }
 
-    // Resolution and refresh rate as people say them, for example "2560 × 1600 at 165 Hz".
+    // Resolution and refresh rate as people say them, for example "1920 × 1080 at 60 Hz".
     private static string DisplayMode(DisplayFacts d) => (d.SourceResolution.State, d.PathRefreshRate.State) switch
     {
         (DataState.Available, DataState.Available) => UiText.Format("Display.Mode",
