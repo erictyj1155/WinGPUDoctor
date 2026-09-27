@@ -1,6 +1,6 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package below is candidate 2, built from clean build output and validated locally on 2026-09-27. One check is still open: a trial without the .NET 10 Desktop Runtime (by a friend). Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
+> **Draft: not published.** The package below is candidate 2, built from clean build output and validated locally on 2026-09-27. Still open before release: a trial without the .NET 10 Desktop Runtime (by a friend), usability sessions with 2-3 people who don't use the console, and an independent review of the app's wording. Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
@@ -47,14 +47,14 @@ A scan shows what Windows reports. It can't tell you which graphics adapter a ga
 Details and dates are in `docs/VALIDATION.md`.
 
 - **Deterministic checks** (2026-09-27, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 375 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
-- **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, network capability, entry hashes) passed, and an independent rescan of the ZIP found nothing.
+- **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, .NET networking references and listed networking imports, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
 - **From the extracted candidate 2, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27):
   - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
   - App, launched directly and through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
-  - No extra files: during scans and saves, nothing attributable to WinGPUDoctor was written under `%APPDATA%`, `%LOCALAPPDATA%` or `%TEMP%`; the only new files were the reports chosen in the Save dialog or on the command line (the report is not added to Windows Recent items).
+  - Files: while watchers recorded `%APPDATA%`, `%LOCALAPPDATA%` and `%TEMP%` during the monitored scans and saves, nothing there was attributable to WinGPUDoctor, and the report was not added to Windows Recent items; the reports were written where chosen in the Save dialog or on the command line. Other folders and the registry were not monitored, and without administrator tools file activity can be attributed only by path.
   - Network disconnected: the maintainer ran the candidate by hand in airplane mode and reported that it worked.
-  - No network connections: with the network connected, the app, the command-line tool and their worker processes owned no TCP or UDP connection in any poll (about every 20-35 ms), and packaged code has no network capability. Polling can miss a connection that opens and closes between two polls.
+  - Network: with the network connected, the app, the command-line tool and their worker processes owned no TCP or UDP connection in any poll (about every 20-35 ms); polling can miss a connection that opens and closes between two polls. A static check found no reference to .NET networking assemblies or types and no import of the listed Windows networking libraries in the packaged files; it does not cover the shared .NET runtime.
 - **App, earlier live checks** (2026-09-26 and 2026-09-27, from builds and local test packages of the app):
   - Scan, results, cancel (stopped in about 0.3 s), saving Markdown and JSON through the real Save dialog, and a clean close with no worker left running.
   - Saved files were byte-identical to the preview; JSON reports passed the schema and privacy checks.
