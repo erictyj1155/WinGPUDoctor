@@ -1,5 +1,6 @@
 # Deterministic checks of the package layout and path guard over the existing Release build output.
-# Writes nothing and runs no collection; dev.ps1 -Action test runs it after the build.
+# Runs no collection and writes only a temporary folder under the system temp directory, removed afterwards;
+# dev.ps1 -Action test runs it after the build.
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 . "$PSScriptRoot/package-layout.ps1"
@@ -46,6 +47,32 @@ Assert-True ((@(Get-UnpackagedRuntimeFiles $syntheticFiles $withoutNative) -join
 Assert-True (@(Get-UnpackagedRuntimeFiles $syntheticFiles (@($withoutNative) + 'example-native.dll')).Count -eq 0) 'nothing is reported once the native library is packaged'
 foreach ($relative in Get-PackageSharedFiles) {
     Assert-True ((Get-FileHash (Join-Path $cli $relative)).Hash -ceq (Get-FileHash (Join-Path $gui $relative)).Hash) "shared $relative is identical in both builds"
+}
+
+# Output locations: only plain folders inside the base. A junction is refused even though its path text stays
+# inside the base, and so is a junction whose target is gone.
+$temp = Join-Path ([IO.Path]::GetTempPath()) ('wingpudoctor-layout-' + [guid]::NewGuid().ToString('N'))
+$base = Join-Path $temp 'artifacts'
+$outside = Join-Path $temp 'outside'
+$gone = Join-Path $temp 'gone'
+foreach ($folder in (Join-Path $base 'plain'), $outside, $gone) { [void][IO.Directory]::CreateDirectory($folder) }
+$link = Join-Path $base 'link'
+$dangling = Join-Path $base 'dangling'
+try {
+    [void](New-Item -ItemType Junction -Path $link -Target $outside)
+    [void](New-Item -ItemType Junction -Path $dangling -Target $gone)
+    [IO.Directory]::Delete($gone)
+    function Get-Refusal([string]$Base, [string]$Path) { try { [void](Resolve-PlainPath $Base $Path); '' } catch { $_.Exception.Message } }
+    Assert-True ((Resolve-PlainPath $base 'plain/new/deeper') -ceq (Join-Path $base 'plain\new\deeper') -and
+        (Resolve-PlainPath $base $base) -ceq $base) 'a plain or new folder inside the base is accepted'
+    Assert-True ((Get-Refusal $base 'link/new') -match 'junction' -and (Get-Refusal $base $link) -match 'junction') 'a junction inside the base is refused'
+    Assert-True ((Test-PathEntry $dangling) -and (Get-Refusal $base 'dangling/new') -match 'junction') 'a junction to a missing target is refused'
+    Assert-True ((Get-Refusal $link 'new') -match 'junction') 'a junction as the base is refused'
+    Assert-True ((Get-Refusal $base '../outside') -match 'inside' -and (Get-Refusal $base $outside) -match 'inside') 'a folder outside the base is refused'
+}
+finally {
+    foreach ($junction in $link, $dangling) { if (Test-PathEntry $junction) { [IO.Directory]::Delete($junction) } }
+    Remove-Item -LiteralPath $temp -Recurse -Force
 }
 
 # Path guard over the GUI files as built: no local checkout or profile path, PDB paths rooted at /_/, and the

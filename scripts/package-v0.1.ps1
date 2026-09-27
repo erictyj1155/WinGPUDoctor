@@ -2,7 +2,8 @@
 # This does not run a live collection or publish anything.
 # -DevGui builds a local test package instead (M7 Step 5): the CLI, wingpudoctor-gui.exe and worker/ in one
 # folder, named WinGPUDoctor-<version>-dev-win-x64 under ignored artifacts/. It is not a release asset.
-# -OutputDirectory writes to another folder inside artifacts/, for example to build again without replacing a package.
+# -OutputDirectory writes to another folder inside artifacts/, for example to build again without replacing a package;
+# the folder and every folder above it up to artifacts/ must be plain folders, not junctions or links.
 param([switch]$DevGui, [string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
@@ -30,18 +31,16 @@ if ($versions.Count -ne 1) { throw 'The project version must be one numeric rele
 $version = $versions[0]
 . (Join-Path $PSScriptRoot 'package-layout.ps1')
 $name = Get-PackageName $version -Dev:$DevGui
-$artifactRoot = Join-Path $projectRoot 'artifacts'
-if ($OutputDirectory) {
-    $requested = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($OutputDirectory, $projectRoot))
-    if (!$requested.StartsWith($artifactRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
-        throw 'The output directory must be inside the ignored artifacts folder.'
-    }
-    $artifactRoot = $requested
-    [void][IO.Directory]::CreateDirectory($artifactRoot)
-}
+# Output goes only through plain folders inside artifacts/: no junction, symbolic link or mount point on the way
+# (package-layout.ps1). This is checked again after the build, before staging and before the ZIP is written.
+$artifacts = Join-Path $projectRoot 'artifacts'
+$artifactRoot = Resolve-PlainPath $artifacts $(if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory, $projectRoot) } else { $artifacts })
+function Assert-PlainOutput { [void](Resolve-PlainPath $artifacts $artifactRoot) }
+[void][IO.Directory]::CreateDirectory($artifactRoot)
+Assert-PlainOutput
 $zipPath = Join-Path $artifactRoot "$name.zip"
 $checksumPath = "$zipPath.sha256"
-if ((Test-Path -LiteralPath $zipPath) -or (Test-Path -LiteralPath $checksumPath)) {
+if ((Test-PathEntry $zipPath) -or (Test-PathEntry $checksumPath)) {
     throw 'This package artifact already exists; refusing to overwrite it.'
 }
 
@@ -110,9 +109,11 @@ if ($DevGui) {
     }
 }
 
+Assert-PlainOutput
 $stageParent = Join-Path $artifactRoot ('package-stage-' + [guid]::NewGuid().ToString('N'))
 $stage = Join-Path $stageParent $name
 [void][IO.Directory]::CreateDirectory($stage)
+[void](Resolve-PlainPath $artifacts $stage)
 function Copy-ReviewedFile([string]$From, [string]$Relative) {
     $destination = Join-Path $stage $Relative
     [void][IO.Directory]::CreateDirectory((Split-Path $destination -Parent))
@@ -152,6 +153,8 @@ if ($stageLeaks.Count) {
     throw 'Package staging contains a local build path; no ZIP was written. Build Release from a Git checkout.'
 }
 
+Assert-PlainOutput
+if ((Test-PathEntry $zipPath) -or (Test-PathEntry $checksumPath)) { throw 'This package artifact already exists; refusing to overwrite it.' }
 [IO.Compression.ZipFile]::CreateFromDirectory($stage, $zipPath, [IO.Compression.CompressionLevel]::Optimal, $true)
 $archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
 try {

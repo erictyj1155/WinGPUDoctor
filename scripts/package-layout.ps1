@@ -1,4 +1,4 @@
-# Reviewed package file lists and names, shared by packaging and its deterministic checks.
+# Reviewed package file lists, names and output locations, shared by packaging and its deterministic checks.
 # Dot-source only; it reads build output and changes nothing.
 
 # Files beside the executables. The CLI list is the release layout; the local test package adds the GUI
@@ -56,4 +56,32 @@ function ConvertFrom-DepsRuntimeFiles([string]$Json) {
 # Declared runtime files that a package layout would leave out; packaging fails if any remain.
 function Get-UnpackagedRuntimeFiles([string[]]$Declared, [string[]]$PackageFiles) {
     @($Declared | Where-Object { $PackageFiles -notcontains $_ } | Sort-Object -Unique)
+}
+
+# True if anything is at the path, including a junction or symbolic link whose target is missing.
+function Test-PathEntry([string]$Path) {
+    try { [void][IO.File]::GetAttributes($Path); $true }
+    catch [IO.FileNotFoundException], [IO.DirectoryNotFoundException] { $false }
+}
+
+# Returns the full path of $Path, which must be $Base or inside it. $Base and every existing entry below it on the
+# way to $Path must be plain: a junction, symbolic link or mount point could send reads or writes outside $Base,
+# whatever the path text says. Missing trailing entries are allowed; the caller creates them as plain folders.
+function Resolve-PlainPath([string]$Base, [string]$Path) {
+    $baseFull = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($Base))
+    $full = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($Path, $baseFull))
+    $separator = [IO.Path]::DirectorySeparatorChar
+    if ($full -ne $baseFull -and !$full.StartsWith($baseFull + $separator, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "The path must be inside $([IO.Path]::GetFileName($baseFull))."
+    }
+    $current = $baseFull
+    $parts = @(if ($full.Length -gt $baseFull.Length) { $full.Substring($baseFull.Length + 1).Split($separator) })
+    foreach ($part in @('') + $parts) {
+        if ($part) { $current = Join-Path $current $part }
+        if (!(Test-PathEntry $current)) { break }
+        if ([IO.File]::GetAttributes($current) -band [IO.FileAttributes]::ReparsePoint) {
+            throw 'The path passes through a junction, symbolic link or mount point.'
+        }
+    }
+    $full
 }
