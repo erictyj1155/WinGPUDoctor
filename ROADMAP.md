@@ -97,6 +97,10 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 
 Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.
 
+## v0.2.1 candidate, separately authorized
+
+- [ ] Evaluate the operation timeout and a retry policy for cold starts. On a second laptop the first scan's signed-driver step may have run past its 10-second budget (the reason was not confirmed; `docs/VALIDATION.md`, 2026-09-27). Any change to `CollectionTimingPolicy` needs measurements from several computers and an independent review. v0.2.0 keeps the current timing and tells the user when a step took too long and that scanning again may help.
+
 ## Later, separately authorized
 
 Potential later work includes SetupAPI/WMI inventory comparison, privacy-reviewed *report* ZIP export, and a public sanitized collection-progress contract for the GUI. Vendor interfaces and classification need their own source, privacy, license, and hardware investigation. No capability or timeline is promised. These ideas do not block v0.1.
