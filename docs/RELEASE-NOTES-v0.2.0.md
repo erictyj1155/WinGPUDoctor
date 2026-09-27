@@ -1,12 +1,13 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package below is candidate 2, built from clean build output and validated locally on 2026-09-27. Still open before release: a trial without the .NET 10 Desktop Runtime (by a friend), usability sessions with 2-3 people who don't use the console, and an independent review of the app's wording. Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
+> **Draft: not published.** The package below is candidate 3, built from clean build output and validated locally on 2026-09-27. Still open before release: a trial without the .NET 10 Desktop Runtime (by a friend), usability sessions with 2-3 people who don't use the console, and an independent review of the app's wording. Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
 ## What's new
 
 - **Desktop app, `wingpudoctor-gui.exe`.** Start a scan (which you can cancel), read the results as plain-language cards with ⓘ explanations and optional technical details, then review the exact report text and save it as Markdown or JSON. The Welcome screen says what the report is for: someone helping you with your graphics or display gets the report, which you save and send yourself.
+- **Clear wording when Windows is slow.** If Windows takes too long to answer a reading step, the affected values say so instead of a general "Couldn't be read", and the summary suggests scanning again, with a Scan again button right under it.
 - **Saving follows the command-line rules.** The text you review is exactly what is saved; reports go only to a local drive of this PC, existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, and the saved file is exactly the preview you saw.
 - **Accessibility and appearance.** The app follows the Windows dark, light and high-contrast themes and the Windows "Animation effects" setting, works with the keyboard, and gives its controls UI Automation names. It uses only built-in Windows fonts and icons, with no vendor logos.
 - **One package.** `WinGPUDoctor-0.2.0-win-x64.zip` contains the app, the command-line tool `wingpudoctor.exe` and one shared `worker` folder in a single folder (ADR 0008, decision 6), plus the README's screenshots in `docs/images`.
@@ -34,7 +35,7 @@ The executables are not code-signed, so Windows can't show a verified publisher,
 
 | File | Size | SHA-256 |
 |---|---|---|
-| `WinGPUDoctor-0.2.0-win-x64.zip` | 1,248,093 bytes | `be75bf3d3115b9803e67964148ef8d6e2727d7bffcd36e8d0cd12ceb5d1842f1` |
+| `WinGPUDoctor-0.2.0-win-x64.zip` | 1,248,441 bytes | `810444aec2579a8090e3a645472b5511216ea36093cc0e08a4aa9ac001a34968` |
 
 A matching checksum shows that the download is complete and unchanged; it can't prove who built it. If it matches, select **More info**, then **Run anyway**. If it doesn't, delete the ZIP and download it again.
 
@@ -49,7 +50,9 @@ Details and dates are in `docs/VALIDATION.md`.
 - **Deterministic checks** (2026-09-27, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 375 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
 - **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, .NET networking references and listed networking imports, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
-- **From the extracted candidate 2, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27):
+- **From the extracted candidate 3, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
+- **On a second laptop with integrated graphics only** (candidate 2, by the maintainer): the downloaded ZIP triggered SmartScreen and ran after **Run anyway**; light and dark modes displayed correctly. The first scan showed the driver details as not read and the second scan showed them; the cause was not confirmed.
+- **From the extracted candidate 2, live on the first laptop, non-administrator, dark mode** (2026-09-27; the program has since changed only in how a timeout is worded):
   - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
   - App, launched directly and through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
   - Cancelling a scan before or during any of its five reading steps stopped it, and closing the window during a scan ended the app (exit code 0); no worker process was left.
@@ -68,9 +71,9 @@ Details and dates are in `docs/VALIDATION.md`.
 ## Not verified
 
 - The release ZIP itself in the light and high-contrast themes (both were checked earlier with test packages).
-- Other PCs, GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
+- The new timeout wording in a real scan (no step timed out during the live checks; covered by deterministic tests).
+- PCs beyond the two laptops, other GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
 - A screen reader such as Narrator or NVDA, and usability sessions with beginners.
 - What happens when the .NET 10 Desktop Runtime is missing: to be checked in a friend's trial.
-- SmartScreen on a downloaded ZIP (the local test packages had no download mark).
 - Live: a scan that is too far along to stop ("Almost done…"), "Animation effects" turned off, and the minimum window size.
 - The independent review of the app's wording (M7 Step 6).
