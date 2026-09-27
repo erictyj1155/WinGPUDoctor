@@ -8,14 +8,14 @@
       "wingpudoctor.protocol": {
         "type": "Project",
         "dependencies": {
-          "WinGPUDoctor.Core": "[0.1.0, )"
+          "WinGPUDoctor.Core": "[0.2.0, )"
         }
       },
       "wingpudoctor.supervisor": {
         "type": "Project",
         "dependencies": {
-          "WinGPUDoctor.Core": "[0.1.0, )",
-          "WinGPUDoctor.Protocol": "[0.1.0, )"
+          "WinGPUDoctor.Core": "[0.2.0, )",
+          "WinGPUDoctor.Protocol": "[0.2.0, )"
         }
       }
     }

@@ -79,7 +79,7 @@ An insufficient-buffer race is retried at most three times. Recovered races rema
 
 ## Export and compatibility
 
-Both formats use the same privacy-projected snapshot. The current schema/tool/privacy versions are 0.2.0/0.1.0/0.2. The tool release version is distinct from the report schema version. The schema forbids undeclared fields. Topology keys are regenerated and references remapped before writing, while GDI aliases and connector/rotation/scan-line strings have field-specific allowlists. Preview remains necessary for arbitrary OEM/monitor descriptions.
+Both formats use the same privacy-projected snapshot. The current schema/tool/privacy versions are 0.2.0/0.2.0/0.2. The tool release version is distinct from the report schema version; tool 0.2.0 keeps schema 0.2.0 unchanged. The schema forbids undeclared fields. Topology keys are regenerated and references remapped before writing, while GDI aliases and connector/rotation/scan-line strings have field-specific allowlists. Preview remains necessary for arbitrary OEM/monitor descriptions.
 
 The separate future report-export ZIP design remains a wrapper for sanitized JSON/Markdown plus a minimal reviewed manifest. No report-export ZIP implementation or raw-log inclusion has been added; the v0.1 application ZIP is a different artifact.
 
