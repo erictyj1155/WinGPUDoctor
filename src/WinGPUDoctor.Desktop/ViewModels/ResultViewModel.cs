@@ -17,8 +17,9 @@ public sealed class ResultViewModel
         Document = document;
         var report = document.Report;
         IsIncomplete = report.Warnings.Contains(WarningCode.CollectionIncomplete);
+        SuggestsScanAgain = report.Collection.Any(run => run.Reason == ReasonCode.Timeout);
         Headline = UiText.Get("Result.Title");
-        Summary = BuildSummary(report, IsIncomplete);
+        Summary = BuildSummary(report, IsIncomplete, SuggestsScanAgain);
         MainCards = [SystemCard(report.Facts.System), AdaptersCard(report.Facts.Gpus), .. DisplayCards(report.Facts.Displays, report.Facts.Gpus)];
         DriverCards = [.. DriverCardsFor(report.Facts.Gpus)];
         MoreCards = [FindingsCard(report.Findings), WarningsCard(report.Warnings), CollectionCard(report.Collection)];
@@ -29,6 +30,9 @@ public sealed class ResultViewModel
 
     public ReportDocument Document { get; }
     public bool IsIncomplete { get; }
+
+    // A reading step ran out of time: the summary says that scanning again may help, next to a Scan again button.
+    public bool SuggestsScanAgain { get; }
     public string Headline { get; }
     public string Summary { get; }
     public IReadOnlyList<CardViewModel> MainCards { get; }
@@ -47,7 +51,7 @@ public sealed class ResultViewModel
 
     // What Windows reported, whether reading was incomplete, and how many values were hidden. It never
     // says that everything was read: a completed step can still leave individual values missing.
-    private static string BuildSummary(DiagnosticReport report, bool incomplete)
+    private static string BuildSummary(DiagnosticReport report, bool incomplete, bool timedOut)
     {
         var facts = report.Facts;
         var adapters = facts.Gpus.State == DataState.Available ? Count("Count.Adapters", facts.Gpus.Value!.Count) : null;
@@ -64,6 +68,7 @@ public sealed class ResultViewModel
             adapters is null ? UiText.Get("Summary.AdaptersUnavailable") : null,
             paths is null ? UiText.Get("Summary.PathsUnavailable") : null,
             incomplete ? UiText.Get("Summary.Incomplete") : null,
+            timedOut ? UiText.Get("Summary.ScanAgain") : null,
             report.Privacy.RedactedFields switch
             {
                 0 => UiText.Get("Summary.HiddenNone"),
@@ -99,7 +104,7 @@ public sealed class ResultViewModel
         TechnicalLine[] technical = [TechnicalLine.Of("Summary.Adapters", gpus, list => Number(list.Count))];
         var tip = ExplanationCatalog.Glossary("Adapters");
         if (gpus.State != DataState.Available)
-            return new(title, null, [FactLine.Unavailable("Summary.Adapters", gpus.State)], [], technical: technical)
+            return new(title, null, [FactLine.Unavailable("Summary.Adapters", gpus.State, gpus.Reason)], [], technical: technical)
             {
                 Glyph = "", Tone = CardTone.Accent, TitleTip = tip, Say = UiText.Get("Card.Adapters.Unavailable")
             };
@@ -119,7 +124,7 @@ public sealed class ResultViewModel
         TechnicalLine[] count = [TechnicalLine.Of("Summary.DisplayPaths", displays, list => Number(list.Count))];
         if (displays.State != DataState.Available)
         {
-            yield return new(UiText.Get("Card.Displays.Title"), null, [FactLine.Unavailable("Summary.DisplayPaths", displays.State)], [],
+            yield return new(UiText.Get("Card.Displays.Title"), null, [FactLine.Unavailable("Summary.DisplayPaths", displays.State, displays.Reason)], [],
                 technical: count) { Glyph = "", Tone = CardTone.Data, Say = UiText.Get("Card.Displays.Unavailable") };
             yield break;
         }
@@ -133,13 +138,13 @@ public sealed class ResultViewModel
             var d = displays.Value[i];
             var facts = new List<FactLine>();
             if (d.SourceResolution.State != DataState.Available)
-                facts.Add(FactLine.Unavailable("Field.Resolution", d.SourceResolution.State).WithGlossary("Resolution"));
+                facts.Add(FactLine.Unavailable("Field.Resolution", d.SourceResolution.State, d.SourceResolution.Reason).WithGlossary("Resolution"));
             if (d.PathRefreshRate.State != DataState.Available)
-                facts.Add(FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State).WithGlossary("RefreshRate"));
+                facts.Add(FactLine.Unavailable("Field.RefreshRate", d.PathRefreshRate.State, d.PathRefreshRate.Reason).WithGlossary("RefreshRate"));
             facts.Add(FactLine.Of("Field.MonitorName", d.Name).WithGlossary("MonitorName"));
             facts.Add((d.OutputTechnology.State == DataState.Available
                 ? FactLine.Text("Field.OutputTechnology", DisplayFormat.OutputTechnology(d.OutputTechnology.Value!))
-                : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State)).WithGlossary("OutputTechnology"));
+                : FactLine.Unavailable("Field.OutputTechnology", d.OutputTechnology.State, d.OutputTechnology.Reason)).WithGlossary("OutputTechnology"));
             facts.Add(Association("Field.SourceAdapter", d.SourceAdapter, gpus).WithGlossary("SourceAdapter"));
             facts.Add(Association("Field.TargetAdapter", d.TargetAdapter, gpus).WithGlossary("TargetAdapter"));
             yield return new(DisplayTitle(i), UiText.Format("Card.ReportLabel", d.Id), facts, [], technical: DisplayTechnical(d))

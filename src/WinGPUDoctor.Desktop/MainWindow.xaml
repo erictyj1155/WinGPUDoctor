@@ -320,6 +320,10 @@
             <TextBlock Text="{Binding Headline}" Style="{StaticResource Wgd.Title}" FontSize="28" HorizontalAlignment="Center"
                        TextAlignment="Center" AutomationProperties.HeadingLevel="Level1" />
             <TextBlock Text="{Binding Summary}" Style="{StaticResource Wgd.Lead}" HorizontalAlignment="Center" TextAlignment="Center" />
+            <!-- Shown when a reading step ran out of time, right under the sentence that suggests scanning again. -->
+            <Button x:Name="SummaryScanAgain" Content="{views:Text Result.ScanAgain}" Style="{StaticResource Wgd.GhostButton}"
+                    Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    HorizontalAlignment="Center" Margin="0,14,0,0" Visibility="{Binding SuggestsScanAgain, Converter={StaticResource Visible}}" />
           </StackPanel>
 
           <ItemsControl ItemsSource="{Binding MainCards}" ItemTemplate="{StaticResource CardTemplate}" Focusable="False">

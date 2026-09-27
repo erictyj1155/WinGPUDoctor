@@ -124,6 +124,67 @@ public class DesktopCatalogTests
         @"\bmux\b", @"\bpower state\b", @"\bbusy\b", @"\bphysical\b", @"\bport\b", @"\bcable\b", @"\bplugged\b", @"\bdisconnected\b"
     ];
 
+    // Driver values in the report always reach the driver card: provider and version form its sentence, the date is
+    // listed, and nothing on the card says a value could not be read.
+    [Fact]
+    public void DriverCardShowsTheReportedDriverValues()
+    {
+        var result = Result(ModelAndPrivacyTests.Sample());
+        var card = Assert.Single(result.DriverCards);
+        Assert.Equal("Example Vendor 1.2.3.4", card.Say);
+        Assert.Equal("2026-09-01", card.Facts.Single(f => f.Label == UiText.Get("Field.DriverDate")).Value);
+        Assert.DoesNotContain(card.Facts, f => f.Label == UiText.Get("Field.DriverProvider") || f.Label == UiText.Get("Field.DriverVersion"));
+        Assert.All(card.Facts, f => Assert.True(f.IsAvailable));
+        Assert.False(result.SuggestsScanAgain);
+        Assert.DoesNotContain(UiText.Get("Summary.ScanAgain"), result.Summary, StringComparison.Ordinal);
+    }
+
+    // A driver step that ran out of time says so and suggests scanning again; any other failure keeps the general wording.
+    [Theory]
+    [InlineData(ReasonCode.Timeout, true)]
+    [InlineData(ReasonCode.ProviderUnavailable, false)]
+    [InlineData(ReasonCode.QueryFailed, false)]
+    public void DriverFailureWordingFollowsTheReason(ReasonCode reason, bool timedOut)
+    {
+        var failed = Observation<string>.Absent(DataState.Failed, DataSource.WmiSignedDriver, reason);
+        var sample = ModelAndPrivacyTests.Sample();
+        var gpus = sample.Facts.Gpus.Value!.Select(g => g with { Driver = new(failed, failed, failed) }).ToArray();
+        var snapshot = sample with
+        {
+            Facts = sample.Facts with { Gpus = Observation<IReadOnlyList<GpuFacts>>.Known(gpus, DataSource.WmiVideoController) },
+            Collection = [.. sample.Collection.Where(r => r.Source != DataSource.WmiSignedDriver), new CollectorRun(DataSource.WmiSignedDriver, CollectorStatus.Failed, reason)]
+        };
+        var result = Result(snapshot);
+        var card = Assert.Single(result.DriverCards);
+        var expected = timedOut ? "Windows took too long to answer" : "Couldn't be read";
+        foreach (var key in new[] { "Field.DriverProvider", "Field.DriverVersion", "Field.DriverDate" })
+        {
+            var line = card.Facts.Single(f => f.Label == UiText.Get(key));
+            Assert.Equal(expected, line.Value);
+            Assert.False(line.IsAvailable);
+            Assert.Contains(timedOut ? ExplanationCatalog.Reason(ReasonCode.Timeout).Meaning : ExplanationCatalog.State(DataState.Failed).Meaning,
+                line.Help, StringComparison.Ordinal);
+        }
+        Assert.Equal(UiText.Get("Driver.SayUnavailable"), card.Say);
+        Assert.Equal(timedOut, result.SuggestsScanAgain);
+        Assert.Contains(UiText.Get("Summary.Incomplete"), result.Summary, StringComparison.Ordinal);
+        Assert.Equal(timedOut, result.Summary.Contains("Scanning again may help.", StringComparison.Ordinal));
+        if (timedOut)
+            Assert.True(result.Summary.IndexOf(UiText.Get("Summary.Incomplete"), StringComparison.Ordinal) <
+                result.Summary.IndexOf(UiText.Get("Summary.ScanAgain"), StringComparison.Ordinal));
+    }
+
+    // The Scan again button under the summary appears only when scanning again is suggested and starts a new scan.
+    [Fact]
+    public void SummaryScanAgainButtonFollowsTheSuggestion()
+    {
+        var xaml = File.ReadAllText(System.IO.Path.Combine(Root, "src", "WinGPUDoctor.Desktop", "MainWindow.xaml"));
+        var button = Regex.Match(xaml, @"<Button x:Name=""SummaryScanAgain""[^>]*>").Value;
+        Assert.Contains(@"Visibility=""{Binding SuggestsScanAgain, Converter={StaticResource Visible}}""", button, StringComparison.Ordinal);
+        Assert.Contains("DataContext.ScanCommand", button, StringComparison.Ordinal);
+        Assert.Contains("Result.ScanAgain", button, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void CopyAddsNoClaimsBeyondCore()
     {

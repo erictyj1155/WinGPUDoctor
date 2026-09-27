@@ -18,15 +18,22 @@ public sealed record FactLine(string Label, string Value, bool IsAvailable, stri
     // A fact whose label is report data, such as an adapter's report-local label.
     internal static FactLine Labelled(string label, Observation<string> field) => field.State == DataState.Available
         ? new(label, field.Value!, true, "")
-        : UnavailableAs(label, field.State);
+        : UnavailableAs(label, field.State, field.Reason);
 
     internal static FactLine Text(string labelKey, string value) => new(UiText.Get(labelKey), value, true, "");
 
-    internal static FactLine Unavailable(string labelKey, DataState state) => UnavailableAs(UiText.Get(labelKey), state);
+    internal static FactLine Unavailable(string labelKey, DataState state, ReasonCode reason = ReasonCode.None) =>
+        UnavailableAs(UiText.Get(labelKey), state, reason);
 
-    private static FactLine UnavailableAs(string label, DataState state)
+    // A read that ran out of time says so, because scanning again may succeed; other reasons keep the state's wording.
+    private static FactLine UnavailableAs(string label, DataState state, ReasonCode reason)
     {
         var entry = ExplanationCatalog.State(state);
+        if (state == DataState.Failed && reason == ReasonCode.Timeout)
+            return new(label, UiText.Get("Value.TimedOut"), false, Glyph(state))
+            {
+                Help = ExplanationCatalog.Reason(reason).Meaning + " " + entry.NotMeaning
+            };
         return new(label, entry.Title, false, Glyph(state))
         {
             Help = entry.NotMeaning is null ? entry.Meaning : entry.Meaning + " " + entry.NotMeaning

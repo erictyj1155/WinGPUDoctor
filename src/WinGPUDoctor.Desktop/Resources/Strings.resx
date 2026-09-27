@@ -88,6 +88,7 @@
   <data name="Summary.AdaptersUnavailable" xml:space="preserve"><value>The graphics adapter list isn't available in this report.</value></data>
   <data name="Summary.PathsUnavailable" xml:space="preserve"><value>Active display path information isn't available in this report.</value></data>
   <data name="Summary.Incomplete" xml:space="preserve"><value>Some information could not be read; the cards below show which parts.</value></data>
+  <data name="Summary.ScanAgain" xml:space="preserve"><value>Scanning again may help.</value></data>
   <data name="Summary.HiddenNone" xml:space="preserve"><value>Nothing was hidden by the privacy filter.</value></data>
   <data name="Summary.HiddenOne" xml:space="preserve"><value>1 field was hidden by the privacy filter.</value></data>
   <data name="Summary.HiddenMany" xml:space="preserve"><value>{0} fields were hidden by the privacy filter.</value></data>
@@ -152,6 +153,7 @@
   <data name="State.Unknown" xml:space="preserve"><value>Windows didn't provide this</value></data>
   <data name="State.Unsupported" xml:space="preserve"><value>Not supported here</value></data>
   <data name="State.Failed" xml:space="preserve"><value>Couldn't be read</value></data>
+  <data name="Value.TimedOut" xml:space="preserve"><value>Windows took too long to answer</value></data>
   <data name="State.Redacted" xml:space="preserve"><value>Hidden by the privacy filter</value></data>
 
   <data name="OutputTechnology.hd15" xml:space="preserve"><value>VGA (HD15)</value></data>

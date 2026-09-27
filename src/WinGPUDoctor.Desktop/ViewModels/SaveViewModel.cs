@@ -50,10 +50,10 @@ public sealed class SaveViewModel : ObservableObject
             Described("Card.System.Title", UiText.Get("Save.Contains.System")),
             facts.Gpus.State == DataState.Available
                 ? Described("Card.Adapters.Title", Counted("Save.Contains.Adapters", facts.Gpus.Value!.Count))
-                : FactLine.Unavailable("Card.Adapters.Title", facts.Gpus.State),
+                : FactLine.Unavailable("Card.Adapters.Title", facts.Gpus.State, facts.Gpus.Reason),
             facts.Displays.State == DataState.Available
                 ? Described("Card.Displays.Title", Counted("Save.Contains.Displays", facts.Displays.Value!.Count))
-                : FactLine.Unavailable("Card.Displays.Title", facts.Displays.State),
+                : FactLine.Unavailable("Card.Displays.Title", facts.Displays.State, facts.Displays.Reason),
             FactLine.Text("Card.Findings.Title", Count(report.Findings.Count)),
             FactLine.Text("Card.Warnings.Title", Count(report.Warnings.Count)),
             Described("Card.Collection.Title", Counted("Save.Contains.Steps", report.Collection.Count))
