@@ -9,7 +9,7 @@ function Test-FirstPartyDllName([string]$Name) {
 }
 
 # The packaged .exe files are SDK apphosts: the Microsoft-built native launcher that the SDK copies from a template
-# and edits for the app. Only such a file may keep the launcher's own (non-/_/) PDB path. There is one trusted
+# and edits for the app. Every packaged .exe must be such a file (it keeps the launcher's own PDB path). There is one trusted
 # template: the one MSBuild selects for the build (AppHostSourcePath), which must be in the host pack of the SDK
 # that builds the package, reached without a junction or link (Resolve-PlainPath, package-layout.ps1). A copy in
 # a writable package cache is never used.
@@ -142,13 +142,17 @@ function Get-PathLeakFindings([string]$Name, [byte[]]$Bytes, [string[]]$Needles,
                     "${Name}: PDB path is under a Windows user profile"
                 }
             }
-            # Every packaged .exe is first-party (an apphost of ours), like the first-party DLLs.
-            if ((Test-FirstPartyDllName $fileName) -or $fileName -match '\.exe$') {
+            # Every packaged .exe must be the SDK apphost: the selected template with only the SDK's edits, whatever
+            # its PDB path says (a /_/ path does not make an executable acceptable). First-party DLLs need a /_/ path.
+            if ($fileName -match '\.exe$') {
+                if ($null -eq $AppHostTemplate -or !(Test-SdkAppHost $Bytes $AppHostTemplate ([IO.Path]::ChangeExtension($fileName, '.dll')))) {
+                    "${Name}: executable is not the SDK apphost template with only the SDK's edits"
+                }
+            }
+            elseif (Test-FirstPartyDllName $fileName) {
                 $codeView = @($debug | Where-Object Type -eq 'CodeView')
                 $mapped = $codeView.Count -eq 1 -and $reader.ReadCodeViewDebugDirectoryData($codeView[0]).Path -cmatch '^/_/[^:\\]+\.pdb$'
-                $appHost = $fileName -match '\.exe$' -and $null -ne $AppHostTemplate -and
-                    (Test-SdkAppHost $Bytes $AppHostTemplate ([IO.Path]::ChangeExtension($fileName, '.dll')))
-                if (!$mapped -and !$appHost) { "${Name}: first-party PDB path is not rooted at /_/" }
+                if (!$mapped) { "${Name}: first-party PDB path is not rooted at /_/" }
             }
         }
         finally { $reader.Dispose() }

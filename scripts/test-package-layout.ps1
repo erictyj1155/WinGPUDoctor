@@ -137,8 +137,8 @@ foreach ($relative in Get-PackageGuiFiles) {
 $cliExe = [IO.File]::ReadAllBytes((Join-Path $cli 'wingpudoctor.exe'))
 Assert-True (@(Get-PathLeakFindings 'wingpudoctor.exe' $cliExe $needles $template).Count -eq 0) 'the built CLI executable is a recognized apphost'
 $guiExe = [IO.File]::ReadAllBytes((Join-Path $gui 'wingpudoctor-gui.exe'))
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $guiExe $needles) -match 'not rooted at /_/').Count -eq 1) 'without the apphost template an executable is rejected'
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-other.exe' $guiExe $needles $template) -match 'not rooted at /_/').Count -eq 1) 'an apphost that launches a different DLL is rejected'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $guiExe $needles) -match 'not the SDK apphost').Count -eq 1) 'without the apphost template an executable is rejected'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-other.exe' $guiExe $needles $template) -match 'not the SDK apphost').Count -eq 1) 'an apphost that launches a different DLL is rejected'
 
 # Path guard catches leaks in GUI files: synthetic text, and PDB paths rewritten in place to the same length.
 $latin1 = [Text.Encoding]::Latin1
@@ -161,7 +161,23 @@ Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $exe $needles $temp
 # Any other absolute PDB path in an executable, outside the checkout and user profiles, is rejected too.
 $elsewhere = Get-Rewritten (Join-Path $gui 'wingpudoctor-gui.exe') 'D:\a\_work\1\s\' 'D:\Dev\GPU\app\'
 $elsewhereFindings = @(Get-PathLeakFindings 'wingpudoctor-gui.exe' $elsewhere $needles $template)
-Assert-True (@($elsewhereFindings -match 'not rooted at /_/').Count -eq 1 -and @($elsewhereFindings -match 'user profile|user-profile|checkout').Count -eq 0) 'an executable PDB path under D:\Dev is reported as unmapped'
+Assert-True (@($elsewhereFindings -match 'not the SDK apphost').Count -eq 1 -and @($elsewhereFindings -match 'user profile|user-profile|checkout').Count -eq 0) 'an executable PDB path under D:\Dev is reported as unmapped'
+# A /_/ PDB path does not make an executable acceptable: the template's PDB path rewritten in place to
+# /_/apphost.pdb (enough for the DLL rule) still fails the template comparison and is reported.
+$appHostPdb = & {
+    $pe = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($guiExe, $false))
+    try { $pe.ReadCodeViewDebugDirectoryData(@($pe.ReadDebugDirectory() | Where-Object Type -eq 'CodeView')[0]).Path } finally { $pe.Dispose() }
+}
+$pdbText = $latin1.GetString($guiExe)
+$pdbAt = $pdbText.IndexOf($appHostPdb, [StringComparison]::Ordinal)
+if ($pdbAt -lt 0 -or $pdbText.IndexOf($appHostPdb, $pdbAt + 1, [StringComparison]::Ordinal) -ge 0) { throw 'Expected one apphost PDB path in the GUI executable.' }
+$mappedExe = [byte[]]$guiExe.Clone()
+[Array]::Clear($mappedExe, $pdbAt, $appHostPdb.Length)
+[Array]::Copy($latin1.GetBytes('/_/apphost.pdb'), 0, $mappedExe, $pdbAt, '/_/apphost.pdb'.Length)
+$mappedPe = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($mappedExe, $false))
+try { $mappedPath = $mappedPe.ReadCodeViewDebugDirectoryData(@($mappedPe.ReadDebugDirectory() | Where-Object Type -eq 'CodeView')[0]).Path } finally { $mappedPe.Dispose() }
+$mappedFindings = @(Get-PathLeakFindings 'wingpudoctor-gui.exe' $mappedExe $needles $template)
+Assert-True ($mappedPath -ceq '/_/apphost.pdb' -and @($mappedFindings -match 'not the SDK apphost').Count -eq 1) 'an executable with its PDB path rewritten to /_/apphost.pdb is reported'
 # The apphost exception covers the whole template: a one-byte change to its code, entry point or other header
 # fields, an executable or longer appended section, or extra trailing bytes is reported.
 $reader = [Reflection.PortableExecutable.PEReader]::new([IO.MemoryStream]::new($guiExe, $false))
@@ -182,8 +198,8 @@ $patches = [ordered]@{
     'resource section size' = Get-Patched ($resourceHeader + 16) 0x01
 }
 foreach ($patch in $patches.GetEnumerator()) {
-    Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $patch.Value $needles $template) -match 'not rooted at /_/').Count -eq 1) "an executable with a changed $($patch.Key) is reported"
+    Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' $patch.Value $needles $template) -match 'not the SDK apphost').Count -eq 1) "an executable with a changed $($patch.Key) is reported"
 }
-Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' ([byte[]]($guiExe + [byte]0)) $needles $template) -match 'not rooted at /_/').Count -eq 1) 'an executable with extra trailing bytes is reported'
+Assert-True (@(@(Get-PathLeakFindings 'wingpudoctor-gui.exe' ([byte[]]($guiExe + [byte]0)) $needles $template) -match 'not the SDK apphost').Count -eq 1) 'an executable with extra trailing bytes is reported'
 
 "Package layout checks: $count passed, 0 failed."
