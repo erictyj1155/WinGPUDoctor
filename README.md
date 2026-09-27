@@ -2,7 +2,110 @@
 
 **Read → Explain → Report.** A read-only Windows GPU/display diagnostics project.
 
-Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 routes five fixed read-only operations through short-lived workers, with controlled cancellation. M5 — Explainable Active-Display Associations — adds informational findings for exact endpoint associations, unresolved correlation, unavailable targets and available empty topology; it was checkpointed at `43d3bc39a6310a48ca7f819bf307650f3afaa6a1`. The M6 local technical milestone is complete; the public GitHub v0.1.0 release remains pending. Packaged v0.1 validation has covered one laptop; evidence is specific to each candidate ZIP, so a refreshed ZIP requires its own checks. See `STATUS.md` and `docs/VALIDATION.md` in the source repository for current milestone and candidate evidence. The tool does not certify GPU health.
+Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 routes five fixed read-only operations through short-lived workers, with controlled cancellation. M5 — Explainable Active-Display Associations — adds informational findings for exact endpoint associations, unresolved correlation, unavailable targets and available empty topology; it was checkpointed at `43d3bc39a6310a48ca7f819bf307650f3afaa6a1`. v0.1.0 was published on 2026-09-25 as a command-line tool; version 0.2.0 adds the desktop app `wingpudoctor-gui` (M7) in the same package. Packaged validation has covered one laptop; evidence is specific to each candidate ZIP, so a refreshed ZIP requires its own checks. See `STATUS.md` and `docs/VALIDATION.md` in the source repository for current milestone and candidate evidence. The tool does not certify GPU health.
+
+## Quick start: the WinGPUDoctor app
+
+The desktop app, `wingpudoctor-gui.exe`, is for people who don't use a console. It reads what Windows reports about your graphics adapters, drivers and active displays, explains it in plain language, and saves a report you can send to someone who is helping you. It changes nothing on your PC and uploads nothing.
+
+![The WinGPUDoctor welcome screen](docs/images/gui-welcome.png)
+
+The screenshots in this guide show made-up example data, not a real PC.
+
+### 1. Download
+
+On the [Releases page](https://github.com/erictyj1155/WinGPUDoctor/releases), download both files for version 0.2.0:
+
+- `WinGPUDoctor-0.2.0-win-x64.zip`: the app, the command-line tool and the files they need.
+- `WinGPUDoctor-0.2.0-win-x64.zip.sha256`: the ZIP's SHA-256 checksum.
+
+WinGPUDoctor runs on 64-bit (x64) Windows. So far it has been tested on one Windows 11 x64 laptop only.
+
+### 2. Install the .NET 10 Desktop Runtime (x64)
+
+WinGPUDoctor needs Microsoft's free .NET 10 Desktop Runtime, which is not in the ZIP.
+
+1. Open Microsoft's [.NET 10.0 download page](https://dotnet.microsoft.com/download/dotnet/10.0).
+2. Under **.NET Desktop Runtime 10.0**, choose the **Windows x64** installer, run it and follow its steps.
+
+It includes the .NET Runtime that the command-line tool uses. To see whether it is already installed, open **Settings → Apps → Installed apps** and search for "Windows Desktop Runtime": you need a 10.0 version marked x64.
+
+### 3. Check the download
+
+WinGPUDoctor is not code-signed, so Windows can't show a verified publisher for it. Before opening it, check that the ZIP is exactly the published file:
+
+1. In File Explorer, open the folder that holds both downloads, right-click an empty area and choose **Open in Terminal**.
+2. Run these two commands:
+
+   ```powershell
+   (Get-FileHash .\WinGPUDoctor-0.2.0-win-x64.zip -Algorithm SHA256).Hash
+   Get-Content .\WinGPUDoctor-0.2.0-win-x64.zip.sha256
+   ```
+
+3. Compare the two 64-character values; capital and small letters don't matter. The same value is also in the release notes. If they differ, don't open anything: delete the ZIP and download it again.
+
+A matching checksum shows that the file arrived complete and unchanged; it can't prove who built it.
+
+### 4. Extract and open
+
+1. Right-click the ZIP, choose **Extract All…** and extract it to a folder on this PC, for example in Documents.
+2. Open the extracted `WinGPUDoctor-0.2.0-win-x64` folder and double-click `wingpudoctor-gui.exe`.
+
+Keep the folder together: the app needs the files and the `worker` folder beside it, so don't open it from inside the ZIP. No installer or administrator rights are needed.
+
+### 5. If Windows SmartScreen appears
+
+Because the app isn't signed, Windows may show **Windows protected your PC** with "Unknown publisher". If the checksum matched in step 3, select **More info**, then **Run anyway**. If you are not sure, select **Don't run**.
+
+If the app doesn't open at all, check that the .NET 10 Desktop Runtime (x64) from step 2 is installed.
+
+### 6. Scan
+
+Select **Start scan**. A scan usually takes a few seconds, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
+
+### 7. Read the results
+
+![Scan results with example data](docs/images/gui-results.png)
+
+The results start with one summary sentence, followed by cards:
+
+- **Your PC**: Windows version and build, manufacturer and model.
+- **Graphics adapters**: each adapter Windows reports, with a label such as `gpu-1`.
+- **Active display path**: one card per active display path, with resolution, refresh rate, output technology and the adapters Windows associates with it.
+- **Driver for gpu-1** (and so on): driver provider, version and the date the provider reports.
+- **More about this scan**: what WinGPUDoctor noticed, notes about the report, how each reading step went, and what this scan can't tell you.
+
+Select an ⓘ button, or move to it with Tab, for a plain-language explanation. **Show technical details** adds where each value came from and whether it could be read. Labels such as `gpu-1` and `display-1` exist only within this report.
+
+### 8. Save the report and send it
+
+![The review-and-save screen with example data](docs/images/gui-save.png)
+
+1. Select **Save report…**.
+2. Choose **Markdown (easy to read)** or **JSON (for tools)**. If you are not sure, ask the person helping you; Markdown is easier for people to read.
+3. Read the report text on the right: it is exactly what will be saved. Model and device names can be distinctive, and the automatic privacy filter can't guarantee anonymity. Values it hides are marked as redacted.
+4. Select **Choose location and save…** and pick a folder on this PC, preferably one that OneDrive, Dropbox or a similar app doesn't sync. WinGPUDoctor never replaces an existing file.
+5. Send the saved file yourself, for example as an email or chat attachment. WinGPUDoctor never uploads anything.
+
+### What WinGPUDoctor can and can't tell you
+
+It can tell you what Windows reports:
+
+- Windows version and build, and the manufacturer and model that the PC's firmware reports.
+- The graphics adapters Windows lists, with PCI vendor and device IDs when recognizable, and each adapter's driver provider, version and provider-reported date.
+- Each active display path: resolution, refresh rate, output technology, and which adapter its source and target are associated with when Windows provides an exact match.
+- What could not be read, and which values the privacy filter hid.
+
+It can't tell you:
+
+- Which graphics adapter a game or app uses.
+- How busy a graphics adapter is, or its power state.
+- Whether hybrid graphics or a display mode switch (MUX) is active.
+- Whether a driver is up to date; the driver date comes from the provider.
+- Whether the PC, a graphics adapter or a display is healthy or working correctly, or what causes a problem.
+- Which physical port a display is plugged into, or anything about displays that aren't active.
+
+It doesn't fix, change or install anything.
 
 ## Implemented
 
@@ -15,7 +118,7 @@ Milestones 1–3 provide a small CLI for inventory and **active display paths**.
 - Sanitized JSON and Markdown, console preview, and opt-in local file export without overwriting existing files.
 - Deterministic tests using synthetic data; separate manual hardware checks.
 
-Topology does not establish application GPU use, GPU utilization/power, MUX state, or Optimus/Advanced Optimus. iGPU/dGPU classification, inactive-display enumeration, vendor APIs, and a GUI remain unimplemented. No automatic fixes, telemetry, network client, background service, configuration writes, or elevation requests are implemented.
+Topology does not establish application GPU use, GPU utilization/power, MUX state, or Optimus/Advanced Optimus. iGPU/dGPU classification, inactive-display enumeration and vendor APIs remain unimplemented. No automatic fixes, telemetry, network client, background service, configuration writes, or elevation requests are implemented.
 
 The Release CLI output contains a `worker/` directory with the framework-dependent `wingpudoctor-worker` deployment and its reviewed runtime inputs. The supervisor validates the recursive runtime closure, hashes and loaded/deployed assembly identities before launch, checks Ready identity before Start, and runs one worker per fixed operation. Provider/timeout failures remain incomplete reports; fatal host admission/deployment/cleanup failures stop preview/export. Schema 0.2.0, exit meanings, and report privacy are unchanged.
 
@@ -23,11 +126,11 @@ The first Ctrl+C while collection remains active cancels it in a controlled way:
 
 The local M2 check found one internal path at 2560 × 1600 and approximately 165 Hz mapped to Intel Graphics. Windows returned no monitor friendly name; that historical run remained unknown with partial-collection exit `3`. M3 keeps the name explicitly unknown but treats absence of that optional metadata as non-blocking, so six repeat collections completed with exit `0` while all path and correlation evidence stayed consistent. This describes this laptop only, not a persistent mode or broad compatibility claim.
 
-## v0.1 package quick start
+## Command-line quick start
 
-The portable `WinGPUDoctor-0.1.0-win-x64.zip` is a framework-dependent application for Windows 11 x64, the only platform/configuration physically tested so far. Install a compatible **.NET 10 x64 runtime** (`Microsoft.NETCore.App`) first; the SDK and PowerShell are needed to build/package from source, not to run the extracted application. Run from an ordinary non-administrator console. No installer, administrator privilege, service, telemetry or automatic upload is involved.
+The portable `WinGPUDoctor-0.2.0-win-x64.zip` also contains the command-line tool, `wingpudoctor.exe`, beside the app. It is a framework-dependent application for Windows 11 x64, the only platform/configuration physically tested so far. Install a compatible **.NET 10 x64 runtime** (`Microsoft.NETCore.App`) first; the .NET 10 Desktop Runtime above includes it. The SDK and PowerShell are needed to build/package from source, not to run the extracted application. Run from an ordinary non-administrator console. No installer, administrator privilege, service, telemetry or automatic upload is involved.
 
-Extract the ZIP to a local folder, open a console in its `WinGPUDoctor-0.1.0-win-x64` directory, and run:
+Extract the ZIP to a local folder, open a console in its `WinGPUDoctor-0.2.0-win-x64` directory, and run:
 
 ```powershell
 .\wingpudoctor.exe --help
@@ -96,7 +199,7 @@ src/
   WinGPUDoctor.Worker/     Framework-dependent internal operation dispatcher
   WinGPUDoctor.Host/       UI-free scan session and local export rules shared by hosts
   WinGPUDoctor.Cli/        Arguments, preview, explicit local export
-  WinGPUDoctor.Desktop/    WPF beginner host (M7, in development; not yet packaged)
+  WinGPUDoctor.Desktop/    WPF desktop app, wingpudoctor-gui (M7)
 tests/WinGPUDoctor.Tests/  Synthetic unit and collector-contract tests
 docs/                     Feasibility, schema guide, decisions, validation
 schemas/                  Versioned JSON Schema
