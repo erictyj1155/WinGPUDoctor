@@ -59,6 +59,8 @@ Because the app isn't signed, Windows may show **Windows protected your PC** wit
 
 If the app doesn't open at all, check that the .NET 10 Desktop Runtime (x64) from step 2 is installed.
 
+**The first run.** Because the app isn't signed, the first time you open it or scan, Windows may show the SmartScreen warning above or a Windows Security notification that it is scanning the app. If a reading step doesn't finish during the first scan, the app shows "Didn't finish in time" for the values it could not read; scanning again may help.
+
 ### 6. Scan
 
 Select **Start scan**. A scan can take up to about a minute, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
