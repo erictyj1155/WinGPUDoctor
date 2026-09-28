@@ -1,6 +1,6 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package below is candidate 3, built from clean build output and validated locally on 2026-09-27. Still open before release: a trial without the .NET 10 Desktop Runtime (by a friend), usability sessions with 2-3 people who don't use the console, and an independent review of the app's wording. Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
+> **Draft: not published.** The package below is candidate 3, built from clean build output and validated locally on 2026-09-27. Still open before release: a final review. On 2026-09-28 the maintainer moved a trial without the .NET 10 Desktop Runtime and usability sessions with people who don't use the console to after the release; both are listed under "Not verified". Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
@@ -73,7 +73,11 @@ Details and dates are in `docs/VALIDATION.md`.
 - The release ZIP itself in the light and high-contrast themes (both were checked earlier with test packages).
 - The new timeout wording in a real scan (no step timed out during the live checks; covered by deterministic tests).
 - PCs beyond the two laptops, other GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
-- A screen reader such as Narrator or NVDA, and usability sessions with beginners.
-- What happens when the .NET 10 Desktop Runtime is missing: to be checked in a friend's trial.
+- A screen reader such as Narrator or NVDA.
+- **What happens when the .NET 10 Desktop Runtime is missing.** Not tested; the maintainer moved this check to after the release. If you try the app without it, please report what you saw.
+- **Use by people who don't use the console.** No usability sessions were held; the maintainer moved them to after the release. Please report anything that was hard to follow.
 - Live: a scan that is too far along to stop ("Almost done…"), "Animation effects" turned off, and the minimum window size.
-- The independent review of the app's wording (M7 Step 6).
+
+## Feedback
+
+Please report problems, and anything that was hard to follow, through [GitHub Issues](https://github.com/erictyj1155/WinGPUDoctor/issues). Reports are especially welcome from PCs without the .NET 10 Desktop Runtime and from people who don't use the console. Describe what you saw rather than pasting a full report: review a report before sharing any of it, because model and device names can be distinctive. Report security problems privately as described in `SECURITY.md`.
