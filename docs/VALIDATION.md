@@ -6,10 +6,41 @@ Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGEN
 
 Sections are dated, newest first. Each describes the snapshot it checked and keeps its original wording, including steps that were pending then; a later section may correct an earlier one. For the current state use `STATUS.md` and live Git.
 
-- **v0.2.0 and M7 (the desktop app):** from the top down to "M7 Step 1 host extraction". The newest sections cover the release candidates (candidate 5 is the current one; each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
+- **v0.2.0 and M7 (the desktop app):** from the top down to "M7 Step 1 host extraction". The newest section records the v0.2.0 publication on 2026-09-28. The sections below it cover the release candidates (candidate 5 was published as v0.2.0; each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
 - **Physical coverage:** packaged candidates were validated in depth on one Windows 11 x64 laptop with one internal display path. The maintainer ran a limited test of candidates 2 and 3 on a second laptop with integrated graphics only and one internal display path (make, model and Windows version not recorded). Sections before the second-laptop records that say "this laptop" or "one laptop" mean the first laptop.
 - **v0.1.0:** published on 2026-09-25 from release source S2 `62e25b7b12d04499f7b39bae417418d33cf297ee`, with the ZIP SHA-256 `65162553242aea18e5b1cebe963b769de76ebd7f7729d360ae151fa984ce63a8`; see the publication, P1.3, P1.3A and P1.2 sections. The earlier local candidates `0328525a…`, `cdefbb10…` and `1a319aa6…` are historical evidence only.
 - **M1-M6:** the older sections, down to Milestone 1.
+
+## v0.2.0 publication — 2026-09-28
+
+**Release batch.** After Codex's final review of rc5 found it ready, the owner authorized the v0.2.0 publication in nine ordered steps, stopping at the first unexpected result. The batch ran with GitHub CLI 2.101.0 on the first laptop. It stopped once, at step 2, and the owner decided how to continue (below).
+
+| Step | Result |
+|---|---|
+| 1. Preflight | The rc5 build commit S3 is `dbbd8d295cde1b182c5cb4c59393013ef70e19b8`. `main` was clean at `09c8df38107734ce3674a528c742f0bcd4ccb230`, which descends from S3 and differs from it only in unpackaged records. `origin/main` (`c2355047513076b7610ecb6d4073287d77e1bba5`) was an ancestor, so the push was a fast-forward. Only `v0.1.0` existed as a tag and only v0.1.0 as a Release. |
+| 2. Rebuild from S3 | S3 was checked out (detached, clean) in the same folder, all 18 `bin`/`obj` folders were deleted, and `package-v0.1.ps1` rebuilt the package into the ignored `artifacts/v0.2.0-release-rebuild-cd8783f7e8724c49b773b80ce31bb1f3/` (0 warnings, 0 errors, 1248912 bytes). All 33 entries have the same names, order and SHA-256 as in rc5. The ZIP's SHA-256 (`23ecf9dc…50aa2`), however, differs from rc5's, because the ZIP stores each built file's modification time and 19 built entries (the first-party DLLs, executables, `deps.json` and `runtimeconfig.json`) got the rebuild's time. **The batch stopped here.** The owner chose option A: accept entry-by-entry identity as the check and publish rc5's own, validated files. The working tree was returned to `main` at `09c8df3`, clean. |
+| 3. Push `main` | `c235504..09c8df3`, a fast-forward without force. |
+| 4. Hosted CI | `deterministic-tests` run #22 (`36370396323`) on `main` at `09c8df3` succeeded: Release build 0 warnings and 0 errors, **383/383** tests and schema checks PASS, no uploaded artifact. (Run #21 was the same commit on `m7-desktop-gui`.) |
+| 5. Tag | Annotated tag `v0.2.0`, tag object `22bc9a47ab38f277560e5eb543af59f12e1b8b66`, created at S3 with a message naming S3, the ZIP size and SHA-256, and that the binaries are unsigned. It was verified locally (type `tag`, object S3, type `commit`) before pushing. Only `refs/tags/v0.2.0` was pushed; GitHub reported the same tag object, peeling to S3. |
+| 6. Draft | "WinGPUDoctor v0.2.0" was created as a draft from the existing tag (`--verify-tag`) with exactly two uploaded assets, rc5's ZIP and `.sha256`. The text is `docs/RELEASE-NOTES-v0.2.0.md` without its first four lines (the "(draft)" title and the "Draft: not published" note, as proposed to the owner); the rest is verbatim. |
+| 7. Draft download | Both draft assets were downloaded back with `gh` and matched rc5's files in size and SHA-256. GitHub's asset digests matched. |
+| 8. Publication | Published at 2026-09-28 02:38:04 UTC (Release ID `397910528`): public, marked latest, not a draft, not a pre-release. Unauthenticated downloads of both public assets (HTTP 200) matched rc5's files. The unauthenticated API reported `v0.2.0` as the latest Release, and the public tag peeled to S3. |
+
+**Published assets.**
+
+| Uploaded asset | Size | SHA-256 |
+|---|---|---|
+| `WinGPUDoctor-0.2.0-win-x64.zip` | 1248912 bytes | `92ef52047fd06a3bebe7f07309c56bb39d487d833b32622f066896030f6e18da` |
+| `WinGPUDoctor-0.2.0-win-x64.zip.sha256` | 97 bytes | `727c348f48b072e87406d629fe6c40bd723cadbd225636a779bdea481c35e992` |
+
+These are the only uploaded assets. The "Source code" archives are generated by GitHub from the tag.
+
+**Unchanged.** The `v0.1.0` tag (`0a3da645…`, peeling to S2) and its Release with its two assets were not touched. No branch was deleted: `main` and `m7-desktop-gui` remain on `origin`. rc1-rc4, the `-dev` packages, the step 2 rebuild and all other local evidence stay in ignored `artifacts/`; none was uploaded.
+
+**Notes.**
+- The binaries are not code-signed. The Release text says so, and gives the `Get-FileHash` command and the expected SHA-256.
+- `docs/RELEASE-NOTES-v0.2.0.md` in the repository keeps its draft title and note; updating it to the published state is a separate follow-up.
+- This record is a docs-only commit after S3 and is not part of the release source.
 
 ## Final review fixes, consistency sweep and v0.2.0 candidate 5 — 2026-09-28
 
