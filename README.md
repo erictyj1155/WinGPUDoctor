@@ -51,7 +51,7 @@ A matching checksum shows that the file arrived complete and unchanged; it can't
 1. Right-click the ZIP, choose **Extract All…** and extract it to a folder on this PC, for example in Documents.
 2. Open the extracted `WinGPUDoctor-0.2.0-win-x64` folder and double-click `wingpudoctor-gui.exe`.
 
-Keep the folder together: the app needs the files and the `worker` folder beside it, so don't open it from inside the ZIP. No installer or administrator rights are needed.
+Keep the folder together: the app needs the files and the `worker` folder beside it, so don't open it from inside the ZIP. The app itself has no installer (only the .NET Desktop Runtime from step 2 is installed), and it needs no administrator rights.
 
 ### 5. If Windows SmartScreen appears
 
@@ -61,7 +61,7 @@ If the app doesn't open at all, check that the .NET 10 Desktop Runtime (x64) fro
 
 ### 6. Scan
 
-Select **Start scan**. A scan usually takes a few seconds, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
+Select **Start scan**. A scan can take up to about a minute, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
 
 ### 7. Read the results
 

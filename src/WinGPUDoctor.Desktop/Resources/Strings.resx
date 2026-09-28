@@ -36,7 +36,7 @@
   <data name="Scan.Finishing" xml:space="preserve"><value>Almost done…</value></data>
   <data name="Scan.FinishingDetail" xml:space="preserve"><value>It's too late to stop this scan. Please wait while it finishes.</value></data>
   <data name="Scan.Eyebrow" xml:space="preserve"><value>SCANNING</value></data>
-  <data name="Scan.Usually" xml:space="preserve"><value>This usually takes a few seconds.</value></data>
+  <data name="Scan.Usually" xml:space="preserve"><value>A scan can take up to about a minute.</value></data>
   <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>
 
   <data name="Result.Eyebrow" xml:space="preserve"><value>SCAN RESULTS</value></data>
@@ -346,6 +346,6 @@
   <data name="Glossary.Resolution" xml:space="preserve"><value>The size of the desktop image for this display path, in pixels.</value></data>
   <data name="Glossary.RefreshRate" xml:space="preserve"><value>The refresh rate Windows reports as configured for this display path. It does not measure frames shown or rendered.</value></data>
   <data name="Glossary.OutputTechnology" xml:space="preserve"><value>The kind of display output Windows reports for this path, such as HDMI or DisplayPort. It does not show which physical port is used.</value></data>
-  <data name="Glossary.SourceAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the source side of this display path. It can differ from the target adapter, and it does not show which adapter renders apps.</value></data>
+  <data name="Glossary.SourceAdapter" xml:space="preserve"><value>Each display path has a source, the image Windows prepares for a display, and a target, the output toward the display itself. This is the graphics adapter that Windows' identity records link to the source. It can differ from the target adapter, and it does not show which adapter renders apps.</value></data>
   <data name="Glossary.TargetAdapter" xml:space="preserve"><value>The graphics adapter that Windows' identity records link to the target side of this display path, the side toward the display. It does not show which physical port is used.</value></data>
 </root>
