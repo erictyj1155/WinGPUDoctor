@@ -2,7 +2,7 @@
 
 **Read → Explain → Report.** A read-only Windows GPU/display diagnostics project.
 
-Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 routes five fixed read-only operations through short-lived workers, with controlled cancellation. M5 — Explainable Active-Display Associations — adds informational findings for exact endpoint associations, unresolved correlation, unavailable targets and available empty topology; it was checkpointed at `43d3bc39a6310a48ca7f819bf307650f3afaa6a1`. v0.1.0 was published on 2026-09-25 as a command-line tool; version 0.2.0 adds the desktop app `wingpudoctor-gui` (M7) in the same package. Packaged validation has covered one laptop; evidence is specific to each candidate ZIP, so a refreshed ZIP requires its own checks. See `STATUS.md` and `docs/VALIDATION.md` in the source repository for current milestone and candidate evidence. The tool does not certify GPU health.
+Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 routes five fixed read-only operations through short-lived workers, with controlled cancellation. M5 — Explainable Active-Display Associations — adds informational findings for exact endpoint associations, unresolved correlation, unavailable targets and available empty topology; it was checkpointed at `43d3bc39a6310a48ca7f819bf307650f3afaa6a1`. v0.1.0 was published on 2026-09-25 as a command-line tool; version 0.2.0 adds the desktop app `wingpudoctor-gui` (M7) in the same package. Packaged candidates were validated in depth on one Windows 11 x64 laptop, and the maintainer ran a limited test of the app on a second laptop; evidence is specific to each candidate ZIP, so a refreshed ZIP requires its own checks. See `STATUS.md` and `docs/VALIDATION.md` in the source repository for current milestone and candidate evidence. The tool does not certify GPU health.
 
 ## Quick start: the WinGPUDoctor app
 
@@ -19,7 +19,7 @@ On the [Releases page](https://github.com/erictyj1155/WinGPUDoctor/releases), do
 - `WinGPUDoctor-0.2.0-win-x64.zip`: the app, the command-line tool and the files they need.
 - `WinGPUDoctor-0.2.0-win-x64.zip.sha256`: the ZIP's SHA-256 checksum.
 
-WinGPUDoctor runs on 64-bit (x64) Windows. So far it has been tested on one Windows 11 x64 laptop only.
+WinGPUDoctor runs on 64-bit (x64) Windows. So far it has been tested in depth on one Windows 11 x64 laptop, and briefly on a second laptop.
 
 ### 2. Install the .NET 10 Desktop Runtime (x64)
 
@@ -59,11 +59,11 @@ Because the app isn't signed, Windows may show **Windows protected your PC** wit
 
 If the app doesn't open at all, check that the .NET 10 Desktop Runtime (x64) from step 2 is installed.
 
-**The first run.** Because the app isn't signed, the first time you open it or scan, Windows may show the SmartScreen warning above or a Windows Security notification that it is scanning the app. If a reading step doesn't finish during the first scan, the app shows "Didn't finish in time" for the values it could not read; scanning again may help.
+**The first run.** The first time you open the app or start a scan, Windows may show the SmartScreen warning above, and a Windows Security notification about a security scan may appear. If a reading step isn't completed within the scan's time limit, in the first scan or a later one, the values it would have read show "Didn't finish in time", and the summary says that scanning again may help.
 
 ### 6. Scan
 
-Select **Start scan**. A scan can take up to about a minute, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
+Select **Start scan**. A scan may take about a minute, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
 
 ### 7. Read the results
 
@@ -143,7 +143,7 @@ Extract the ZIP to a local folder, open a console in its `WinGPUDoctor-0.2.0-win
 
 With no arguments, the tool previews a privacy-projected Markdown report without creating a file. JSON preview goes to stdout. `--output` previews the same collected snapshot on stderr and saves it only after you type `EXPORT`; `--yes` with `--output` is deliberate non-interactive acceptance. The parent directory must exist; the destination must be on a local fixed drive. Existing files are never overwritten. Exit `0` means collection completed, `2` argument/platform/destination error, `3` either an incomplete collection whose report is still previewed or saved, **or collection stopped with no report** (a controlled first Ctrl+C or a fatal collection failure), `4` export declined, and `5` export failed. When collection stops with no report, nothing is written to stdout or the output file and stderr says `No report was exported.` A second interrupt permits ordinary forced termination without an exit-code or cleanup promise.
 
-Review every report before sharing. Neutral labels and text filtering reduce exposure but cannot guarantee anonymity of customized device descriptions. The package includes `PRIVACY.md`; the source repository also has a report schema guide. Active display associations do not establish application rendering, electrical routing, MUX/graphics mode, GPU health or a hardware cause. Only one laptop with one internal active path has been physically validated; external displays, other GPU configurations, ARM64, remote/virtual sessions and other machines are unvalidated.
+Review every report before sharing. Neutral labels and text filtering reduce exposure but cannot guarantee anonymity of customized device descriptions. The package includes `PRIVACY.md`; the source repository also has a report schema guide. Active display associations do not establish application rendering, electrical routing, MUX/graphics mode, GPU health or a hardware cause. In-depth physical validation covers one laptop with one internal active path; a second laptop with integrated graphics only and one internal active path had a limited test of the app. External displays, other GPU configurations, ARM64, remote/virtual sessions and other machines are unvalidated.
 
 ## Build and run from source
 

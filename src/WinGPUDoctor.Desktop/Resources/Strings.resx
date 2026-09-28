@@ -36,7 +36,7 @@
   <data name="Scan.Finishing" xml:space="preserve"><value>Almost done…</value></data>
   <data name="Scan.FinishingDetail" xml:space="preserve"><value>It's too late to stop this scan. Please wait while it finishes.</value></data>
   <data name="Scan.Eyebrow" xml:space="preserve"><value>SCANNING</value></data>
-  <data name="Scan.Usually" xml:space="preserve"><value>A scan can take up to about a minute.</value></data>
+  <data name="Scan.Usually" xml:space="preserve"><value>A scan may take about a minute.</value></data>
   <data name="Scan.Cancel" xml:space="preserve"><value>Cancel</value></data>
 
   <data name="Result.Eyebrow" xml:space="preserve"><value>SCAN RESULTS</value></data>
