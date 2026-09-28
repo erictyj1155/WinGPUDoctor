@@ -1,8 +1,14 @@
 # WinGPUDoctor
 
-**Read → Explain → Report.** A read-only Windows GPU/display diagnostics project.
+**See what Windows reports about your graphics and active displays.** WinGPUDoctor is a read-only desktop app and command-line tool that explains graphics adapters, drivers and active display paths in plain language. Review a local Markdown or JSON report before saving or sharing it. The tool does not change settings or upload data.
 
-Milestones 1–3 provide a small CLI for inventory and **active display paths**. M4 routes five fixed read-only operations through short-lived workers, with controlled cancellation. M5 — Explainable Active-Display Associations — adds informational findings for exact endpoint associations, unresolved correlation, unavailable targets and available empty topology; it was checkpointed at `43d3bc39a6310a48ca7f819bf307650f3afaa6a1`. v0.1.0 was published on 2026-09-25 as a command-line tool; version 0.2.0 adds the desktop app `wingpudoctor-gui` (M7) in the same package. Packaged candidates were validated in depth on one Windows 11 x64 laptop, and the maintainer ran a limited test of the app on a second laptop; evidence is specific to each candidate ZIP, so a refreshed ZIP requires its own checks. See `STATUS.md` and `docs/VALIDATION.md` in the source repository for current milestone and candidate evidence. The tool does not certify GPU health.
+[Download v0.2.0](https://github.com/erictyj1155/WinGPUDoctor/releases/tag/v0.2.0) · [Install and run](#quick-start-the-wingpudoctor-app) · [What it can and can't tell you](#what-wingpudoctor-can-and-cant-tell-you)
+
+![WinGPUDoctor scan results with made-up example data](docs/images/gui-results.png)
+
+*The screenshot uses made-up example data, not a real PC.*
+
+**Before you download:** The package is for Windows x64 and needs the .NET 10 Desktop Runtime (x64). It is not code-signed, so check its published SHA-256 before opening it. Validation was in depth on one Windows 11 x64 laptop and limited on a second laptop. WinGPUDoctor does not certify GPU health, identify which GPU an app uses, or determine the cause of a problem. See the [installation steps](#quick-start-the-wingpudoctor-app), [limits](#what-wingpudoctor-can-and-cant-tell-you), and [validation record](docs/VALIDATION.md).
 
 ## Quick start: the WinGPUDoctor app
 
@@ -66,8 +72,6 @@ If the app doesn't open at all, check that the .NET 10 Desktop Runtime (x64) fro
 Select **Start scan**. A scan may take about a minute, and you can select **Cancel** while it runs. The app only reads information from Windows; it doesn't change settings, drivers or hardware.
 
 ### 7. Read the results
-
-![Scan results with example data](docs/images/gui-results.png)
 
 The results start with one summary sentence, followed by cards:
 

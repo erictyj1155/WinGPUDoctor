@@ -6,10 +6,16 @@ Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGEN
 
 Sections are dated, newest first. Each describes the snapshot it checked and keeps its original wording, including steps that were pending then; a later section may correct an earlier one. For the current state use `STATUS.md` and live Git.
 
-- **v0.2.0 and M7 (the desktop app):** from the top down to "M7 Step 1 host extraction". The newest section records the v0.2.0 publication on 2026-09-28. The sections below it cover the release candidates (candidate 5 was published as v0.2.0; each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
+- **v0.2.0 and M7 (the desktop app):** the documentation check below is newer than the v0.2.0 publication record. From the publication record down to "M7 Step 1 host extraction" are the release candidates (candidate 5 was published as v0.2.0; each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
 - **Physical coverage:** packaged candidates were validated in depth on one Windows 11 x64 laptop with one internal display path. The maintainer ran a limited test of candidates 2 and 3 on a second laptop with integrated graphics only and one internal display path (make, model and Windows version not recorded). Sections before the second-laptop records that say "this laptop" or "one laptop" mean the first laptop.
 - **v0.1.0:** published on 2026-09-25 from release source S2 `62e25b7b12d04499f7b39bae417418d33cf297ee`, with the ZIP SHA-256 `65162553242aea18e5b1cebe963b769de76ebd7f7729d360ae151fa984ce63a8`; see the publication, P1.3, P1.3A and P1.2 sections. The earlier local candidates `0328525a…`, `cdefbb10…` and `1a319aa6…` are historical evidence only.
 - **M1-M6:** the older sections, down to Milestone 1.
+
+## Repository homepage documentation check — 2026-09-28
+
+The README was edited locally to put the tool's purpose, v0.2.0 download link, synthetic results screenshot, runtime requirement and key limits before development history. GitHub repository topics were set to `diagnostics`, `display`, `dotnet`, `gpu`, `windows` and `wpf`; the public repository page displayed all six. The public v0.2.0 Release page and the local README image/document targets were checked. No application code, package or release asset changed.
+
+`./scripts/dev.ps1 -Action test` built Release with 0 warnings and 0 errors. The deterministic run passed 373 of 383 tests; 10 `WorkerProcessTests` failed at private worker pipe client creation with `System.ComponentModel.Win32Exception`. This run does not establish a passing suite or a code regression. No live hardware check was run for this documentation change. `git diff --check` passed.
 
 ## v0.2.0 publication — 2026-09-28
 
