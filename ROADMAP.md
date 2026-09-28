@@ -93,7 +93,7 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 - [x] Step 3 explanation catalog and detail views with completeness tests (local checkpoint 2026-09-26).
 - [x] Step 4 save/export on shared host rules (local checkpoint 2026-09-26).
 - [x] Step 5 packaging with distinct GUI executable name, allowlist and path guard (release package with the CLI, GUI and `worker/`, 2026-09-27; the missing-runtime experience moved after the v0.2.0 release, below).
-- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0: every earlier candidate had its deterministic and live checks, and the independent copy review was done with its findings addressed; the owner moved the missing-runtime trial and the beginner usability sessions after the release on 2026-09-28 (below). The final candidate needs its own live checks; after them, the final review is the only remaining gate.
+- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0: every earlier candidate had its deterministic and live checks, and the independent copy review was done with its findings addressed; the owner moved the missing-runtime trial and the beginner usability sessions after the release on 2026-09-28 (below). The final candidate, rc5, passed its live checks on 2026-09-28, so the final review is the only remaining gate.
 
 Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.
 

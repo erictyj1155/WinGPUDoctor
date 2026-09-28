@@ -6,10 +6,73 @@ Use [STATUS.md](../STATUS.md) for the current checkpoint and [AGENTS.md](../AGEN
 
 Sections are dated, newest first. Each describes the snapshot it checked and keeps its original wording, including steps that were pending then; a later section may correct an earlier one. For the current state use `STATUS.md` and live Git.
 
-- **v0.2.0 and M7 (the desktop app):** from the top down to "M7 Step 1 host extraction". The newest sections cover the release candidates (each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
+- **v0.2.0 and M7 (the desktop app):** from the top down to "M7 Step 1 host extraction". The newest sections cover the release candidates (candidate 5 is the current one; each supersedes the earlier ones, which are kept unchanged and must not be published), the maintainer's runs on a second laptop, the Codex reviews with their dispositions, the v0.2.0 preparation, and M7 Steps 1-5 with their reviews.
 - **Physical coverage:** packaged candidates were validated in depth on one Windows 11 x64 laptop with one internal display path. The maintainer ran a limited test of candidates 2 and 3 on a second laptop with integrated graphics only and one internal display path (make, model and Windows version not recorded). Sections before the second-laptop records that say "this laptop" or "one laptop" mean the first laptop.
 - **v0.1.0:** published on 2026-09-25 from release source S2 `62e25b7b12d04499f7b39bae417418d33cf297ee`, with the ZIP SHA-256 `65162553242aea18e5b1cebe963b769de76ebd7f7729d360ae151fa984ce63a8`; see the publication, P1.3, P1.3A and P1.2 sections. The earlier local candidates `0328525a…`, `cdefbb10…` and `1a319aa6…` are historical evidence only.
 - **M1-M6:** the older sections, down to Milestone 1.
+
+## Final review fixes, consistency sweep and v0.2.0 candidate 5 — 2026-09-28
+
+**Review.** Codex's final review of rc4 found the release not ready because of public text. It confirmed rc4's package: it was built at `74f63d3`, its SHA-256 matches, all 33 entries match staging and the build outputs, and the path, network and dependency checks are clean. It also confirmed that the six earlier should-fix items were present and that the owner's gate revision was recorded. It raised 1 blocker, 3 should-fix items and 1 nit, all in public text and records. The README is packaged, so a new candidate was needed. The owner authorized fixing the findings (A), a keyword sweep of all public text and records for the same kinds of problem (B), a self-check against both Codex reviews (C), candidate 5 (D), its live check (E), and these records with a push of `m7-desktop-gui` only (F).
+
+| Review | Item | Finding | Disposition |
+|---|---|---|---|
+| rc4 final | Blocker | The release notes said Windows took too long to answer. The README's first-run note implied that any unfinished step shows "Didn't finish in time" and named the unsigned app as the cause of a Defender notification. | `8f0d6df05bd11f8bfb3e7c90bd43342328856d53`: both describe a step that "isn't completed within the scan's time limit" and the values it would have read. The Windows Security notification "may appear", with no cause named. |
+| rc4 final | Should-fix | README lines 5, 22 and 146 said one laptop, or that other machines were unvalidated. | `8f0d6df`: in-depth validation on the first laptop, a limited test on a second laptop. The sweep (`dbbd8d295cde1b182c5cb4c59393013ef70e19b8`) did the same in SECURITY, ARCHITECTURE and the README's M2/M4 lines. The release notes no longer say that the second laptop runs Windows 11, because its version was not recorded. |
+| rc4 final | Should-fix | The release notes said the program had changed since rc2 only in timeout wording. | `8f0d6df`, tidied in `dbbd8d2`: changed since then are the app's wording (including how a timed-out value is shown), a Scan again button under the summary after a timeout, and the packaged documents. The command-line tool, the worker, the collection code and the packaging scripts did not change. |
+| rc4 final | Should-fix | STATUS mixed current and outdated gate statements, called for a merge into `main` and was dated 2026-09-27; ROADMAP and GUI_PLAN kept older open-check wording. | `dbbd8d2`: STATUS is rewritten as a snapshot dated 2026-09-28 (history stays here and in Git). STATUS, ROADMAP and GUI_PLAN give the same gate. It says a fast-forward push is needed, not a merge, because the work is on local `main`. |
+| rc4 final | Nit | "Up to about a minute" suggested a hard limit. | `8f0d6df`: "A scan may take about a minute." in `Scan.Usually` and the README; seen on screen with rc5. |
+| rc3 copy | Blocker | The timeout wording named a cause. | Still in place: "Didn't finish in time" and "This reading step wasn't completed within the scan's time limit.", covered by the three-kind timeout test (`7b7fa56`). |
+| rc3 copy | Should-fix ×6 | `State.Unknown`, three redaction texts, `Warning.TopologyIsNotRendering.Meaning`, `Save.Outcome.NotLocal` and the release-notes saving line, `Technical.NoIssues`, release-notes facts | Still in place (`1b377d9`). The release-notes facts now state the rc5 counts and the limited second-laptop test. |
+| rc3 copy | Nits ×3 | "A few seconds", the source-adapter tip, "no installer" | The tip and installer fixes are still in place (`469404c`); the timing text is now fully closed by `8f0d6df`. |
+
+**Also found by the sweep** (`dbbd8d2`):
+- **PRIVACY.md** still called the GUI unpackaged.
+- **ROADMAP** still listed the v0.1.0 tag and Release, and a Step 1 re-review, as pending. It now labels the Defender collision a hypothesis, attributes the 10-second figure to the Windows Security notification, and no longer calls the rc2 result a timeout.
+- **Unsigned-app wording:** SmartScreen now "may" warn, and the text says only that it names an unsigned publisher as unknown.
+- **Release notes, not-verified list:** it now notes that light mode was seen with rc2 on the second laptop.
+- **Code comment:** a comment in `CardViewModel` that had been cut off in `7b7fa56` is completed.
+- **VALIDATION reading guide:** shortened.
+
+**Correction to earlier sections.** The rc3 section says that rc3's code change is limited to how the result page words a timeout. The rc4 section says that rc3 and rc4 changed only Desktop wording and the README. In fact, rc3 (`cfbeb0f`) also added the Scan again button under the summary.
+
+**Candidate 5 (D).** From `dbbd8d2` with a clean working tree, all 18 `bin`/`obj` folders were deleted, and `./scripts/package-v0.1.ps1 -OutputDirectory artifacts/v0.2.0-rc5-86e85fc4164c4b9989988ebbe631f0c1` built from scratch:
+
+| File | Size | SHA-256 |
+|---|---|---|
+| `WinGPUDoctor-0.2.0-win-x64.zip` | 1248912 bytes | `92ef52047fd06a3bebe7f07309c56bb39d487d833b32622f066896030f6e18da` |
+| `WinGPUDoctor-0.2.0-win-x64.zip.sha256` | one line: the hash, two spaces, the file name | matches the ZIP |
+
+- **Contents:** 33 entries in one folder: 16 application files, 5 documents, 3 screenshots and 9 worker files.
+- **Packaging checks:** the path guard, the network check, deps completeness and the entry-hash check passed.
+- **Independent read-only rescan:** 0 path-guard findings (2 without the template, as intended) and 0 network findings. The documents and screenshots are byte-identical to the checkout.
+- **Earlier artifacts:** all 34 earlier package files, rc1-rc4 included, kept their size and SHA-256.
+- **Tests after the clean build:** Release build 0 warnings and 0 errors, xUnit **383/383**, schema and helper checks, package layout **61/61**. Each of parts A and B also passed the full test run before its commit.
+- **Audit:** no lock file changed, so the dependency audit was not rerun.
+
+**Live check from the extracted rc5 (E).** Non-administrator on the first laptop, in dark mode with high contrast off (read from the Windows settings, not changed). The package was extracted to the ignored `artifacts/v0.2.0-rc5-live-6e3a305590064489954911da7274d076/package/`.
+- **CLI:**
+  - `verify-cli.ps1 -CliExecutable` passed 7/7.
+  - `--help` names 0.2.0, and the default Markdown preview exited 0 and created no file.
+  - Typing `EXPORT` in a console exited 0 with "Report saved locally. Nothing was uploaded." and a 9312-byte report that passed the schema and privacy checks (`toolVersion` 0.2.0).
+  - Typing `no` exited 4 with "Export declined. No file written." and no file.
+  - `--yes` exited 0 with a valid report.
+- **GUI:** one pass launched directly (Markdown) and one through Explorer's open action (JSON). Each ran a scan, the result with technical details, a second scan cancelled while reading (stopped 182 ms and 191 ms after Cancel), a third scan, and a save through the real Save dialog.
+  - The scanning screen read "A scan may take about a minute." The palette samples were the dark palette (`#171C22` and `#1E252D`).
+  - The save screen read "2 entries", "1 entry" and "5 reading steps".
+  - The Markdown report (4459 bytes) and the JSON report (9312 bytes) were byte-identical to the preview, and the JSON passed the schema and privacy checks.
+  - The direct launch exited 0, and no worker remained.
+- **Close during a scan:** a new GUI process was closed while worker 3 (video controllers) was running. It exited with code 0, 101 ms after the Close request, and no worker remained.
+- **Package folder:** unchanged after all runs.
+
+Screenshots, reports and logs are in the ignored live folder and are not committed.
+
+**Not exercised with rc5.**
+- **Timeout wording:** the timeout wording in a real scan (no step timed out on this laptop); deterministic tests only.
+- **Not repeated from rc2:** cancel at every stage, the file and network monitoring, and the airplane-mode run. Since rc2, only the app's wording, the Scan again button and the packaged documents have changed.
+- **Other gaps:** light and high-contrast themes with rc5, a screen reader, SmartScreen with rc5, and the second laptop with rc4 or rc5.
+
+**v0.2.0 gate:** the final candidate's live checks are done with rc5, so the final review is the only remaining gate. The missing-runtime trial and beginner usability sessions are after-release items (ROADMAP v0.2.1).
 
 ## Copy review fixes and v0.2.0 candidate 4 — 2026-09-28
 
