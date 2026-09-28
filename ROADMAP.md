@@ -80,26 +80,26 @@ Checkpoint commit: `f966e1b602561044c19eaca6a84cf4baa146b62a` (tree `f4972e15628
 
 M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and established collection, privacy, diagnostic and lifecycle semantics remain unchanged. **No M7 is required for v0.1.** New features and broader hardware support are post-v0.1 future work that require separate scope and authorization.
 
-The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. The v0.1.0 tag, GitHub Release, release assets and announcement remain pending and separately authorized.
+The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. v0.1.0 was published on 2026-09-25: the `v0.1.0` tag, the GitHub Release and its two assets (see `STATUS.md`). Any announcement needs separate authorization.
 
 ## Milestone 7 — Beginner desktop host (in progress; post-v0.1)
 
-Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in [ADR 0008](docs/decisions/0008-beginner-desktop-host.md); screens, explanation catalog, delivery steps and validation additions are in [docs/GUI_PLAN.md](docs/GUI_PLAN.md). Gate 1 has passed; each implementation step still needs separate owner authorization.
+Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in [ADR 0008](docs/decisions/0008-beginner-desktop-host.md); screens, explanation catalog, delivery steps and validation additions are in [docs/GUI_PLAN.md](docs/GUI_PLAN.md). Gate 1 has passed; each implementation step was separately authorized by the owner, and publication needs its own authorization.
 
 - [x] Gate 0 scope accepted: WPF host over the unchanged engine; English-first resources.
 - [x] Gate 1: independent review passed with should-fix items, all addressed; ADR 0008 frozen by the owner on 2026-09-25.
-- [x] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior (local checkpoint 2026-09-26; focused re-review of the review follow-up outstanding).
+- [x] Step 1 `WinGPUDoctor.Host` extraction with byte-identical CLI behavior (local checkpoint 2026-09-26; the later Codex review of Steps 1-4 covered the review follow-up).
 - [x] Step 2 vertical slice: welcome, scan, summary, single-use cancel; JSON round-trip test (local checkpoint 2026-09-26).
 - [x] Step 3 explanation catalog and detail views with completeness tests (local checkpoint 2026-09-26).
 - [x] Step 4 save/export on shared host rules (local checkpoint 2026-09-26).
-- [x] Step 5 packaging with distinct GUI executable name, allowlist and path guard (release package with the CLI, GUI and `worker/`, 2026-09-27; the missing-runtime experience awaits a friend's trial).
-- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0: the live checks of the final candidate and the final review (the copy review was done and its findings addressed); the missing-runtime trial and the beginner usability sessions were moved after release by the owner on 2026-09-28 (below).
+- [x] Step 5 packaging with distinct GUI executable name, allowlist and path guard (release package with the CLI, GUI and `worker/`, 2026-09-27; the missing-runtime experience moved after the v0.2.0 release, below).
+- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0: every earlier candidate had its deterministic and live checks, and the independent copy review was done with its findings addressed; the owner moved the missing-runtime trial and the beginner usability sessions after the release on 2026-09-28 (below). The final candidate needs its own live checks; after them, the final review is the only remaining gate.
 
 Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.
 
 ## v0.2.1 candidate, separately authorized
 
-- [ ] Evaluate code signing, the operation timeout and a retry policy for first runs and cold starts. On a second laptop the first scan timed out in one step (the driver step with rc2, Windows version and build with rc3), and a later scan read everything; Microsoft Defender's first cloud scan of the unsigned program (up to about 10 seconds) may collide with the 10-second operation budget. The reason codes were not confirmed (`docs/VALIDATION.md`, 2026-09-27 and 2026-09-28). Any change to `CollectionTimingPolicy` or to signing needs measurements from several computers and an independent review. v0.2.0 keeps the current timing and tells the user when a step didn't finish in time and that scanning again may help.
+- [ ] Evaluate code signing, the operation timeout and a retry policy for first runs and cold starts. On a second laptop one step of the first scan was not completed (the driver step with rc2, shown as not read; Windows version and build with rc3, shown as timed out), and a later scan read everything. One hypothesis, not confirmed: Microsoft Defender's first cloud scan of the unsigned program (which Windows Security said could take up to 10 seconds) may collide with the 10-second operation budget. The reason codes were not checked in technical details (`docs/VALIDATION.md`, 2026-09-27 and 2026-09-28). Any change to `CollectionTimingPolicy` or to signing needs measurements from several computers and an independent review. v0.2.0 keeps the current timing and tells the user when a step didn't finish in time and that scanning again may help.
 
 - [ ] The experience when the .NET 10 Desktop Runtime is missing (moved out of the v0.2.0 release gate by the owner on 2026-09-28): check it through a friend's trial or user reports on GitHub Issues, and record the result in `docs/VALIDATION.md`.
 - [ ] Usability with 2-3 people who don't use the console (moved out of the v0.2.0 release gate by the owner on 2026-09-28): note where they hesitate, whether in sessions or from GitHub Issues, and feed the findings into the copy.

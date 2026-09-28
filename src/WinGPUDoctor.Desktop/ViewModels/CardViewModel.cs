@@ -25,7 +25,8 @@ public sealed record FactLine(string Label, string Value, bool IsAvailable, stri
     internal static FactLine Unavailable(string labelKey, DataState state, ReasonCode reason = ReasonCode.None) =>
         UnavailableAs(UiText.Get(labelKey), state, reason);
 
-    // A step that did not finish within the scan's time limit says so neutrally (a worker that was slow to start or to answer,
+    // A step that did not finish within the scan's time limit says so neutrally: the same reason covers a worker that was
+    // slow to start or to answer and a step skipped because too little time was left.
     private static FactLine UnavailableAs(string label, DataState state, ReasonCode reason)
     {
         var entry = ExplanationCatalog.State(state);

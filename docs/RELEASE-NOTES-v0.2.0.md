@@ -21,13 +21,13 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 
 ## Requirements
 
-- 64-bit (x64) Windows. Tested on two Windows 11 x64 laptops (the second by the maintainer, with candidate 2).
+- 64-bit (x64) Windows. Tested in depth on one Windows 11 x64 laptop; the maintainer also ran a limited test of candidates 2 and 3 on a second laptop, whose Windows version was not recorded.
 - The [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0) for the app. It includes the .NET 10 Runtime that the command-line tool needs; to use only the command-line tool, the .NET 10 Runtime (x64) is enough.
 - No installer and no administrator rights: extract the ZIP and open `wingpudoctor-gui.exe`. The README has a step-by-step guide.
 
 ## Not code-signed
 
-The executables are not code-signed, so Windows can't show a verified publisher, and SmartScreen may show "Windows protected your PC" with "Unknown publisher". Before opening the app, compare the ZIP's SHA-256 with the value below and with the first 64 characters of the attached `.sha256` file (the rest of its line is the file name):
+The executables are not code-signed, so Windows can't show a verified publisher: if SmartScreen shows "Windows protected your PC", it names the publisher as "Unknown publisher". Before opening the app, compare the ZIP's SHA-256 with the value below and with the first 64 characters of the attached `.sha256` file (the rest of its line is the file name):
 
 ```powershell
 (Get-FileHash .\WinGPUDoctor-0.2.0-win-x64.zip -Algorithm SHA256).Hash
@@ -50,9 +50,9 @@ Details and dates are in `docs/VALIDATION.md`.
 - **Deterministic checks** (2026-09-28, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 383 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
 - **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, .NET networking references and listed networking imports, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
-- **From the extracted candidate 4, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-28): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
-- **On a second laptop with integrated graphics only** (candidates 2 and 3, by the maintainer): the downloaded ZIP triggered SmartScreen and ran after **Run anyway**; light and dark modes displayed correctly. On a first scan, one reading step did not finish (the driver step with candidate 2; Windows version and build with candidate 3, while Windows Security reported a Microsoft Defender cloud scan); a second scan read everything. The cause was not confirmed.
-- **From the extracted candidate 2, live on the first laptop, non-administrator, dark mode** (2026-09-27; since then, the app's wording has changed, including how a timed-out value is shown, a Scan again button appears under the summary after a timeout, and the packaged documents have changed; the command-line tool, the worker, the collection code and the packaging scripts have not):
+- **From the extracted candidate 4, live on the first laptop (Windows 11 x64), non-administrator, dark mode** (2026-09-28): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
+- **On a second laptop with integrated graphics only** (a limited test of candidates 2 and 3 by the maintainer): the downloaded ZIP triggered SmartScreen and ran after **Run anyway**; light and dark modes displayed correctly. On a first scan, one reading step did not finish (the driver step with candidate 2; Windows version and build with candidate 3, while Windows Security reported a Microsoft Defender cloud scan); a second scan read everything. The cause was not confirmed.
+- **From the extracted candidate 2, live on the first laptop, non-administrator, dark mode** (2026-09-27; changed since then: the app's wording, including how a timed-out value is shown, a Scan again button under the summary after a timeout, and the packaged documents; unchanged: the command-line tool, the worker, the collection code and the packaging scripts):
   - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
   - App, launched directly and through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
   - Cancelling a scan before or during any of its five reading steps stopped it, and closing the window during a scan ended the app (exit code 0); no worker process was left.
@@ -70,8 +70,8 @@ Details and dates are in `docs/VALIDATION.md`.
 
 ## Not verified
 
-- The release ZIP itself in the light and high-contrast themes (both were checked earlier with test packages).
-- The new timeout wording in a real scan (no step timed out during the live checks; covered by deterministic tests).
+- A release ZIP in high contrast, and in light mode on the first laptop. Light mode displayed correctly with candidate 2 on the second laptop, and both themes were checked earlier with test packages.
+- The current timeout wording, "Didn't finish in time", in a real scan: no step timed out during the live checks on the first laptop, and the second laptop's runs used earlier candidates. Deterministic tests cover it.
 - PCs beyond the two laptops, other GPU configurations, external or multiple displays, Windows 10, Windows on ARM, virtual machines and remote sessions.
 - A screen reader such as Narrator or NVDA.
 - **What happens when the .NET 10 Desktop Runtime is missing.** Not tested; the maintainer moved this check to after the release. If you try the app without it, please report what you saw.
