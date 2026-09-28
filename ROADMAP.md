@@ -82,7 +82,7 @@ M6 completes local WinGPUDoctor v0.1 technical development. Schema 0.2.0 and est
 
 The GitHub repository is now Public and `main` has been published. Post-public security controls are active: GitHub Private Vulnerability Reporting, secret scanning, repository push protection, and a `main` ruleset blocking force pushes and deletion. v0.1.0 was published on 2026-09-25: the `v0.1.0` tag, the GitHub Release and its two assets (see `STATUS.md`). Any announcement needs separate authorization.
 
-## Milestone 7 — Beginner desktop host (in progress; post-v0.1)
+## Milestone 7 — Beginner desktop host (released in v0.2.0 on 2026-09-28)
 
 Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in [ADR 0008](docs/decisions/0008-beginner-desktop-host.md); screens, explanation catalog, delivery steps and validation additions are in [docs/GUI_PLAN.md](docs/GUI_PLAN.md). Gate 1 has passed; each implementation step was separately authorized by the owner, and publication needs its own authorization.
 
@@ -93,7 +93,7 @@ Gate 0 scope was accepted by the owner on 2026-09-25. Decisions are accepted in 
 - [x] Step 3 explanation catalog and detail views with completeness tests (local checkpoint 2026-09-26).
 - [x] Step 4 save/export on shared host rules (local checkpoint 2026-09-26).
 - [x] Step 5 packaging with distinct GUI executable name, allowlist and path guard (release package with the CLI, GUI and `worker/`, 2026-09-27; the missing-runtime experience moved after the v0.2.0 release, below).
-- [ ] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0: every earlier candidate had its deterministic and live checks, and the independent copy review was done with its findings addressed; the owner moved the missing-runtime trial and the beginner usability sessions after the release on 2026-09-28 (below). The final candidate, rc5, passed its live checks on 2026-09-28, so the final review is the only remaining gate.
+- [x] Step 6 deterministic, separately authorized live and usability validation; copy review. For v0.2.0, every candidate had its deterministic and live checks, the independent copy review was done with its findings addressed, and the final review found rc5 ready. v0.2.0 was published on 2026-09-28 from S3 `dbbd8d295cde1b182c5cb4c59393013ef70e19b8` (tag `v0.2.0`, see `STATUS.md`). The owner moved the missing-runtime trial and the beginner usability sessions after the release on 2026-09-28; they stay open below.
 
 Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exit codes remain unchanged. Out of scope: progress contract, classification, vendor APIs, ZIP bundles, clipboard, installer, auto-update and code signing.
 
@@ -103,6 +103,7 @@ Schema 0.2.0, privacy projection, rules, supervisor/worker lifecycle and CLI exi
 
 - [ ] The experience when the .NET 10 Desktop Runtime is missing (moved out of the v0.2.0 release gate by the owner on 2026-09-28): check it through a friend's trial or user reports on GitHub Issues, and record the result in `docs/VALIDATION.md`.
 - [ ] Usability with 2-3 people who don't use the console (moved out of the v0.2.0 release gate by the owner on 2026-09-28): note where they hesitate, whether in sessions or from GitHub Issues, and feed the findings into the copy.
+- [ ] Write fixed timestamps into the package ZIP, so that a rebuild from the same commit produces a byte-identical ZIP. For v0.2.0 a rebuild from S3 matched every entry, but the ZIP differed because it stores each built file's modification time (`docs/VALIDATION.md`, v0.2.0 publication).
 
 ## Later, separately authorized
 

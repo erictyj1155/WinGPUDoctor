@@ -1,7 +1,3 @@
-# WinGPUDoctor v0.2.0 release notes (draft)
-
-> **Draft: not published.** The package below is candidate 5, built from clean build output and validated locally on 2026-09-28. Still open before release: a final review. On 2026-09-28 the maintainer moved a trial without the .NET 10 Desktop Runtime and usability sessions with people who don't use the console to after the release; both are listed under "Not verified". Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
-
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
 ## What's new

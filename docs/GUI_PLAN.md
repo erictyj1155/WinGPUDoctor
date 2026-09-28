@@ -1,6 +1,6 @@
 # M7 beginner desktop host plan
 
-Status: **M7 plan; Gate 0 accepted by the owner on 2026-09-25 with the recommended options.** Boundary decisions live in [ADR 0008](decisions/0008-beginner-desktop-host.md) (accepted 2026-09-25), and gates are tracked in `ROADMAP.md`. This file holds UX, copy rules, delivery steps and validation details. Each implementation step still needs separate owner authorization.
+Status: **M7 released in v0.2.0 on 2026-09-28; Gate 0 accepted by the owner on 2026-09-25 with the recommended options.** The missing-runtime check and the usability check remain open after the release (Step 6). Boundary decisions live in [ADR 0008](decisions/0008-beginner-desktop-host.md) (accepted 2026-09-25), and gates are tracked in `ROADMAP.md`. This file holds UX, copy rules, delivery steps and validation details. Each implementation step still needs separate owner authorization.
 
 Record language: English.
 
@@ -163,7 +163,8 @@ Each step needs the owner's explicit authorization; none of them includes commit
   - **Release gate revision (decided by the owner, who is the maintainer, on 2026-09-28).** The trial without the .NET 10 Desktop Runtime and the usability check with 2-3 people who don't use the console are no longer part of the v0.2.0 release gate; they move to after the release (ROADMAP, v0.2.1).
     - **Reasons given by the owner:** the candidates were tested on two computers; several rounds of independent review were done; the tool is read-only and makes no network connection; and feedback from real use after release is more representative.
     - **Feedback after release:** the release notes list both items as not verified and invite reports through GitHub Issues, and a friend's trial remains welcome. Reports and trial results are recorded in `docs/VALIDATION.md`, and usability findings feed back into the copy, not the engine.
-    - **What still gates v0.2.0:** the final review; the final candidate, rc5, passed its live checks on 2026-09-28.
+    - **v0.2.0 released:** the final review found rc5 ready, and v0.2.0 was published on 2026-09-28 with rc5's ZIP (`docs/VALIDATION.md`, v0.2.0 publication).
+    - **Still open after the release:** the missing-runtime check and the usability check (§7; ROADMAP v0.2.1).
 
 ## 7. Validation additions (for `docs/VALIDATION.md`)
 
