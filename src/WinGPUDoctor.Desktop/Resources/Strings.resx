@@ -73,7 +73,7 @@
   <data name="Save.FilterJson" xml:space="preserve"><value>JSON report (*.json)|*.json</value></data>
   <data name="Save.Outcome.Saved" xml:space="preserve"><value>Report saved. WinGPUDoctor did not upload anything.</value></data>
   <data name="Save.Outcome.AlreadyExists" xml:space="preserve"><value>A file with that name already exists. WinGPUDoctor never replaces files; choose a new name.</value></data>
-  <data name="Save.Outcome.NotLocal" xml:space="preserve"><value>Choose a folder on a local drive of this PC. Network locations and removable drives are not accepted.</value></data>
+  <data name="Save.Outcome.NotLocal" xml:space="preserve"><value>Choose a folder on a local fixed drive of this PC. Network paths such as \\server\share and removable drives are refused.</value></data>
   <data name="Save.Outcome.InvalidName" xml:space="preserve"><value>That location or file name can't be used. Choose another.</value></data>
   <data name="Save.Outcome.WriteFailed" xml:space="preserve"><value>The report was not saved. Check the folder and choose a new file name. Existing files are never replaced, and a partial new file may remain if writing stopped partway.</value></data>
   <data name="Result.CardsName" xml:space="preserve"><value>Scan results</value></data>
@@ -150,7 +150,7 @@
   <data name="Unit.Resolution" xml:space="preserve"><value>{0} × {1} pixels</value></data>
 
   <data name="State.Available" xml:space="preserve"><value>Available</value></data>
-  <data name="State.Unknown" xml:space="preserve"><value>Windows didn't provide this</value></data>
+  <data name="State.Unknown" xml:space="preserve"><value>Not determined</value></data>
   <data name="State.Unsupported" xml:space="preserve"><value>Not supported here</value></data>
   <data name="State.Failed" xml:space="preserve"><value>Couldn't be read</value></data>
   <data name="Value.TimedOut" xml:space="preserve"><value>Didn't finish in time</value></data>
@@ -199,7 +199,7 @@
   <data name="Technical.SourceTarget" xml:space="preserve"><value>{0} / {1}</value></data>
   <data name="Technical.Match" xml:space="preserve"><value>{0} matched to {1} · evidence: {2} · confidence: {3}</value></data>
   <data name="Technical.Run" xml:space="preserve"><value>status: {0} · reason: {1} · attempts: {2} · query mode: {3}</value></data>
-  <data name="Technical.NoIssues" xml:space="preserve"><value>No issues recorded</value></data>
+  <data name="Technical.NoIssues" xml:space="preserve"><value>No detailed issue entries</value></data>
   <data name="Technical.Issue" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="Technical.IssueCode" xml:space="preserve"><value>{0}: {1} (Windows error code {2})</value></data>
 
@@ -246,7 +246,7 @@
   <data name="Warning.TopologyNotCollected.Meaning" xml:space="preserve"><value>Active display path information was not available in this scan. The technical details show the reason.</value></data>
   <data name="Warning.TopologyNotCollected.NotMeaning" xml:space="preserve"><value>This does not mean that no display is attached.</value></data>
   <data name="Warning.TopologyIsNotRendering" xml:space="preserve"><value>Display paths are not app rendering</value></data>
-  <data name="Warning.TopologyIsNotRendering.Meaning" xml:space="preserve"><value>Display paths describe how Windows has set up each active display: resolution, refresh rate and the linked adapters. Monitor names are read separately and can change during a scan.</value></data>
+  <data name="Warning.TopologyIsNotRendering.Meaning" xml:space="preserve"><value>Display paths describe how Windows has set up each active display: resolution, refresh rate and, where they could be matched, the source and target adapters. Monitor names are read separately and can change during a scan.</value></data>
   <data name="Warning.TopologyIsNotRendering.NotMeaning" xml:space="preserve"><value>They do not show which adapter an app uses, how busy it is, its power state or a confirmed graphics mode.</value></data>
   <data name="Warning.ReviewBeforeSharing" xml:space="preserve"><value>Review before sharing</value></data>
   <data name="Warning.ReviewBeforeSharing.Meaning" xml:space="preserve"><value>Model names and device descriptions can be distinctive or customized.</value></data>
@@ -256,18 +256,18 @@
   <data name="Warning.CollectionIncomplete.Meaning" xml:space="preserve"><value>At least one reading step did not fully complete. The fields and "How the scan went" show which parts.</value></data>
   <data name="Warning.CollectionIncomplete.NotMeaning" xml:space="preserve"><value>This does not mean that something is wrong with the PC.</value></data>
   <data name="Warning.ValuesRedacted" xml:space="preserve"><value>Some values were hidden</value></data>
-  <data name="Warning.ValuesRedacted.Meaning" xml:space="preserve"><value>The privacy filter removed text that looked like it could identify you or this PC.</value></data>
+  <data name="Warning.ValuesRedacted.Meaning" xml:space="preserve"><value>The privacy filter removed values that looked like they could identify you or this PC, or that were not in the expected form.</value></data>
   <data name="Warning.ValuesRedacted.NotMeaning" xml:space="preserve"><value>Hidden values are not errors, and the filter cannot guarantee anonymity.</value></data>
 
   <data name="State.Available.Meaning" xml:space="preserve"><value>Windows provided this value.</value></data>
   <data name="State.Available.NotMeaning" xml:space="preserve"><value>An available value is not checked for accuracy.</value></data>
-  <data name="State.Unknown.Meaning" xml:space="preserve"><value>Windows did not provide a usable value.</value></data>
+  <data name="State.Unknown.Meaning" xml:space="preserve"><value>Windows did not provide a usable value, or WinGPUDoctor could not match the records Windows reported to this item.</value></data>
   <data name="State.Unknown.NotMeaning" xml:space="preserve"><value>This does not mean that the device is missing or faulty.</value></data>
   <data name="State.Unsupported.Meaning" xml:space="preserve"><value>This item is not collected by this version, or Windows does not support it here.</value></data>
   <data name="State.Unsupported.NotMeaning" xml:space="preserve"><value>This does not indicate a problem with the PC.</value></data>
   <data name="State.Failed.Meaning" xml:space="preserve"><value>Reading this value did not succeed.</value></data>
   <data name="State.Failed.NotMeaning" xml:space="preserve"><value>A failed read does not by itself indicate a hardware or driver problem.</value></data>
-  <data name="State.Redacted.Meaning" xml:space="preserve"><value>The privacy filter removed this value because it looked like it could identify you or this PC.</value></data>
+  <data name="State.Redacted.Meaning" xml:space="preserve"><value>The privacy filter removed this value because it looked like it could identify you or this PC, or because it was not in the expected form.</value></data>
   <data name="State.Redacted.NotMeaning" xml:space="preserve"><value>Windows did provide a value; it is only left out of the report.</value></data>
 
   <data name="Reason.None" xml:space="preserve"><value>No reason</value></data>
@@ -293,7 +293,7 @@
   <data name="Reason.QueryFailed" xml:space="preserve"><value>Query did not succeed</value></data>
   <data name="Reason.QueryFailed.Meaning" xml:space="preserve"><value>This information could not be read during the scan.</value></data>
   <data name="Reason.SensitiveValue" xml:space="preserve"><value>Hidden for privacy</value></data>
-  <data name="Reason.SensitiveValue.Meaning" xml:space="preserve"><value>The value looked like it could identify you or this PC.</value></data>
+  <data name="Reason.SensitiveValue.Meaning" xml:space="preserve"><value>The value looked like it could identify you or this PC, or it was not in the expected form.</value></data>
   <data name="Reason.ApiUnavailable" xml:space="preserve"><value>Windows function unavailable</value></data>
   <data name="Reason.ApiUnavailable.Meaning" xml:space="preserve"><value>A Windows function needed for this was not available.</value></data>
   <data name="Reason.NotSupported" xml:space="preserve"><value>Not supported</value></data>

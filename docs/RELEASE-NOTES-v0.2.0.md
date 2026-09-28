@@ -8,7 +8,7 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 
 - **Desktop app, `wingpudoctor-gui.exe`.** Start a scan (which you can cancel), read the results as plain-language cards with ⓘ explanations and optional technical details, then review the exact report text and save it as Markdown or JSON. The Welcome screen says what the report is for: someone helping you with your graphics or display gets the report, which you save and send yourself.
 - **Clear wording when Windows is slow.** If Windows takes too long to answer a reading step, the affected values say so instead of a general "Couldn't be read", and the summary suggests scanning again, with a Scan again button right under it.
-- **Saving follows the command-line rules.** The text you review is exactly what is saved; reports go only to a local drive of this PC, existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, and the saved file is exactly the preview you saw.
+- **Saving follows the command-line rules.** The text you review is exactly what is saved; reports are saved only to a folder on a fixed drive of this PC (direct network paths and removable drives are refused, but a folder there that links or syncs elsewhere is not detected; see `PRIVACY.md`), existing files are never replaced, and the app suggests choosing a folder that OneDrive, Dropbox or a similar app doesn't sync. Copying from the preview is blocked, and the saved file is exactly the preview you saw.
 - **Accessibility and appearance.** The app follows the Windows dark, light and high-contrast themes and the Windows "Animation effects" setting, works with the keyboard, and gives its controls UI Automation names. It uses only built-in Windows fonts and icons, with no vendor logos.
 - **One package.** `WinGPUDoctor-0.2.0-win-x64.zip` contains the app, the command-line tool `wingpudoctor.exe` and one shared `worker` folder in a single folder (ADR 0008, decision 6), plus the README's screenshots in `docs/images`.
 - **Packaging checks.** Packaging fails if a packaged file carries a local build or user-profile path, if an executable is not the SDK's own launcher with only the SDK's edits, if a runtime file that an executable declares is missing, if packaged code references .NET networking or imports a Windows networking library, or if the output folder is reached through a junction or link.
@@ -21,7 +21,7 @@ WinGPUDoctor reads what Windows reports about graphics adapters, drivers and act
 
 ## Requirements
 
-- 64-bit (x64) Windows. Tested on one Windows 11 x64 laptop only.
+- 64-bit (x64) Windows. Tested on two Windows 11 x64 laptops (the second by the maintainer, with candidate 2).
 - The [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0) for the app. It includes the .NET 10 Runtime that the command-line tool needs; to use only the command-line tool, the .NET 10 Runtime (x64) is enough.
 - No installer and no administrator rights: extract the ZIP and open `wingpudoctor-gui.exe`. The README has a step-by-step guide.
 
@@ -47,7 +47,7 @@ A scan shows what Windows reports. It can't tell you which graphics adapter a ga
 
 Details and dates are in `docs/VALIDATION.md`.
 
-- **Deterministic checks** (2026-09-27, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 375 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
+- **Deterministic checks** (2026-09-27, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 383 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
 - **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, .NET networking references and listed networking imports, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
 - **From the extracted candidate 3, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
