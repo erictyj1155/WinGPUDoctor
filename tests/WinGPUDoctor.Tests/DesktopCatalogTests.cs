@@ -156,7 +156,7 @@ public class DesktopCatalogTests
         };
         var result = Result(snapshot);
         var card = Assert.Single(result.DriverCards);
-        var expected = timedOut ? "Windows took too long to answer" : "Couldn't be read";
+        var expected = timedOut ? "Didn't finish in time" : "Couldn't be read";
         foreach (var key in new[] { "Field.DriverProvider", "Field.DriverVersion", "Field.DriverDate" })
         {
             var line = card.Facts.Single(f => f.Label == UiText.Get(key));

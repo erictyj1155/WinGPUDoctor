@@ -153,7 +153,7 @@
   <data name="State.Unknown" xml:space="preserve"><value>Windows didn't provide this</value></data>
   <data name="State.Unsupported" xml:space="preserve"><value>Not supported here</value></data>
   <data name="State.Failed" xml:space="preserve"><value>Couldn't be read</value></data>
-  <data name="Value.TimedOut" xml:space="preserve"><value>Windows took too long to answer</value></data>
+  <data name="Value.TimedOut" xml:space="preserve"><value>Didn't finish in time</value></data>
   <data name="State.Redacted" xml:space="preserve"><value>Hidden by the privacy filter</value></data>
 
   <data name="OutputTechnology.hd15" xml:space="preserve"><value>VGA (HD15)</value></data>
@@ -289,7 +289,7 @@
   <data name="Reason.ProviderUnavailable" xml:space="preserve"><value>Provider unavailable</value></data>
   <data name="Reason.ProviderUnavailable.Meaning" xml:space="preserve"><value>The Windows component that supplies this information was not available.</value></data>
   <data name="Reason.Timeout" xml:space="preserve"><value>Timed out</value></data>
-  <data name="Reason.Timeout.Meaning" xml:space="preserve"><value>Reading this information took too long and was stopped.</value></data>
+  <data name="Reason.Timeout.Meaning" xml:space="preserve"><value>This reading step wasn't completed within the scan's time limit.</value></data>
   <data name="Reason.QueryFailed" xml:space="preserve"><value>Query did not succeed</value></data>
   <data name="Reason.QueryFailed.Meaning" xml:space="preserve"><value>This information could not be read during the scan.</value></data>
   <data name="Reason.SensitiveValue" xml:space="preserve"><value>Hidden for privacy</value></data>

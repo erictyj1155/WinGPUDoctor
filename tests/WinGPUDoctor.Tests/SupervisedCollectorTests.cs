@@ -1,4 +1,6 @@
 using WinGPUDoctor.Core;
+using WinGPUDoctor.Desktop;
+using WinGPUDoctor.Desktop.ViewModels;
 using WinGPUDoctor.Protocol;
 using WinGPUDoctor.Supervisor;
 using System.Text;
@@ -350,6 +352,55 @@ public class SupervisedCollectorTests
     private static DiagnosticReport Parse(string json) =>
         JsonSerializer.Deserialize<DiagnosticReport>(json, ReportWriter.JsonOptions)!;
 
+    // Every kind of timeout reaches the report as failed/timeout and the GUI as the same neutral wording: a worker that
+    // does not answer in time, one that never reports ready, and an operation skipped before any worker starts because
+    // too little of the scan's time was left (a policy whose total budget leaves the first operation no time).
+    [Theory]
+    [InlineData("while reading")]
+    [InlineData("before ready")]
+    [InlineData("skipped")]
+    public async Task EveryKindOfTimeoutReadsTheSameInTheGui(string kind)
+    {
+        var factory = new ScriptedFactory()
+            .For(WorkerOperation.WmiOperatingSystem, () => M4TestData.Success(WorkerOperation.WmiOperatingSystem, M4TestData.OperatingSystem()))
+            .For(WorkerOperation.WmiComputerSystem, () => M4TestData.Success(WorkerOperation.WmiComputerSystem, M4TestData.ComputerSystem()))
+            .For(WorkerOperation.WmiVideoControllers, () => M4TestData.Success(WorkerOperation.WmiVideoControllers,
+                M4TestData.Video(("INSTANCE", "GPU", "10DE", "1234"))))
+            .For(WorkerOperation.WmiDisplayDrivers, () => M4TestData.Success(WorkerOperation.WmiDisplayDrivers,
+                M4TestData.Drivers(("instance", "Example Vendor", "1.2.3.4", "2026-09-01"))))
+            .For(WorkerOperation.DisplayActiveTopology, () => M4TestData.TopologySuccess(ProtocolTests.Display("gpu-1")));
+        var policy = Policy;
+        if (kind == "while reading") factory.Timeout(WorkerOperation.WmiDisplayDrivers);
+        if (kind == "before ready") factory.TimeoutBeforeReady(WorkerOperation.WmiDisplayDrivers);
+        if (kind == "skipped")
+            policy = new(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500),
+                TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+
+        var snapshot = await new SupervisedWindowsCollector(policy, new DeadlineTests.ManualClock(), factory, new HostAdmission()).CollectAsync();
+
+        var skipped = kind == "skipped";
+        var fields = skipped
+            ? new[] { snapshot.Facts.System.WindowsVersion, snapshot.Facts.System.WindowsBuild }
+            : new[] { snapshot.Facts.Gpus.Value![0].Driver.Provider, snapshot.Facts.Gpus.Value[0].Driver.Version, snapshot.Facts.Gpus.Value[0].Driver.Date };
+        Assert.All(fields, f => Assert.Equal((DataState.Failed, ReasonCode.Timeout), (f.State, f.Reason)));
+        var run = snapshot.Collection.Single(r => r.Source == (skipped ? DataSource.WmiOperatingSystem : DataSource.WmiSignedDriver));
+        Assert.Equal((CollectorStatus.Failed, ReasonCode.Timeout), (run.Status, run.Reason));
+        Assert.Equal(skipped, !factory.Calls.Contains(WorkerOperation.WmiOperatingSystem));
+        if (skipped) Assert.Equal(0, run.Attempts);
+
+        var result = new ResultViewModel(ReportDocument.From(PrivacyPolicy.Prepare(snapshot, new(2026, 9, 28))));
+        var card = skipped ? result.MainCards[0] : Assert.Single(result.DriverCards);
+        var keys = skipped ? new[] { "Field.WindowsVersion", "Field.WindowsBuild" } : new[] { "Field.DriverProvider", "Field.DriverVersion", "Field.DriverDate" };
+        foreach (var key in keys)
+        {
+            var line = card.Facts.Single(f => f.Label == UiText.Get(key));
+            Assert.Equal("Didn't finish in time", line.Value);
+            Assert.Contains("This reading step wasn't completed within the scan's time limit.", line.Help, StringComparison.Ordinal);
+            Assert.DoesNotContain("Windows", line.Value, StringComparison.Ordinal); // No cause is assigned.
+        }
+        Assert.True(result.SuggestsScanAgain);
+        Assert.Contains("Scanning again may help.", result.Summary, StringComparison.Ordinal);
+    }
     private static async Task<CollectionSnapshot> Collect(ScriptedFactory factory) =>
         await new SupervisedWindowsCollector(Policy, TimeProvider.System, factory, new HostAdmission()).CollectAsync();
 
@@ -372,13 +423,24 @@ public class SupervisedCollectorTests
             _results[operation] = () => null;
             return this;
         }
+        // The worker never reports ready: the operation times out before any reading starts.
+        internal ScriptedFactory TimeoutBeforeReady(WorkerOperation operation)
+        {
+            _results[operation] = () => null;
+            _beforeReady.Add(operation);
+            return this;
+        }
+        private readonly HashSet<WorkerOperation> _beforeReady = [];
         public ValueTask<IWorkerSession> CreateAsync(WorkerOperation operation, WorkerLaunchOptions? options,
             Deadline connectDeadline, Deadline cleanupLimit, TimeSpan cleanupAllowance, HostAdmission admission,
             CancellationToken token)
         {
             Calls.Add(operation);
             if (Failure is { } failure) throw new WorkerAdmissionException(failure);
-            var session = new ScriptedSession(operation, _results[operation], _cleanupSucceeds.GetValueOrDefault(operation, true));
+            var session = new ScriptedSession(operation, _results[operation], _cleanupSucceeds.GetValueOrDefault(operation, true))
+            {
+                TimesOutBeforeReady = _beforeReady.Contains(operation)
+            };
             Sessions[operation] = session;
             return ValueTask.FromResult<IWorkerSession>(session);
         }
@@ -390,6 +452,7 @@ public class SupervisedCollectorTests
         private bool _resolved;
         private ResultFrame? _result;
         internal ProtocolFrame? StartFrame { get; private set; }
+        internal bool TimesOutBeforeReady { get; init; }
         public bool IsInCreationTimeJob => true;
         public bool IsElevated => false;
         public WorkerBuildIdentity ExpectedIdentity => ProtocolTests.Identity;
@@ -403,6 +466,7 @@ public class SupervisedCollectorTests
         public ValueTask<ProtocolFrame> ReceiveAsync(Deadline deadline, CancellationToken token)
         {
             _read++;
+            if (_read == 1 && TimesOutBeforeReady) throw new TimeoutException("synthetic worker never ready");
             if (_read == 1) return ValueTask.FromResult<ProtocolFrame>(new ReadyFrame(operation, ProtocolTests.Identity));
             if (_read <= 1 + Attempts) return ValueTask.FromResult<ProtocolFrame>(new AttemptStartedFrame(operation, _read - 1));
             return ValueTask.FromResult<ProtocolFrame>(Result ?? throw new TimeoutException("synthetic worker timeout"));
