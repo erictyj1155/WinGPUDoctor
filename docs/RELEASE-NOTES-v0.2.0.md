@@ -1,6 +1,6 @@
 # WinGPUDoctor v0.2.0 release notes (draft)
 
-> **Draft: not published.** The package below is candidate 3, built from clean build output and validated locally on 2026-09-27. Still open before release: a final review. On 2026-09-28 the maintainer moved a trial without the .NET 10 Desktop Runtime and usability sessions with people who don't use the console to after the release; both are listed under "Not verified". Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
+> **Draft: not published.** The package below is candidate 4, built from clean build output and validated locally on 2026-09-28. Still open before release: a final review. On 2026-09-28 the maintainer moved a trial without the .NET 10 Desktop Runtime and usability sessions with people who don't use the console to after the release; both are listed under "Not verified". Tagging and publishing need separate owner authorization after the final review; if the package is rebuilt, its size and SHA-256 must be updated here.
 
 WinGPUDoctor reads what Windows reports about graphics adapters, drivers and active display paths, explains it, and produces a report that you review and save yourself. Version 0.2.0 adds a desktop app for people who don't use a console.
 
@@ -35,7 +35,7 @@ The executables are not code-signed, so Windows can't show a verified publisher,
 
 | File | Size | SHA-256 |
 |---|---|---|
-| `WinGPUDoctor-0.2.0-win-x64.zip` | 1,248,441 bytes | `810444aec2579a8090e3a645472b5511216ea36093cc0e08a4aa9ac001a34968` |
+| `WinGPUDoctor-0.2.0-win-x64.zip` | 1,248,708 bytes | `7b28ef3b3e2566b6785287d9522b34f8eb767f8717e6974a91f9b0b2e82a297c` |
 
 A matching checksum shows that the download is complete and unchanged; it can't prove who built it. If it matches, select **More info**, then **Run anyway**. If it doesn't, delete the ZIP and download it again.
 
@@ -47,11 +47,11 @@ A scan shows what Windows reports. It can't tell you which graphics adapter a ga
 
 Details and dates are in `docs/VALIDATION.md`.
 
-- **Deterministic checks** (2026-09-27, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 383 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
+- **Deterministic checks** (2026-09-28, after a clean build of the candidate commit): Release build with 0 warnings and 0 errors, 383 xUnit tests, the schema and helper checks and 61 package-layout checks passed. The dependency audit (same lock files) found no known vulnerable direct or transitive NuGet package.
 - **Release package:** built after deleting all build output, from the candidate commit with a clean working tree; the packaging checks (local paths, launcher check, declared runtime files, .NET networking references and listed networking imports, entry hashes) passed, and an independent rescan of the ZIP found nothing.
 - **Command-line tool:** compared with 0.1.0 on every path that returns before collection (help, invalid or duplicate arguments, rejected destinations), the output and exit codes are identical apart from the version in `--help`.
-- **From the extracted candidate 3, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-27): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
-- **On a second laptop with integrated graphics only** (candidate 2, by the maintainer): the downloaded ZIP triggered SmartScreen and ran after **Run anyway**; light and dark modes displayed correctly. The first scan showed the driver details as not read and the second scan showed them; the cause was not confirmed.
+- **From the extracted candidate 4, live on one Windows 11 x64 laptop, non-administrator, dark mode** (2026-09-28): the command-line checks (help, preview, typed `EXPORT`, typed decline, `--yes`), and the app's scan, cancel while reading, closing during a scan, and Markdown and JSON saves byte-identical to the preview, with no worker left running.
+- **On a second laptop with integrated graphics only** (candidates 2 and 3, by the maintainer): the downloaded ZIP triggered SmartScreen and ran after **Run anyway**; light and dark modes displayed correctly. On a first scan, one reading step did not finish (the driver step with candidate 2; Windows version and build with candidate 3, while Windows Security reported a Microsoft Defender cloud scan); a second scan read everything. The cause was not confirmed.
 - **From the extracted candidate 2, live on the first laptop, non-administrator, dark mode** (2026-09-27; the program has since changed only in how a timeout is worded):
   - Command-line tool: `--help` shows 0.2.0; Markdown and JSON previews create no file; export after typing `EXPORT` in a console and with `--yes` saved a report that passed the schema and privacy checks; typing another answer, or redirected input without `--yes`, declined with exit code 4 and no file; an existing file was not replaced.
   - App, launched directly and through Explorer: scan, results, cancel (stopped in about 0.2 s), saving Markdown and JSON through the real Save dialog (byte-identical to the preview; JSON passed the schema and privacy checks), "1 entry" and "2 entries" on the save screen, and a clean close with no worker left running and the package folder unchanged.
